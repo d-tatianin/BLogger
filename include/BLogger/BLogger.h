@@ -11,9 +11,9 @@
 #include <iomanip>
 
 #if defined(__unix__)
-	#define UPDATE_TIME localtime_r(&t, &bt)
+	#define UPDATE_TIME localtime_r(&t, &m_BT)
 #elif defined(_MSC_VER)
-	#define UPDATE_TIME localtime_s(&bt, &t)
+	#define UPDATE_TIME localtime_s(&m_BT, &t)
 #endif
 
 namespace level {
@@ -33,7 +33,7 @@ namespace BLogger {
 		const char* m_Name;
 		level::level_enum m_Filter;
 		bool m_ShowTimestamps;
-		std::tm bt{};
+		std::tm m_BT;
 	public:
 		Logger()
 		{
@@ -59,7 +59,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << enumToString(lvl);
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << enumToString(lvl);
 				ss << m_Name << ": "<< message << "\n";
 				std::cout << ss.str();
 			}
@@ -82,7 +82,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << enumToString(lvl);
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << enumToString(lvl);
 				ss << m_Name << ": " << formattedMsg << "\n";
 				printf(ss.str().c_str(), args...);
 			}
@@ -104,7 +104,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[TRACE] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[TRACE] ";
 				ss << m_Name << ": " << message << "\n";
 				std::cout << ss.str();
 			}
@@ -126,7 +126,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[DEBUG] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[DEBUG] ";
 				ss << m_Name << ": " << message << "\n";
 				std::cout << ss.str();
 			}
@@ -148,7 +148,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[INFO] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[INFO]  ";
 				ss << m_Name << ": " << message << "\n";
 				std::cout << ss.str();
 			}
@@ -170,7 +170,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[WARN] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[WARN]  ";
 				ss << m_Name << ": " << message << "\n";
 				std::cout << ss.str();
 			}
@@ -189,7 +189,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[ERROR] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[ERROR] ";
 				ss << m_Name << ": " << message << "\n";
 				std::cout << ss.str();
 			}
@@ -212,7 +212,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[TRACE] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[TRACE] ";
 				ss << m_Name << ": " << formattedMsg << "\n";
 				printf(ss.str().c_str(), args...);
 			}
@@ -235,7 +235,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[DEBUG] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[DEBUG] ";
 				ss << m_Name << ": " << formattedMsg << "\n";
 				printf(ss.str().c_str(), args...);
 			}
@@ -258,7 +258,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[INFO] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[INFO]  ";
 				ss << m_Name << ": " << formattedMsg << "\n";
 				printf(ss.str().c_str(), args...);
 			}
@@ -281,7 +281,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[WARN] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[WARN]  ";
 				ss << m_Name << ": " << formattedMsg << "\n";
 				printf(ss.str().c_str(), args...);
 			}
@@ -301,7 +301,7 @@ namespace BLogger {
 				auto t = std::time(nullptr);
 				std::stringstream ss;
 				UPDATE_TIME;
-				ss << std::put_time(&bt, "[%OH:%OM:%OS]") << "[ERROR] ";
+				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[ERROR] ";
 				ss << m_Name << ": " << formattedMsg << "\n";
 				printf(ss.str().c_str(), args...);
 			}
