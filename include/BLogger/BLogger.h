@@ -45,8 +45,9 @@ namespace BLogger {
 			m_Filter = level::TRACE;
 			m_ShowTimestamps = false;
 		}
-
-		void Log(const char* message, level::level_enum lvl)
+		
+		template <typename T>
+		void Log(const T& message, level::level_enum lvl)
 		{
 
 			if (m_Filter > lvl)
@@ -69,8 +70,8 @@ namespace BLogger {
 			}
 		}
 
-		template<typename... Args>
-		void Log(const char* formattedMsg, level::level_enum lvl, const Args& ... args)
+		template<typename T, typename... Args>
+		void Log(const T& formattedMsg, level::level_enum lvl, const Args& ... args)
 		{
 			if (m_Filter > lvl)
 				return;
@@ -92,7 +93,8 @@ namespace BLogger {
 			}
 		}
 
-		void Trace(const char* message)
+		template <typename T>
+		void Trace(const T& message)
 		{
 			if (m_Filter > level::TRACE)
 				return;
@@ -114,7 +116,8 @@ namespace BLogger {
 			}
 		}
 
-		void Debug(const char* message)
+		template <typename T>
+		void Debug(const T& message)
 		{
 			if (m_Filter > level::DEBUG)
 				return;
@@ -136,7 +139,8 @@ namespace BLogger {
 			}
 		}
 
-		void Info(const char* message)
+		template <typename T>
+		void Info(const T& message)
 		{
 			if (m_Filter > level::INFO)
 				return;
@@ -158,7 +162,8 @@ namespace BLogger {
 			}
 		}
 
-		void Warning(const char* message)
+		template <typename T>
+		void Warning(const T& message)
 		{
 			if (m_Filter > level::WARN)
 				return;
@@ -180,7 +185,8 @@ namespace BLogger {
 			}
 		}
 
-		void Error(const char* message)
+		template <typename T>
+		void Error(const T& message)
 		{
 			if (m_ShowTimestamps)
 			{
@@ -199,8 +205,8 @@ namespace BLogger {
 			}
 		}
 
-		template<typename... Args>
-		void Trace(const char* formattedMsg, const Args &... args)
+		template<typename T, typename... Args>
+		void Trace(const T& formattedMsg, const Args &... args)
 		{
 			if (m_Filter > level::TRACE)
 				return;
@@ -222,8 +228,8 @@ namespace BLogger {
 			}
 		}
 
-		template<typename... Args>
-		void Debug(const std::string& formattedMsg, const Args &... args)
+		template<typename T, typename... Args>
+		void Debug(const T& formattedMsg, const Args &... args)
 		{
 			if (m_Filter > level::DEBUG)
 				return;
@@ -245,8 +251,8 @@ namespace BLogger {
 			}
 		}
 
-		template<typename... Args>
-		void Info(const std::string& formattedMsg, const Args &... args)
+		template<typename T, typename... Args>
+		void Info(const T& formattedMsg, const Args &... args)
 		{
 			if (m_Filter > level::INFO)
 				return;
@@ -268,8 +274,8 @@ namespace BLogger {
 			}
 		}
 
-		template<typename... Args>
-		void Warning(const std::string& formattedMsg, const Args &... args)
+		template<typename T, typename... Args>
+		void Warning(const T& formattedMsg, const Args &... args)
 		{
 			if (m_Filter > level::WARN)
 				return;
@@ -291,8 +297,8 @@ namespace BLogger {
 			}
 		}
 
-		template<typename... Args>
-		void Error(const std::string& formattedMsg, const Args &... args)
+		template<typename T, typename... Args>
+		void Error(const T& formattedMsg, const Args &... args)
 		{
 			if (m_ShowTimestamps)
 			{
