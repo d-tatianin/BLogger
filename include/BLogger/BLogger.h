@@ -5,9 +5,7 @@
 #include <string>
 #include <sstream>
 
-
 #include <time.h>
-#include <ctime>
 #include <iomanip>
 
 #if defined(__unix__)
