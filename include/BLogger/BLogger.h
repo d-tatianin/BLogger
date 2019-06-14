@@ -18,7 +18,7 @@ namespace level {
 
 	enum level_enum
 	{
-		TRACE = 0, DEBUG, INFO, WARN, ERROR
+		TRACE = 0, DEBUG, INFO, WARN, Error /*ERROR changed to Error because of incompatibility with Windows.h*/
 	};
 
 }
@@ -28,12 +28,13 @@ namespace BLogger {
 	class Logger
 	{
 	private:
-		const char* m_Name;
+		std::string m_Name;
 		level::level_enum m_Filter;
 		bool m_ShowTimestamps;
 		std::tm m_BT;
 	public:
 		Logger()
+			: m_Name("Unknown")
 		{
 			m_Filter = level::TRACE;
 			m_ShowTimestamps = false;
@@ -322,11 +323,15 @@ namespace BLogger {
 			m_Filter = lvl;
 		}
 
-		void ShowTimestamps(const bool& setting)
+		void ShowTimestamps(bool setting)
 		{
 			m_ShowTimestamps = setting;
 		}
 
+		void SetName(const std::string& name)
+		{
+			m_Name = name;
+		}
 	private:
 		const char* enumToString(level::level_enum lvl)
 		{
@@ -340,7 +345,7 @@ namespace BLogger {
 				return "[INFO]  ";
 			case level::WARN:
 				return "[WARN]  ";
-			case level::ERROR:
+			case level::Error:
 				return "[ERROR] ";
 			default:
 				return "[UNKNOWN] ";
