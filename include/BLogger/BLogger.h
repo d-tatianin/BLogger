@@ -33,19 +33,11 @@ namespace BLogger {
 		bool m_ShowTimestamps;
 		std::tm m_BT;
 	public:
-		Logger()
-			: m_Name("Unknown")
-		{
-			m_Filter = level::TRACE;
-			m_ShowTimestamps = false;
-		}
+		Logger() : m_Name("Unknown"), m_Filter(level::TRACE), m_ShowTimestamps(false) {}
 
-		Logger(const char* name)
-			: m_Name(name)
-		{
-			m_Filter = level::TRACE;
-			m_ShowTimestamps = false;
-		}
+		Logger(const std::string& name) : m_Name(name), m_Filter(level::TRACE), m_ShowTimestamps(false) {}
+
+		Logger(const std::string& name, level::level_enum lvl) : m_Name(name), m_Filter(lvl), m_ShowTimestamps(false) {}
 		
 		template <typename T>
 		void Log(const T& message, level::level_enum lvl)
