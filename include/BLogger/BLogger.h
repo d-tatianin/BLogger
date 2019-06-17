@@ -89,225 +89,61 @@ namespace BLogger {
 		template <typename T>
 		void Trace(const T& message)
 		{
-			if (m_Filter > level::TRACE)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[TRACE] ";
-				ss << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[TRACE] " << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
+			Log(message, level::TRACE);
 		}
 
 		template <typename T>
 		void Debug(const T& message)
 		{
-			if (m_Filter > level::DEBUG)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[DEBUG] ";
-				ss << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[DEBUG] " << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
+			Log(message, level::DEBUG);
 		}
 
 		template <typename T>
 		void Info(const T& message)
 		{
-			if (m_Filter > level::INFO)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[INFO]  ";
-				ss << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[INFO] " << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
+			Log(message, level::INFO);
 		}
 
 		template <typename T>
 		void Warning(const T& message)
 		{
-			if (m_Filter > level::WARN)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[WARN]  ";
-				ss << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[WARN] " << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
+			Log(message, level::WARN);
 		}
 
 		template <typename T>
 		void Error(const T& message)
 		{
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[ERROR] ";
-				ss << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[ERROR] " << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
-			}
+			Log(message, level::Error);
 		}
 
 		template<typename T, typename... Args>
 		void Trace(const T& formattedMsg, const Args &... args)
 		{
-			if (m_Filter > level::TRACE)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[TRACE] ";
-				ss << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[TRACE] " << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
+			Log(formattedMsg, level::TRACE, args...);
 		}
 
 		template<typename T, typename... Args>
 		void Debug(const T& formattedMsg, const Args &... args)
 		{
-			if (m_Filter > level::DEBUG)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[DEBUG] ";
-				ss << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[DEBUG] " << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
+			Log(formattedMsg, level::DEBUG, args...);
 		}
 
 		template<typename T, typename... Args>
 		void Info(const T& formattedMsg, const Args &... args)
 		{
-			if (m_Filter > level::INFO)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[INFO]  ";
-				ss << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[INFO] " << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
+			Log(formattedMsg, level::INFO, args...);
 		}
 
 		template<typename T, typename... Args>
 		void Warning(const T& formattedMsg, const Args &... args)
 		{
-			if (m_Filter > level::WARN)
-				return;
-
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[WARN]  ";
-				ss << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[WARN] " << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
+			Log(formattedMsg, level::WARN, args...);
 		}
 
 		template<typename T, typename... Args>
 		void Error(const T& formattedMsg, const Args &... args)
 		{
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << "[ERROR] ";
-				ss << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << "[ERROR] " << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
+			Log(formattedMsg, level::Error, args...);
 		}
 
 		void SetFilter(level::level_enum lvl)
