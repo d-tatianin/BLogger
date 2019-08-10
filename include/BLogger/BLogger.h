@@ -16,168 +16,365 @@
 
 namespace level {
 
-	enum level_enum
+	enum level_enum : int
 	{
-		TRACE = 0, DEBUG, INFO, WARN, Error /*ERROR changed to Error because of incompatibility with Windows.h*/
+		TRACE = 0, 
+		DEBUG, 
+		INFO, 
+		WARN, 
+		CRIT
 	};
 
+	inline const char* LevelToString(level_enum lvl)
+	{
+		switch (lvl)
+		{
+		case level::TRACE:
+			return "[TRACE] ";
+		case level::DEBUG:
+			return "[DEBUG] ";
+		case level::INFO:
+			return "[INFO] ";
+		case level::WARN:
+			return "[WARNING] ";
+		case level::CRIT:
+			return "[CRITICAL] ";
+		default:
+			return nullptr;
+		}
+	}
 }
 
-namespace BLogger {
-
-	class Logger
+class BLogger
+{
+private:
+	std::tm           m_BT;
+	std::string       m_Name;
+	level::level_enum m_Filter;
+	bool              m_AppendTimestamp;
+	bool              m_LogToConsole;
+	bool              m_LogToFile;
+	bool              m_RotateLogs;
+	FILE*             m_File;
+	std::string       m_DirectoryPath;
+	size_t            m_BytesPerFile;
+	size_t            m_CurrentBytes;
+	size_t            m_MaxLogFiles;
+	size_t            m_CurrentLogFiles;
+public:
+	BLogger() 
+		: m_Name("Unnamed"), 
+		  m_Filter(level::TRACE), 
+		  m_AppendTimestamp(false),
+	      m_LogToConsole(false),
+	      m_LogToFile(false),
+		  m_File(nullptr),
+		  m_BytesPerFile(0),
+		  m_CurrentBytes(0),
+		  m_MaxLogFiles(0),
+		  m_CurrentLogFiles(0)
 	{
-	private:
-		std::string m_Name;
-		level::level_enum m_Filter;
-		bool m_ShowTimestamps;
-		std::tm m_BT;
-	public:
-		Logger() : m_Name("Unknown"), m_Filter(level::TRACE), m_ShowTimestamps(false) {}
+	}
 
-		Logger(const std::string& name) : m_Name(name), m_Filter(level::TRACE), m_ShowTimestamps(false) {}
+	BLogger(const std::string& name) 
+		: m_Name(name),
+		m_Filter(level::TRACE),
+		m_AppendTimestamp(false),
+		m_LogToConsole(false),
+		m_LogToFile(false),
+		m_File(nullptr),
+		m_BytesPerFile(0),
+		m_CurrentBytes(0),
+		m_MaxLogFiles(0),
+		m_CurrentLogFiles(0)
+	{
+	}
 
-		Logger(const std::string& name, level::level_enum lvl) : m_Name(name), m_Filter(lvl), m_ShowTimestamps(false) {}
+	BLogger(const std::string& name, level::level_enum lvl)
+		: m_Name(name),
+		m_Filter(lvl),
+		m_AppendTimestamp(false),
+		m_LogToConsole(false),
+		m_LogToFile(false),
+		m_File(nullptr),
+		m_BytesPerFile(0),
+		m_CurrentBytes(0),
+		m_MaxLogFiles(0),
+		m_CurrentLogFiles(0)
+	{
+	}
+
+	bool InitFileLogger(const char* directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs = true)
+	{
+		m_BytesPerFile = bytesPerFile;
+		m_MaxLogFiles = maxLogFiles;
+		m_RotateLogs = rotateLogs;
+		m_CurrentBytes = 0;
+		m_CurrentLogFiles = 1;
+
+		m_DirectoryPath = directoryPath;
+		m_DirectoryPath += '/';
+
+		std::string fullPath;
+		ConstructFullPath(fullPath);
 		
-		template <typename T>
-		void Log(const T& message, level::level_enum lvl)
+		fopen_s(&m_File, fullPath.c_str(), "a");
+
+		if (m_File)
+			return true;
+		
+		Critical("Could not initialize the file logger! Make sure the path is valid.");
+		return false;	
+	}
+
+	bool EnableFileLogger()
+	{
+		if (!m_File)
 		{
+			Critical("Could not enable the file logger. Did you call InitFileLogger?");
+			return false;
+		}
 
-			if (m_Filter > lvl)
-				return;
+		m_LogToFile = true;
+		return true;
+	}
 
-			if (m_ShowTimestamps)
+	void DisableFileLogger()
+	{
+		m_LogToFile = false;
+	}
+
+	void TerminateFileLogger()
+	{
+		m_LogToFile = false;
+		
+		if (m_File)
+			fclose(m_File);
+	}
+
+	void EnableConsoleLogger()
+	{
+		m_LogToConsole = true;
+	}
+
+	void DisableConsoleLogger()
+	{
+		m_LogToConsole = false;
+	}
+	
+	template <typename T>
+	void Log(level::level_enum lvl, const T& message)
+	{
+
+		if (m_Filter > lvl)
+			return;
+
+		if (!m_LogToConsole && !m_LogToFile)
+			return;
+
+		auto t = std::time(nullptr);
+		UPDATE_TIME;
+		std::stringstream ss;
+		
+		if (m_AppendTimestamp)
+			ss << std::put_time(&m_BT, "[%OH:%OM:%OS]");
+
+		ss << LevelToString(lvl);
+		ss << m_Name << ": " << message << "\n";
+
+		if (m_LogToConsole)
+		{
+			std::cout << ss.str();
+		}
+
+		if (m_LogToConsole)
+		{
+			size_t bytes;
+			ss.seekg(0, std::ios::beg);
+			ss.seekg(0, std::ios::end);
+			bytes = ss.tellg();
+
+			if ((m_CurrentBytes + bytes) > m_BytesPerFile)
 			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << enumToString(lvl);
-				ss << m_Name << ": "<< message << "\n";
-				std::cout << ss.str();
+				if (m_CurrentLogFiles == m_MaxLogFiles)
+				{
+					if (!m_RotateLogs)
+						return;
+					else
+					{
+						m_CurrentLogFiles = 1;
+						m_CurrentBytes = 0;
+						NewLogFile();
+					}
+				}
+				else
+				{
+					m_CurrentBytes = 0;
+					++m_CurrentLogFiles;
+					NewLogFile();
+				}
+					
 			}
-			else
+			
+			m_CurrentBytes += bytes;
+			fprintf(m_File, ss.str().c_str());
+		}
+	}
+
+	template<typename T, typename... Args>
+	void Log(level::level_enum lvl, const T& formattedMsg, const Args& ... args)
+	{
+		if (m_Filter > lvl)
+			return;
+
+		if (!m_LogToConsole && !m_LogToFile)
+			return;
+
+		auto t = std::time(nullptr);
+		UPDATE_TIME;
+		std::stringstream ss;
+
+		if (m_AppendTimestamp)
+			ss << std::put_time(&m_BT, "[%OH:%OM:%OS]");
+
+		ss << LevelToString(lvl);
+		ss << m_Name << ": " << formattedMsg << "\n";
+
+		if (m_LogToConsole)
+		{
+			printf(ss.str().c_str(), args...);
+		}
+
+		if (m_LogToConsole)
+		{
+			size_t bytes;
+			ss.seekg(0, std::ios::beg);
+			ss.seekg(0, std::ios::end);
+			bytes = ss.tellg();
+
+			while ((m_CurrentBytes + bytes) > m_BytesPerFile)
 			{
-				std::stringstream ss;
-				ss << enumToString(lvl) << m_Name << ": " << message << "\n";
-				std::cout << ss.str();
+				if (m_CurrentLogFiles == m_MaxLogFiles)
+				{
+					if (!m_RotateLogs)
+						return;
+					else
+					{
+						m_CurrentLogFiles = 1;
+						m_CurrentBytes = 0;
+						NewLogFile();
+					}
+				}
+				else
+				{
+					m_CurrentBytes = 0;
+					NewLogFile();
+				}
 			}
-		}
 
-		template<typename T, typename... Args>
-		void Log(const T& formattedMsg, level::level_enum lvl, const Args& ... args)
-		{
-			if (m_Filter > lvl)
-				return;
+			m_CurrentBytes += bytes;
+			fprintf(ss.str().c_str(), args...); // use sprtinf so we can measure the size properly
+		}
+	}
 
-			if (m_ShowTimestamps)
-			{
-				auto t = std::time(nullptr);
-				std::stringstream ss;
-				UPDATE_TIME;
-				ss << std::put_time(&m_BT, "[%OH:%OM:%OS]") << enumToString(lvl);
-				ss << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << enumToString(lvl) << m_Name << ": " << formattedMsg << "\n";
-				printf(ss.str().c_str(), args...);
-			}
-		}
+	template <typename T>
+	void Trace(const T& message)
+	{
+		Log(level::TRACE, message);
+	}
 
-		template <typename T>
-		void Trace(const T& message)
-		{
-			Log(message, level::TRACE);
-		}
+	template <typename T>
+	void Debug(const T& message)
+	{
+		Log(level::DEBUG, message);
+	}
 
-		template <typename T>
-		void Debug(const T& message)
-		{
-			Log(message, level::DEBUG);
-		}
+	template <typename T>
+	void Info(const T& message)
+	{
+		Log(level::INFO, message);
+	}
 
-		template <typename T>
-		void Info(const T& message)
-		{
-			Log(message, level::INFO);
-		}
+	template <typename T>
+	void Warning(const T& message)
+	{
+		Log(level::WARN, message);
+	}
 
-		template <typename T>
-		void Warning(const T& message)
-		{
-			Log(message, level::WARN);
-		}
+	template <typename T>
+	void Critical(const T& message)
+	{
+		Log(level::CRIT, message);
+	}
 
-		template <typename T>
-		void Error(const T& message)
-		{
-			Log(message, level::Error);
-		}
+	template<typename T, typename... Args>
+	void Trace(const T& formattedMsg, const Args &... args)
+	{
+		Log(level::TRACE, formattedMsg, args...);
+	}
 
-		template<typename T, typename... Args>
-		void Trace(const T& formattedMsg, const Args &... args)
-		{
-			Log(formattedMsg, level::TRACE, args...);
-		}
+	template<typename T, typename... Args>
+	void Debug(const T& formattedMsg, const Args &... args)
+	{
+		Log(level::DEBUG, formattedMsg, args...);
+	}
 
-		template<typename T, typename... Args>
-		void Debug(const T& formattedMsg, const Args &... args)
-		{
-			Log(formattedMsg, level::DEBUG, args...);
-		}
+	template<typename T, typename... Args>
+	void Info(const T& formattedMsg, const Args &... args)
+	{
+		Log(level::INFO, formattedMsg, args...);
+	}
 
-		template<typename T, typename... Args>
-		void Info(const T& formattedMsg, const Args &... args)
-		{
-			Log(formattedMsg, level::INFO, args...);
-		}
+	template<typename T, typename... Args>
+	void Warning(const T& formattedMsg, const Args &... args)
+	{
+		Log(level::WARN, formattedMsg, args...);
+	}
 
-		template<typename T, typename... Args>
-		void Warning(const T& formattedMsg, const Args &... args)
-		{
-			Log(formattedMsg, level::WARN, args...);
-		}
+	template<typename T, typename... Args>
+	void Critical(const T& formattedMsg, const Args &... args)
+	{
+		Log(level::CRIT, formattedMsg, args...);
+	}
 
-		template<typename T, typename... Args>
-		void Error(const T& formattedMsg, const Args &... args)
-		{
-			Log(formattedMsg, level::Error, args...);
-		}
+	void SetFilter(level::level_enum lvl)
+	{
+		m_Filter = lvl;
+	}
 
-		void SetFilter(level::level_enum lvl)
-		{
-			m_Filter = lvl;
-		}
+	void ShowTimestamps(bool setting)
+	{
+		m_AppendTimestamp = setting;
+	}
 
-		void ShowTimestamps(bool setting)
-		{
-			m_ShowTimestamps = setting;
-		}
+	void SetName(const std::string& name)
+	{
+		m_Name = name;
+	}
 
-		void SetName(const std::string& name)
-		{
-			m_Name = name;
-		}
-	private:
-		const char* enumToString(level::level_enum lvl)
-		{
-			switch (lvl)
-			{
-			case level::TRACE:
-				return "[TRACE] ";
-			case level::DEBUG:
-				return "[DEBUG] ";
-			case level::INFO:
-				return "[INFO]  ";
-			case level::WARN:
-				return "[WARN]  ";
-			case level::Error:
-				return "[ERROR] ";
-			default:
-				return "[UNKNOWN] ";
-			}
-		}
-	};
-}
+	~BLogger()
+	{
+		if (m_File)
+			fclose(m_File);
+	}
+
+private:
+	void ConstructFullPath(std::string& outPath)
+	{
+		outPath += m_DirectoryPath;
+		outPath += m_Name;
+		outPath += '-';
+		outPath += std::to_string(m_CurrentLogFiles);
+		outPath += ".txt";
+	}
+
+	void NewLogFile()
+	{
+		fclose(m_File);
+
+		std::string fullPath;
+		ConstructFullPath(fullPath);
+
+		fopen_s(&m_File, fullPath.c_str(), "w");
+	}
+};
