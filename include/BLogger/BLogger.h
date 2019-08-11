@@ -153,9 +153,12 @@ public:
 	void TerminateFileLogger()
 	{
 		m_LogToFile = false;
-		
+
 		if (m_File)
+		{
 			fclose(m_File);
+			m_File = nullptr;
+		}
 	}
 
 	void EnableConsoleLogger()
