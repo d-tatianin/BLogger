@@ -2,17 +2,22 @@
 #include <stdio.h>
 #include <iostream>
 
+#include <vector>
 #include <string>
 #include <sstream>
 
 #include <time.h>
 #include <iomanip>
 
+#include <algorithm>
+
 #if defined(__unix__)
 	#define UPDATE_TIME localtime_r(&t, &m_BT)
 #elif defined(_MSC_VER)
 	#define UPDATE_TIME localtime_s(&m_BT, &t)
 #endif
+
+#define MAX_MESSAGE_SIZE 128
 
 namespace level {
 
@@ -118,7 +123,7 @@ public:
 		std::string fullPath;
 		ConstructFullPath(fullPath);
 		
-		fopen_s(&m_File, fullPath.c_str(), "a");
+		fopen_s(&m_File, fullPath.c_str(), "w");
 
 		if (m_File)
 			return true;
@@ -187,12 +192,15 @@ public:
 			std::cout << ss.str();
 		}
 
-		if (m_LogToConsole)
+		if (m_LogToFile)
 		{
 			size_t bytes;
 			ss.seekg(0, std::ios::beg);
 			ss.seekg(0, std::ios::end);
 			bytes = ss.tellg();
+
+			if (bytes > m_BytesPerFile)
+				return;
 
 			if ((m_CurrentBytes + bytes) > m_BytesPerFile)
 			{
@@ -240,19 +248,27 @@ public:
 		ss << LevelToString(lvl);
 		ss << m_Name << ": " << formattedMsg << "\n";
 
+		std::vector<char> message;
+		message.resize(MAX_MESSAGE_SIZE);
+		snprintf(message.data(), message.size(), ss.str().c_str(), args...);
+		
+		auto itr = std::remove_if(message.begin(), message.end(), [](char c) { return c == '\0'; });
+		*itr = '\0';
+		message.erase(++itr, message.end());
+
 		if (m_LogToConsole)
 		{
-			printf(ss.str().c_str(), args...);
+			std::cout << message.data();
 		}
 
-		if (m_LogToConsole)
+		if (m_LogToFile)
 		{
-			size_t bytes;
-			ss.seekg(0, std::ios::beg);
-			ss.seekg(0, std::ios::end);
-			bytes = ss.tellg();
+			size_t bytes = message.size();
 
-			while ((m_CurrentBytes + bytes) > m_BytesPerFile)
+			if (bytes > m_BytesPerFile)
+				return;
+
+			if ((m_CurrentBytes + bytes) > m_BytesPerFile)
 			{
 				if (m_CurrentLogFiles == m_MaxLogFiles)
 				{
@@ -267,13 +283,14 @@ public:
 				}
 				else
 				{
+					++m_CurrentLogFiles;
 					m_CurrentBytes = 0;
 					NewLogFile();
 				}
 			}
 
 			m_CurrentBytes += bytes;
-			fprintf(ss.str().c_str(), args...); // use sprtinf so we can measure the size properly
+			fprintf(m_File, message.data());
 		}
 	}
 
@@ -371,6 +388,7 @@ private:
 	void NewLogFile()
 	{
 		fclose(m_File);
+		m_File = nullptr;
 
 		std::string fullPath;
 		ConstructFullPath(fullPath);
