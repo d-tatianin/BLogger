@@ -34,8 +34,8 @@ If you do not intend to use the file logger anymore, use `TerminateFileLogger()`
 
 ---
 ### - Logging your messages:
-- `Log(const T& message, level lvl)` -> Logs the message with the given level.  
-- `Log(const T& formattedMsg, level lvl, const Args& ... args)` -> Logs the message with the given level. Expects a `printf`-style formatted string as well as any arguments to go with it. Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::stringstream`.  
+- `Log(level lvl, const T& message)` -> Logs the message with the given level.  
+- `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the message with the given level. Expects a `printf`-style formatted string as well as any arguments to go with it. Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::stringstream`.  
 ### - The following redundant member functions are also available with the same overloads as `Log()`, however, don't require a level argument:
 - `Trace(...)` -> Logs the given message with logging level `TRACE`.
 - `Debug(...)`-> Logs the given message with logging level `DEBUG`.
