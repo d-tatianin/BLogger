@@ -386,7 +386,7 @@ private:
 		outPath += m_Name;
 		outPath += '-';
 		outPath += std::to_string(m_CurrentLogFiles);
-		outPath += ".txt";
+		outPath += ".log";
 	}
 
 	void NewLogFile()
