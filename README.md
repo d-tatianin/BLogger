@@ -27,7 +27,7 @@ In case `InitFileLogger(...)` fails to initialize the file logger, it will retur
 
 After you successfully initialized the file logger, you need to call `EnableFileLogger()` to enable it. As a fail-safe, it also returns `true` if the operation succeeded, or `false`, as well as an error message otherwise.
 
-File logger logfile naming pattern: `loggerName + loggingFileNumber + .txt`, e.g `mylogger-1.txt`.  
+File logger logfile naming pattern: `loggerName + loggingFileNumber + .log`, e.g `mylogger-1.log`.  
 
 In order to temporarily disable the file logger, call `DisableFileLogger()`.  
 If you do not intend to use the file logger anymore, use `TerminateFileLogger()`. Keep in mind that you would have to call `InitFileLogger(...)` again if you ever want to reactivate it.  
