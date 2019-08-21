@@ -1,4 +1,4 @@
-# BLogger
+# BLogger | [![Build status](https://ci.appveyor.com/api/projects/status/nbwtd4mu4cjmnjcm?svg=true)](https://ci.appveyor.com/project/8infy/blogger)
 An easy to use logger which supports console & file logging, log rotation and more!
 
 ## Using the logger:
