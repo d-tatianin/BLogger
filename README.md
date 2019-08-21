@@ -18,10 +18,10 @@ In order to activate file logger you have to first initialize it.
 In order to initialize the file logger call:  
 `InitFileLogger(const char* directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs = true)`  
 
- 1.  A valid directory path where you want the logs to be store, e.g `"C:\mylogs"`.  
- 2.  Byte limit per logging file.  
- 3.  Maximum number of logging files, so your total byte limit is `bytesPerFile` * `maxLogFiles`.  
- 4.  An optional parameter, if it's set to `true` once the logger reaches the `maxLogFiles` limit it will go back to the first log file and overwrite it with new logs.  
+1.  A valid directory path where you want the logs to be store, e.g `"C:\mylogs"`.  
+2.  Byte limit per logging file.  
+3.  Maximum number of logging files, so your total byte limit is `bytesPerFile` * `maxLogFiles`.  
+4.  An optional parameter, if it's set to `true` once the logger reaches the `maxLogFiles` limit it will go back to the first log file and overwrite it with new logs.  
 
 In case `InitFileLogger(...)` fails to initialize the file logger, it will return `false` and log an error message. If it succeeds, `true` is returned.  
 
@@ -34,8 +34,8 @@ If you do not intend to use the file logger anymore, use `TerminateFileLogger()`
 
 ---
 ### - Logging your messages
--  `Log(level lvl, const T& message)` -> Logs the message with the given level.  
--  `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the message with the given level. Expects a `printf`-style formatted string as well as any arguments to go with it. Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::stringstream`.  
+-   `Log(level lvl, const T& message)` -> Logs the message with the given level.  
+-   `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the message with the given level. Expects a `printf`-style formatted string as well as any arguments to go with it. Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::stringstream`.  
 ### - The following redundant member functions are also available with the same overloads as `Log()`, however, don't require a level argument
 -   `Trace(...)` -> Logs the given message with logging level `TRACE`.
 -   `Debug(...)`-> Logs the given message with logging level `DEBUG`.
