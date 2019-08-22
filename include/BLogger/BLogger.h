@@ -16,7 +16,7 @@
 
 #ifdef _WIN32
     #define UPDATE_TIME localtime_s(&m_BT, &t)
-    #define OPEN_FILE   fopen_s(&m_File, fullPath.c_str(), "w");
+    #define OPEN_FILE   fopen_s(&m_File, fullPath.c_str(), "w")
 #else
     #define UPDATE_TIME localtime_r(&t, &m_BT)
     #define OPEN_FILE   m_File = fopen(fullPath.c_str(), "w")
