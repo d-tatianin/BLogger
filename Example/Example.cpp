@@ -1,0 +1,69 @@
+#include "BLogger.h"
+
+int main()
+{
+    // Create a logger with name "MyLogger" and a logging filter "Trace"
+    BLogger logger("MyLogger", level::TRACE);
+
+    // Enable logging to stdout(console)
+    logger.EnableConsoleLogger();
+
+    // Enable timestamps before the message
+    logger.EnableTimestamps();
+
+    // Enable colored messages for stdout
+    // The default colors for each level are defined in BLogger.h
+    // Feel free to change the default colors however you want
+    // You can find all availble colors in Colors.h
+    logger.EnableColoredOutput();
+
+    // We have to initialize the file logger before enabling it
+    // 1st parameter -> The directory where you want you logging files to be stored
+    // 2nd parameter -> Bytes per file limit
+    // 3rd parameter -> Maximum number of files
+    // 4th parameter (default is true) -> Enable log rotation
+    // Log rotation means the oldest file gets overwritten once the file limit is hit
+    logger.InitFileLogger("dev/mylogs", 1000, 2, true);
+    logger.EnableFileLogger();
+
+    // Change the name of the logger
+    logger.SetName("NewFancyName");
+
+    // Set logging filter to 'Warning'
+    // The logger will ignore all messages below 'Warning' log level
+    logger.SetFilter(level::WARN);
+
+    // Log a message with log level 'Trace'
+    logger.Trace("Trace message");
+    logger.Trace("Trace with args %d", 25);
+
+    // Log a message with log level 'Debug'
+    logger.Debug("Debug message");
+    logger.Debug("Debug with args %d", 25);
+
+    // Log a message with log level 'Information'
+    logger.Info("Info message");
+    logger.Info("Info with args %d", 25);
+
+    // Log a message with log level 'Warning'
+    logger.Warning("Warning message");
+    logger.Warning("Warning with args %d", 25);
+
+    // Log a message with log level 'Critical'
+    logger.Critical("Critical message");
+    logger.Critical("Critical with args %d", 25);
+
+    // Temporarily disable the file logger
+    // Can be reactvated any time with 'EnableFileLogger()'
+    logger.DisableFileLogger();
+
+    // Permanently disable the file logger
+    // If you want to reactivate it, you will have to call
+    // 'InitFileLogger()' again
+    logger.TerminateFileLogger();
+
+    // Disable logging to stdout(console)
+    logger.DisableConsoleLogger();
+
+    return 0;
+}
