@@ -14,10 +14,12 @@
 
 #include "Colors.h"
 
-#if defined(__unix__)
-    #define UPDATE_TIME localtime_r(&t, &m_BT)
-#elif defined(_MSC_VER)
+#ifdef _WIN32
     #define UPDATE_TIME localtime_s(&m_BT, &t)
+    #define OPEN_FILE   fopen_s(&m_File, fullPath.c_str(), "w");
+#else
+    #define UPDATE_TIME localtime_r(&t, &m_BT)
+    #define OPEN_FILE   m_File = fopen(fullPath.c_str(), "w")
 #endif
 
 #define BLOGGER_TRACE_COLOR BLOGGER_WHITE
@@ -140,7 +142,7 @@ public:
         std::string fullPath;
         ConstructFullPath(fullPath);
 
-        fopen_s(&m_File, fullPath.c_str(), "w");
+        OPEN_FILE;
 
         if (m_File)
             return true;
@@ -361,6 +363,7 @@ public:
 
             m_CurrentBytes += bytes;
             fprintf(m_File, message.data());
+            fflush(m_File);
         }
     }
 
@@ -446,7 +449,7 @@ private:
     void ConstructFullPath(std::string& outPath)
     {
         outPath += m_DirectoryPath;
-        outPath += m_Name;
+        outPath += std::string(m_Name.begin() + 1, m_Name.end() - 1);
         outPath += '-';
         outPath += std::to_string(m_CurrentLogFiles);
         outPath += ".log";
@@ -460,6 +463,6 @@ private:
         std::string fullPath;
         ConstructFullPath(fullPath);
         
-        fopen_s(&m_File, fullPath.c_str(), "w");
+        OPEN_FILE;
     }
 };
