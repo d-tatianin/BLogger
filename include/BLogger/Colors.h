@@ -4,11 +4,11 @@
 
 #ifdef _WIN32
     #define BLOGGER_BLACK   0
-    #define BLOGGER_BLUE    1
-    #define BLOGGER_GREEN   2
-    #define BLOGGER_CYAN    3
-    #define BLOGGER_RED     4
-    #define BLOGGER_MAGENTA 5
+    #define BLOGGER_BLUE    9
+    #define BLOGGER_GREEN   10
+    #define BLOGGER_CYAN    11
+    #define BLOGGER_RED     12
+    #define BLOGGER_MAGENTA 13
     #define BLOGGER_YELLOW  14
     #define BLOGGER_WHITE   15
     #define BLOGGER_RESET   99
