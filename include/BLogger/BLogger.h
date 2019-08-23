@@ -41,7 +41,7 @@ namespace level {
         CRIT
     };
 
-    constexpr const char* LevelToString(level_enum lvl)
+    inline const char* LevelToString(level_enum lvl)
     {
         switch (lvl)
         {
