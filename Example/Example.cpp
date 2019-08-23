@@ -1,4 +1,4 @@
-#include "BLogger.h"
+#include <BLogger/BLogger.h>
 
 int main()
 {
@@ -29,10 +29,6 @@ int main()
     // Change the name of the logger
     logger.SetName("NewFancyName");
 
-    // Set logging filter to 'Warning'
-    // The logger will ignore all messages below 'Warning' log level
-    logger.SetFilter(level::WARN);
-
     // Log a message with log level 'Trace'
     logger.Trace("Trace message");
     logger.Trace("Trace with args %d", 25);
@@ -44,6 +40,10 @@ int main()
     // Log a message with log level 'Information'
     logger.Info("Info message");
     logger.Info("Info with args %d", 25);
+
+    // Set logging filter to 'Warning'
+    // The logger will ignore all messages below 'Warning' log level
+    logger.SetFilter(level::WARN);
 
     // Log a message with log level 'Warning'
     logger.Warning("Warning message");
@@ -65,5 +65,6 @@ int main()
     // Disable logging to stdout(console)
     logger.DisableConsoleLogger();
 
+    std::cin.get();
     return 0;
 }
