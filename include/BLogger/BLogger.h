@@ -254,7 +254,7 @@ public:
             size_t bytes;
             ss.seekg(0, std::ios::beg);
             ss.seekg(0, std::ios::end);
-            bytes = ss.tellg();
+            bytes = static_cast<size_t>(ss.tellg());
 
             if (bytes > m_BytesPerFile)
                 return;
