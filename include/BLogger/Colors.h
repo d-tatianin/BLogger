@@ -32,18 +32,19 @@
     inline void set_output_color(blogger_color color)
     {
         static HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-        static CONSOLE_SCREEN_BUFFER_INFO console_defaults;
         static bool defaults_set = false;
+        static WORD default_color;
 
         if (!defaults_set)
         {
+            CONSOLE_SCREEN_BUFFER_INFO console_defaults;
             GetConsoleScreenBufferInfo(console, &console_defaults);
+            default_color = console_defaults.wAttributes;
             defaults_set = true;
         }
 
         if (color == BLOGGER_RESET)
-            SetConsoleTextAttribute(console, console_defaults.wAttributes);
+            SetConsoleTextAttribute(console, default_color);
         else
             SetConsoleTextAttribute(console, color);
     }
