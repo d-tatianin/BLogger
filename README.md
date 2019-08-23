@@ -1,6 +1,6 @@
 # BLogger | [![Build status](https://ci.appveyor.com/api/projects/status/nbwtd4mu4cjmnjcm?svg=true)](https://ci.appveyor.com/project/8infy/blogger) | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/19f939802f724ad4a53854068325f0a3)](https://www.codacy.com/app/8infy/BLogger?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=8infy/BLogger&amp;utm_campaign=Badge_Grade) |
 
-An easy to use logger which supports console & file logging, log rotation and more!
+An easy to use modern C++ cross-platform logger which supports colored output console, file logging, log rotation & more!
 
 ## Using the logger
 ### - Create an instance of BLogger by calling one of the constructors 
@@ -24,7 +24,7 @@ Currently supported colors:
 -   `BLOGGER_WHITE`
 -   `BLOGGER_RESET` -> used to reset the sink to its default color.  
 
-Current stdout color is set with `set_output_color(blogger_color color)` defined inside the Colors.h (included in BLogger.h), it's automatically managed by BLogger, however, feel free to use it for your own purposes.  
+Current stdout color is set with `set_output_color(blogger_color color)` defined inside Colors.h (included in BLogger.h), it's automatically managed by BLogger, however, feel free to use it for your own purposes.  
 If you want the console logger messages to be colored, call `EnableColoredOutput()`.  
 Similarly, if you wish to deactivate colored output, use `DisableColoredOutput()`.  
 That's it for console logger!
