@@ -3,7 +3,7 @@
 int main()
 {
     // Create a logger with name "MyLogger" and a logging filter "Trace"
-    BLogger logger("MyLogger", level::TRACE);
+    BLogger logger("MyLogger", level::trace);
 
     // Enable logging to stdout(console)
     logger.EnableConsoleLogger();
@@ -43,15 +43,15 @@ int main()
 
     // Set logging filter to 'Warning'
     // The logger will ignore all messages below 'Warning' log level
-    logger.SetFilter(level::WARN);
+    logger.SetFilter(level::warn);
 
     // Log a message with log level 'Warning'
     logger.Warning("Warning message");
     logger.Warning("Warning with args %d", 25);
 
-    // Log a message with log level 'Critical'
-    logger.Critical("Critical message");
-    logger.Critical("Critical with args %d", 25);
+    // Log a message with log level 'Error'
+    logger.Error("Error message");
+    logger.Error("Error with args %d", 25);
 
     // Temporarily disable the file logger
     // Can be reactvated any time with 'EnableFileLogger()'

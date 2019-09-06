@@ -26,7 +26,7 @@
 #define BLOGGER_DEBUG_COLOR BLOGGER_GREEN
 #define BLOGGER_INFO_COLOR  BLOGGER_BLUE
 #define BLOGGER_WARN_COLOR  BLOGGER_YELLOW
-#define BLOGGER_CRIT_COLOR  BLOGGER_RED
+#define BLOGGER_ERROR_COLOR BLOGGER_RED
 
 #define MAX_MESSAGE_SIZE 128
 
@@ -34,23 +34,23 @@ namespace level {
 
     enum level_enum : int
     {
-        TRACE = 0,
-        DEBUG, 
-        INFO, 
-        WARN, 
-        CRIT
+        trace = 0,
+        debug, 
+        info, 
+        warn, 
+        error
     };
 
-    inline const char* LevelToString(level_enum lvl)
+    constexpr const char* LevelToString(level_enum lvl)
     {
         switch (lvl)
         {
-        case level::TRACE: return "[TRACE]";
-        case level::DEBUG: return "[DEBUG]";
-        case level::INFO:  return "[INFO]";
-        case level::WARN:  return "[WARNING]";
-        case level::CRIT:  return "[CRITICAL]";
-        default:           return nullptr;
+        case level::trace:  return "[TRACE]";
+        case level::debug:  return "[DEBUG]";
+        case level::info:   return "[INFO]";
+        case level::warn:   return "[WARNING]";
+        case level::error:  return "[ERROR]";
+        default:            return nullptr;
         }
     }
 }
@@ -74,8 +74,8 @@ private:
     size_t            m_CurrentLogFiles;
 public:
     BLogger() 
-        : m_Name("[Unnamed]"), 
-        m_Filter(level::TRACE), 
+        : m_Name("[Unnamed]"),
+        m_Filter(level::trace),
         m_AppendTimestamp(false),
         m_LogToConsole(false),
         m_LogToFile(false),
@@ -84,13 +84,15 @@ public:
         m_BytesPerFile(0),
         m_CurrentBytes(0),
         m_MaxLogFiles(0),
-        m_CurrentLogFiles(0)
+        m_CurrentLogFiles(0),
+        m_RotateLogs(false),
+        m_BT()
     {
     }
 
     BLogger(const std::string& name) 
         : m_Name("["),
-        m_Filter(level::TRACE),
+        m_Filter(level::trace),
         m_AppendTimestamp(false),
         m_LogToConsole(false),
         m_LogToFile(false),
@@ -99,7 +101,9 @@ public:
         m_BytesPerFile(0),
         m_CurrentBytes(0),
         m_MaxLogFiles(0),
-        m_CurrentLogFiles(0)
+        m_CurrentLogFiles(0),
+        m_RotateLogs(false),
+        m_BT()
     {
         m_Name += name;
         m_Name += "]";
@@ -116,7 +120,9 @@ public:
         m_BytesPerFile(0),
         m_CurrentBytes(0),
         m_MaxLogFiles(0),
-        m_CurrentLogFiles(0)
+        m_CurrentLogFiles(0),
+        m_RotateLogs(false),
+        m_BT()
     {
         m_Name += name;
         m_Name += "]";
@@ -147,7 +153,7 @@ public:
         if (m_File)
             return true;
 
-        Critical("Could not initialize the file logger! Make sure the path is valid.");
+        Error("Could not initialize the file logger! Make sure the path is valid.");
         return false;
     }
 
@@ -155,7 +161,7 @@ public:
     {
         if (!m_File)
         {
-            Critical("Could not enable the file logger. Did you call InitFileLogger?");
+            Error("Could not enable the file logger. Did you call InitFileLogger?");
             return false;
         }
 
@@ -235,11 +241,11 @@ public:
             {
                 switch (lvl)
                 {
-                case level::TRACE: set_output_color(BLOGGER_TRACE_COLOR); break;
-                case level::DEBUG: set_output_color(BLOGGER_DEBUG_COLOR); break;
-                case level::INFO:  set_output_color(BLOGGER_INFO_COLOR);  break;
-                case level::WARN:  set_output_color(BLOGGER_WARN_COLOR);  break;
-                case level::CRIT:  set_output_color(BLOGGER_CRIT_COLOR);  break;
+                case level::trace: set_output_color(BLOGGER_TRACE_COLOR); break;
+                case level::debug: set_output_color(BLOGGER_DEBUG_COLOR); break;
+                case level::info:  set_output_color(BLOGGER_INFO_COLOR);  break;
+                case level::warn:  set_output_color(BLOGGER_WARN_COLOR);  break;
+                case level::error: set_output_color(BLOGGER_ERROR_COLOR); break;
                 }
             }
 
@@ -319,18 +325,18 @@ public:
             {
                 switch (lvl)
                 {
-                case level::TRACE: set_output_color(BLOGGER_TRACE_COLOR); break;
-                case level::DEBUG: set_output_color(BLOGGER_DEBUG_COLOR); break;
-                case level::INFO:  set_output_color(BLOGGER_INFO_COLOR);  break;
-                case level::WARN:  set_output_color(BLOGGER_WARN_COLOR);  break;
-                case level::CRIT:  set_output_color(BLOGGER_CRIT_COLOR);  break;
+                case level::trace: set_output_color(BLOGGER_TRACE_COLOR); break;
+                case level::debug: set_output_color(BLOGGER_DEBUG_COLOR); break;
+                case level::info:  set_output_color(BLOGGER_INFO_COLOR);  break;
+                case level::warn:  set_output_color(BLOGGER_WARN_COLOR);  break;
+                case level::error: set_output_color(BLOGGER_ERROR_COLOR); break;
                 }
             }
 
             std::cout << message.data();
 
             if (m_ColoredOutput)
-            set_output_color(BLOGGER_RESET);
+                set_output_color(BLOGGER_RESET);
         }
 
         if (m_LogToFile)
@@ -363,68 +369,67 @@ public:
 
             m_CurrentBytes += bytes;
             fprintf(m_File, message.data());
-            fflush(m_File);
         }
     }
 
     template <typename T>
     void Trace(const T& message)
     {
-        Log(level::TRACE, message);
+        Log(level::trace, message);
     }
 
     template <typename T>
     void Debug(const T& message)
     {
-        Log(level::DEBUG, message);
+        Log(level::debug, message);
     }
 
     template <typename T>
     void Info(const T& message)
     {
-        Log(level::INFO, message);
+        Log(level::info, message);
     }
 
     template <typename T>
     void Warning(const T& message)
     {
-        Log(level::WARN, message);
+        Log(level::warn, message);
     }
 
     template <typename T>
-    void Critical(const T& message)
+    void Error(const T& message)
     {
-        Log(level::CRIT, message);
+        Log(level::error, message);
     }
 
     template<typename T, typename... Args>
     void Trace(const T& formattedMsg, const Args &... args)
     {
-        Log(level::TRACE, formattedMsg, args...);
+        Log(level::trace, formattedMsg, args...);
     }
 
     template<typename T, typename... Args>
     void Debug(const T& formattedMsg, const Args &... args)
     {
-        Log(level::DEBUG, formattedMsg, args...);
+        Log(level::debug, formattedMsg, args...);
     }
 
     template<typename T, typename... Args>
     void Info(const T& formattedMsg, const Args &... args)
     {
-        Log(level::INFO, formattedMsg, args...);
+        Log(level::info, formattedMsg, args...);
     }
 
     template<typename T, typename... Args>
     void Warning(const T& formattedMsg, const Args &... args)
     {
-        Log(level::WARN, formattedMsg, args...);
+        Log(level::warn, formattedMsg, args...);
     }
 
     template<typename T, typename... Args>
-    void Critical(const T& formattedMsg, const Args &... args)
+    void Error(const T& formattedMsg, const Args &... args)
     {
-        Log(level::CRIT, formattedMsg, args...);
+        Log(level::error, formattedMsg, args...);
     }
 
     void SetFilter(level::level_enum lvl)
