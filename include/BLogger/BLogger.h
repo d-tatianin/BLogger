@@ -41,7 +41,7 @@ namespace level {
         error
     };
 
-    constexpr const char* LevelToString(level_enum lvl)
+    inline const char* LevelToString(level_enum lvl)
     {
         switch (lvl)
         {
