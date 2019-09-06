@@ -4,8 +4,8 @@ An easy to use modern C++ cross-platform logger which supports colored output co
 
 ## Using the logger
 ### - Create an instance of BLogger by calling one of the constructors 
--   `BLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `TRACE`.
--   `BLogger(const std::string& name)` -> Sets the logger name to `name` and the logging filter to `TRACE`.
+-   `BLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
+-   `BLogger(const std::string& name)` -> Sets the logger name to `name` and the logging filter to `trace`.
 -   `BLogger(const std::string& name, level lvl)` -> Sets the logger name to `name` and the logging filter to `lvl`.
 ---
 ### - Setting up the console logger
@@ -57,11 +57,11 @@ Please note: file logger does not flush after every log message due to performan
 -   `Log(level lvl, const T& message)` -> Logs the message with the given level.  
 -   `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the message with the given level. Expects a `printf`-style formatted string as well as any arguments to go with it. Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::stringstream`.  
 ### - The following redundant member functions are also available with the same overloads as `Log()`, however, don't require a level argument
--   `Trace(...)` -> Logs the given message with logging level `TRACE`.
--   `Debug(...)`-> Logs the given message with logging level `DEBUG`.
--   `Info(...)` -> Logs the given message with logging level `INFO`.
--   `Warning(...)` -> Logs the given message with logging level `WARN`.
--   `Critical(...)` -> Logs the given message with logging level `CRIT`.
+-   `Trace(...)` -> Logs the given message with logging level `trace`.
+-   `Debug(...)`-> Logs the given message with logging level `debug`.
+-   `Info(...)` -> Logs the given message with logging level `info`.
+-   `Warning(...)` -> Logs the given message with logging level `warn`.
+-   `Error(...)` -> Logs the given message with logging level `error`.
 ---
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
@@ -70,8 +70,8 @@ Please note: file logger does not flush after every log message due to performan
 -   `DisableTimestamps()` -> Disables timestamps before the messages.
 ---
 ### There is a total of 5 available logging levels that reside inside the unscoped level_enum inside the level namespace
--   `TRACE`
--   `DEBUG`
--   `INFO`
--   `WARN`
--   `CRIT`
+-   `trace`
+-   `debug`
+-   `info`
+-   `warn`
+-   `error`
