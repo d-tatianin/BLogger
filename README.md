@@ -5,8 +5,8 @@ An easy to use modern C++ cross-platform logger which supports colored output co
 ## Using the logger
 ### - Create an instance of BLogger by calling one of the constructors 
 -   `BLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
--   `BLogger(const std::string& name)` -> Sets the logger name to `name` and the logging filter to `trace`.
--   `BLogger(const std::string& name, level lvl)` -> Sets the logger name to `name` and the logging filter to `lvl`.
+-   `BLogger(const std::string& tag)` -> Sets the logger name to `name` and the logging filter to `trace`.
+-   `BLogger(const std::string& tag, level lvl)` -> Sets the logger name to `name` and the logging filter to `lvl`.
 ---
 ### - Setting up the console logger
 By default, the console logger is disabled.  
@@ -15,14 +15,16 @@ Activate & decativate with `EnableConsoleLogger()` & `DisableConsoleLogger` resp
 Console logger can print its messages with a specific color for each logging level, which can be set in BLogger.h.
 Currently supported colors:
 -   `BLOGGER_BLACK`
+-   `BLOGGER_RED`
+-   `BLOGGER_ORANGE`
 -   `BLOGGER_BLUE`
 -   `BLOGGER_GREEN`
 -   `BLOGGER_CYAN`
--   `BLOGGER_RED`
 -   `BLOGGER_MAGENTA`
 -   `BLOGGER_YELLOW`
 -   `BLOGGER_WHITE`
--   `BLOGGER_RESET` -> used to reset the sink to its default color.  
+-   `BLOGGER_RESET` -> used to reset the sink to its default color.
+-   `BLOGGER_DEFAULT` -> same as `BLOGGER_RESET`.
 
 Current stdout color is set with `set_output_color(blogger_color color)` defined inside Colors.h (included in BLogger.h), it's automatically managed by BLogger, however, feel free to use it for your own purposes.  
 If you want the console logger messages to be colored, call `EnableColoredOutput()`.  
@@ -35,7 +37,7 @@ In order to activate file logger you have to first initialize it.
 In order to initialize the file logger call:  
 `InitFileLogger(const char* directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs = true)`  
 1.  A valid directory path where you want the logs to be store, e.g `"C:\mylogs"`.  
-2.  Byte limit per logging file.  
+2.  Byte limit per logging file. You can also use `BLOGGER_INFINITE` for unlimited size.
 3.  Maximum number of logging files, so your total byte limit is `bytesPerFile` * `maxLogFiles`.  
 4.  An optional parameter, if it's set to `true` once the logger reaches the `maxLogFiles` limit it will go back to the first log file and overwrite it with new logs.  
 
@@ -65,9 +67,12 @@ Please note: file logger does not flush after every log message due to performan
 ---
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
--   `SetName(const std::string& name)` -> Sets the logger name to the name specified.
--   `EnableTimestamps()` -> Enables timestamps before the messages.
--   `DisableTimestamps()` -> Disables timestamps before the messages.
+-   `SetTag(const std::string& tag)` -> Sets the logger name to the name specified.
+-   `EnableTimestamps()` -> Enables timestamps before the message.
+-   `DisableTimestamps()` -> Disables timestamps before the message.
+-   `EnableTag()` -> Enables tags before the message. On by default.
+-   `DisableTag()` -> Disables tags before the message.
+-   `Flush()` -> Flushes the logger.
 ---
 ### There is a total of 5 available logging levels that reside inside the unscoped level_enum inside the level namespace
 -   `trace`
