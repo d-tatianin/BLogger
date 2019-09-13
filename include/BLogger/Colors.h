@@ -16,14 +16,14 @@
     #define BLOGGER_DEFAULT BLOGGER_RESET
 #else
     #define BLOGGER_BLACK   "\033[0;30m"
-    #define BLOGGER_RED     "\033[0;31m"
+    #define BLOGGER_RED     "\033[1;31m"
     #define BLOGGER_ORANGE  "\033[0;33m"
-    #define BLOGGER_BLUE    "\033[0;34m"
-    #define BLOGGER_GREEN   "\033[0;32m"
-    #define BLOGGER_CYAN    "\033[0;36m"
-    #define BLOGGER_MAGENTA "\033[0;35m"
+    #define BLOGGER_BLUE    "\033[1;34m"
+    #define BLOGGER_GREEN   "\033[1;32m"
+    #define BLOGGER_CYAN    "\033[1;36m"
+    #define BLOGGER_MAGENTA "\033[1;35m"
     #define BLOGGER_YELLOW  "\033[1;33m"
-    #define BLOGGER_WHITE   "\033[0;37m"
+    #define BLOGGER_WHITE   "\033[1;37m"
     #define BLOGGER_RESET   "\033[0m"
     #define BLOGGER_DEFAULT BLOGGER_RESET
 #endif
