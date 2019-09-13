@@ -15,11 +15,11 @@
 #include "Colors.h"
 
 #ifdef _WIN32
-    #define UPDATE_TIME localtime_s(&m_BT, &t)
-    #define OPEN_FILE   fopen_s(&m_File, fullPath.c_str(), "w")
+    #define UPDATE_TIME(to, from) localtime_s(&to, &from)
+    #define OPEN_FILE(file, path) fopen_s(&file, path.c_str(), "w")
 #else
-    #define UPDATE_TIME localtime_r(&t, &m_BT)
-    #define OPEN_FILE   m_File = fopen(fullPath.c_str(), "w")
+    #define UPDATE_TIME(to, from) localtime_r(&from, &to)
+    #define OPEN_FILE(file, path) file = fopen(path.c_str(), "w")
 #endif
 
 #define BLOGGER_TRACE_COLOR BLOGGER_WHITE
@@ -29,6 +29,7 @@
 #define BLOGGER_ERROR_COLOR BLOGGER_RED
 
 #define MAX_MESSAGE_SIZE 128
+#define BLOGGER_INFINITE 0u
 
 namespace level {
 
@@ -41,7 +42,7 @@ namespace level {
         error
     };
 
-    inline const char* LevelToString(level_enum lvl)
+    constexpr const char* LevelToString(level_enum lvl)
     {
         switch (lvl)
         {
@@ -59,13 +60,14 @@ class BLogger
 {
 private:
     std::tm           m_BT;
-    std::string       m_Name;
+    std::string       m_Tag;
     level::level_enum m_Filter;
     bool              m_AppendTimestamp;
     bool              m_LogToConsole;
     bool              m_LogToFile;
     bool              m_RotateLogs;
     bool              m_ColoredOutput;
+    bool              m_ShowTag;
     FILE*             m_File;
     std::string       m_DirectoryPath;
     size_t            m_BytesPerFile;
@@ -74,7 +76,7 @@ private:
     size_t            m_CurrentLogFiles;
 public:
     BLogger() 
-        : m_Name("[Unnamed]"),
+        : m_Tag("[Unnamed]"),
         m_Filter(level::trace),
         m_AppendTimestamp(false),
         m_LogToConsole(false),
@@ -86,12 +88,13 @@ public:
         m_MaxLogFiles(0),
         m_CurrentLogFiles(0),
         m_RotateLogs(false),
+        m_ShowTag(true),
         m_BT()
     {
     }
 
-    BLogger(const std::string& name) 
-        : m_Name("["),
+    BLogger(const std::string& tag) 
+        : m_Tag("["),
         m_Filter(level::trace),
         m_AppendTimestamp(false),
         m_LogToConsole(false),
@@ -103,14 +106,15 @@ public:
         m_MaxLogFiles(0),
         m_CurrentLogFiles(0),
         m_RotateLogs(false),
+        m_ShowTag(true),
         m_BT()
     {
-        m_Name += name;
-        m_Name += "]";
+        m_Tag += tag;
+        m_Tag += "]";
     }
 
-    BLogger(const std::string& name, level::level_enum lvl)
-        : m_Name("["),
+    BLogger(const std::string& tag, level::level_enum lvl)
+        : m_Tag("["),
         m_Filter(lvl),
         m_AppendTimestamp(false),
         m_LogToConsole(false),
@@ -122,10 +126,11 @@ public:
         m_MaxLogFiles(0),
         m_CurrentLogFiles(0),
         m_RotateLogs(false),
+        m_ShowTag(true),
         m_BT()
     {
-        m_Name += name;
-        m_Name += "]";
+        m_Tag += tag;
+        m_Tag += "]";
     }
 
     BLogger(const BLogger& other)            = delete;
@@ -148,7 +153,7 @@ public:
         std::string fullPath;
         ConstructFullPath(fullPath);
 
-        OPEN_FILE;
+        OPEN_FILE(m_File, fullPath);
 
         if (m_File)
             return true;
@@ -215,6 +220,24 @@ public:
         m_AppendTimestamp = false;
     }
 
+    void EnableTag()
+    {
+        m_ShowTag = true;
+    }
+
+    void DisableTag()
+    {
+        m_ShowTag = false;
+    }
+
+    void Flush()
+    {
+        std::cout.flush();
+
+        if (m_File)
+            fflush(m_File);
+    }
+
     template <typename T>
     void Log(level::level_enum lvl, const T& message)
     {
@@ -225,15 +248,21 @@ public:
         if (!m_LogToConsole && !m_LogToFile)
             return;
 
-        auto t = std::time(nullptr);
-        UPDATE_TIME;
         std::stringstream ss;
 
         if (m_AppendTimestamp)
+        {
+            auto t = std::time(nullptr);
+            UPDATE_TIME(m_BT, t);
             ss << std::put_time(&m_BT, "[%OH:%OM:%OS]");
+        }
 
         ss << LevelToString(lvl);
-        ss << m_Name << " " << message << "\n";
+
+        if(m_ShowTag)
+            ss << m_Tag;
+
+        ss << " " << message << "\n";
 
         if (m_LogToConsole)
         {
@@ -262,10 +291,10 @@ public:
             ss.seekg(0, std::ios::end);
             bytes = static_cast<size_t>(ss.tellg());
 
-            if (bytes > m_BytesPerFile)
+            if (m_BytesPerFile && bytes > m_BytesPerFile)
                 return;
 
-            if ((m_CurrentBytes + bytes) > m_BytesPerFile)
+            if (m_BytesPerFile && (m_CurrentBytes + bytes) > m_BytesPerFile)
             {
                 if (m_CurrentLogFiles == m_MaxLogFiles)
                 {
@@ -301,23 +330,24 @@ public:
         if (!m_LogToConsole && !m_LogToFile)
             return;
 
-        auto t = std::time(nullptr);
-        UPDATE_TIME;
         std::stringstream ss;
 
         if (m_AppendTimestamp)
+        {
+            auto t = std::time(nullptr);
+            UPDATE_TIME(m_BT, t);
             ss << std::put_time(&m_BT, "[%OH:%OM:%OS]");
+        }
 
         ss << LevelToString(lvl);
-        ss << m_Name << " " << formattedMsg << "\n";
+        ss << m_Tag << " " << formattedMsg << "\n";
 
         std::vector<char> message;
         message.resize(MAX_MESSAGE_SIZE);
-        snprintf(message.data(), message.size(), ss.str().c_str(), args...);
-
-        auto itr = std::remove_if(message.begin(), message.end(), [](char c) { return c == '\0'; });
-        *itr = '\0';
-        message.erase(++itr, message.end());
+        size_t bytes = static_cast<size_t>(
+            snprintf(message.data(), message.size(), ss.str().c_str(), args...)
+        );
+        ++bytes; // take null terminator into account
 
         if (m_LogToConsole)
         {
@@ -341,12 +371,10 @@ public:
 
         if (m_LogToFile)
         {
-            size_t bytes = message.size();
-
-            if (bytes > m_BytesPerFile)
+            if (m_BytesPerFile && bytes > m_BytesPerFile)
                 return;
 
-            if ((m_CurrentBytes + bytes) > m_BytesPerFile)
+            if (m_BytesPerFile && (m_CurrentBytes + bytes) > m_BytesPerFile)
             {
                 if (m_CurrentLogFiles == m_MaxLogFiles)
                 {
@@ -368,7 +396,7 @@ public:
             }
 
             m_CurrentBytes += bytes;
-            fprintf(m_File, message.data());
+            fwrite(message.data(), 1, bytes, m_File);
         }
     }
 
@@ -437,11 +465,11 @@ public:
         m_Filter = lvl;
     }
 
-    void SetName(const std::string& name)
+    void SetTag(const std::string& tag)
     {
-        m_Name = "[";
-        m_Name += name;
-        m_Name += "]";
+        m_Tag = "[";
+        m_Tag += tag;
+        m_Tag += "]";
     }
 
     ~BLogger()
@@ -454,7 +482,7 @@ private:
     void ConstructFullPath(std::string& outPath)
     {
         outPath += m_DirectoryPath;
-        outPath += std::string(m_Name.begin() + 1, m_Name.end() - 1);
+        outPath += std::string(m_Tag.begin() + 1, m_Tag.end() - 1);
         outPath += '-';
         outPath += std::to_string(m_CurrentLogFiles);
         outPath += ".log";
@@ -468,6 +496,15 @@ private:
         std::string fullPath;
         ConstructFullPath(fullPath);
         
-        OPEN_FILE;
+        OPEN_FILE(m_File, fullPath);
     }
 };
+
+#undef UPDATE_TIME
+#undef OPEN_FILE
+#undef BLOGGER_TRACE_COLOR
+#undef BLOGGER_DEBUG_COLOR
+#undef BLOGGER_INFO_COLOR
+#undef BLOGGER_WARN_COLOR
+#undef BLOGGER_ERROR_COLOR
+#undef MAX_MESSAGE_SIZE
