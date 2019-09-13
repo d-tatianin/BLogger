@@ -10,7 +10,7 @@ An easy to use modern C++ cross-platform logger which supports colored output co
 ---
 ### - Setting up the console logger
 By default, the console logger is disabled.  
-Activate & decativate with `EnableConsoleLogger()` & `DisableConsoleLogger` respectively.
+Activate & decativate with `EnableConsoleLogger()` & `DisableConsoleLogger()` respectively.
 ### - Printing with color
 Console logger can print its messages with a specific color for each logging level, which can be set in BLogger.h.
 Currently supported colors:
