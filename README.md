@@ -64,6 +64,7 @@ Please note: file logger does not flush after every log message due to performan
 -   `Info(...)` -> Logs the given message with logging level `info`.
 -   `Warning(...)` -> Logs the given message with logging level `warn`.
 -   `Error(...)` -> Logs the given message with logging level `error`.
+-   `Critical(...)` -> Logs the given message with logging level `crit`.
 ---
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
@@ -74,9 +75,10 @@ Please note: file logger does not flush after every log message due to performan
 -   `DisableTag()` -> Disables tags before the message.
 -   `Flush()` -> Flushes the logger.
 ---
-### There is a total of 5 available logging levels that reside inside the unscoped level_enum inside the level namespace
+### There is a total of 6 available logging levels that reside inside the unscoped level_enum inside the level namespace
 -   `trace`
 -   `debug`
 -   `info`
 -   `warn`
 -   `error`
+-   `crit`
