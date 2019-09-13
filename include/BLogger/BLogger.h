@@ -27,6 +27,7 @@
 #define BLOGGER_INFO_COLOR  BLOGGER_BLUE
 #define BLOGGER_WARN_COLOR  BLOGGER_YELLOW
 #define BLOGGER_ERROR_COLOR BLOGGER_RED
+#define BLOGGER_CRIT_COLOR  BLOGGER_MAGENTA
 
 #define MAX_MESSAGE_SIZE 128
 #define BLOGGER_INFINITE 0u
@@ -39,7 +40,8 @@ namespace level {
         debug, 
         info, 
         warn, 
-        error
+        error,
+        crit
     };
 
     inline const char* LevelToString(level_enum lvl)
@@ -51,6 +53,7 @@ namespace level {
         case level::info:   return "[INFO]";
         case level::warn:   return "[WARNING]";
         case level::error:  return "[ERROR]";
+        case level::crit:   return "[CRITICAL]";
         default:            return nullptr;
         }
     }
@@ -275,6 +278,7 @@ public:
                 case level::info:  set_output_color(BLOGGER_INFO_COLOR);  break;
                 case level::warn:  set_output_color(BLOGGER_WARN_COLOR);  break;
                 case level::error: set_output_color(BLOGGER_ERROR_COLOR); break;
+                case level::crit:  set_output_color(BLOGGER_CRIT_COLOR);  break;
                 }
             }
 
@@ -364,6 +368,7 @@ public:
                 case level::info:  set_output_color(BLOGGER_INFO_COLOR);  break;
                 case level::warn:  set_output_color(BLOGGER_WARN_COLOR);  break;
                 case level::error: set_output_color(BLOGGER_ERROR_COLOR); break;
+                case level::crit:  set_output_color(BLOGGER_CRIT_COLOR);  break;
                 }
             }
 
@@ -434,6 +439,12 @@ public:
         Log(level::error, message);
     }
 
+    template <typename T>
+    void Critical(const T& message)
+    {
+        Log(level::crit, message);
+    }
+
     template<typename T, typename... Args>
     void Trace(const T& formattedMsg, const Args &... args)
     {
@@ -462,6 +473,12 @@ public:
     void Error(const T& formattedMsg, const Args &... args)
     {
         Log(level::error, formattedMsg, args...);
+    }
+
+    template<typename T, typename... Args>
+    void Critical(const T& formattedMsg, const Args &... args)
+    {
+        Log(level::crit, formattedMsg, args...);
     }
 
     void SetFilter(level::level_enum lvl)

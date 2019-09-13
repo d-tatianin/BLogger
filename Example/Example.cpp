@@ -60,6 +60,10 @@ int main()
     logger.Error("Error message");
     logger.Error("Error with args %d", 25);
 
+    // Log a message with log level 'Critical'
+    logger.Critical("Critical message");
+    logger.Critical("Critical with args %d", 25);
+
     // Temporarily disable the file logger
     // Can be reactvated any time with 'EnableFileLogger()'
     logger.DisableFileLogger();
