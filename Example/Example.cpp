@@ -19,15 +19,15 @@ int main()
 
     // We have to initialize the file logger before enabling it
     // 1st parameter -> The directory where you want you logging files to be stored
-    // 2nd parameter -> Bytes per file limit
+    // 2nd parameter -> Bytes per file limit (infinite in our case)
     // 3rd parameter -> Maximum number of files
     // 4th parameter (default is true) -> Enable log rotation
     // Log rotation means the oldest file gets overwritten once the file limit is hit
-    logger.InitFileLogger("dev/mylogs", 1000, 2, true);
+    logger.InitFileLogger("dev/mylogs", BLOGGER_INFINITE, 2, true);
     logger.EnableFileLogger();
 
     // Change the name of the logger
-    logger.SetName("NewFancyName");
+    logger.SetTag("NewFancyName");
 
     // Log a message with log level 'Trace'
     logger.Trace("Trace message");
@@ -37,6 +37,10 @@ int main()
     logger.Debug("Debug message");
     logger.Debug("Debug with args %d", 25);
 
+    // Flush the logger 
+    // (primarily used to immediately dump all written data to file)
+    logger.Flush();
+
     // Log a message with log level 'Information'
     logger.Info("Info message");
     logger.Info("Info with args %d", 25);
@@ -44,6 +48,9 @@ int main()
     // Set logging filter to 'Warning'
     // The logger will ignore all messages below 'Warning' log level
     logger.SetFilter(level::warn);
+
+    // Don't append the name of the logger
+    logger.DisableTag();
 
     // Log a message with log level 'Warning'
     logger.Warning("Warning message");

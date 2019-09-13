@@ -42,7 +42,7 @@ namespace level {
         error
     };
 
-    constexpr const char* LevelToString(level_enum lvl)
+    inline const char* LevelToString(level_enum lvl)
     {
         switch (lvl)
         {
@@ -259,7 +259,7 @@ public:
 
         ss << LevelToString(lvl);
 
-        if(m_ShowTag)
+        if (m_ShowTag)
             ss << m_Tag;
 
         ss << " " << message << "\n";
@@ -340,7 +340,11 @@ public:
         }
 
         ss << LevelToString(lvl);
-        ss << m_Tag << " " << formattedMsg << "\n";
+
+        if (m_ShowTag)
+            ss << m_Tag;
+
+        ss << " " << formattedMsg << "\n";
 
         std::vector<char> message;
         message.resize(MAX_MESSAGE_SIZE);
