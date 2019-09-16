@@ -21,3 +21,10 @@
    NOTE: not yet available.
 */
 #include "Loggers/BLoggerAsync.h"
+
+/* The default BLogger.
+   Will probably be
+   switched to BLoggerAsync
+   as soon as it is done.
+*/
+typedef BLoggerBlock BLogger;
