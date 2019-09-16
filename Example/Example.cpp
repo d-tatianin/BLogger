@@ -3,7 +3,7 @@
 int main()
 {
     // Create a logger with name "MyLogger" and a logging filter "Trace"
-    BLogger logger("MyLogger", level::trace);
+    BLoggerBlock logger("MyLogger", level::trace);
 
     // Enable logging to stdout(console)
     logger.EnableConsoleLogger();
