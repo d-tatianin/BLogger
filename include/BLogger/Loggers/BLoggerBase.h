@@ -83,7 +83,7 @@ protected:
         {
             if ((m_Buffer.size() - m_Occupied) >= size)
             {
-                memcpy_s(m_Cursor, remaining(), data, size);
+                MEMORY_COPY(m_Cursor, remaining(), data, size);
                 m_Cursor += size;
                 m_Occupied += size;
             }
@@ -94,7 +94,7 @@ protected:
             if ((m_Buffer.size() - m_Occupied) >= size + 2)
             {
                 *(m_Cursor++) = opening;
-                memcpy_s(m_Cursor, remaining(), data, size);
+                MEMORY_COPY(m_Cursor, remaining(), data, size);
                 m_Cursor += size;
                 *(m_Cursor++) = closing;
                 m_Occupied += size + 2;
