@@ -3,7 +3,7 @@
 An easy to use modern C++14/17 cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
 ## WIP notice
-Please note that the logger is currently under active development and is missing some features.
+Please note that the logger is currently under active development and is missing some features.  
 Some of the features to be released soon:
 -   An asynchronous version of BLogger.
 -   Setting a pattern like `{ts}{lvl}{tag}{msg}` instead of enabling/disabling parts of the hardcoded pattern manually.
@@ -17,7 +17,7 @@ Some of the features to be released soon:
 By default, the console logger is disabled.  
 Activate & decativate with `EnableConsoleLogger()` & `DisableConsoleLogger()` respectively.
 ### - Printing with color
-Console logger can print its messages with a specific color for each logging level, which can be set in BLogger.h.
+Console logger can print its messages with a specific color for each logging level, which can be set in LogLevels.h.
 Currently supported colors:
 -   `BLOGGER_BLACK`
 -   `BLOGGER_RED`
