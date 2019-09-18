@@ -7,6 +7,7 @@ Please note that the logger is currently under active development and is missing
 Some of the features to be released soon:
 -   An asynchronous version of BLogger.
 -   Setting a pattern like `{ts}{lvl}{tag}{msg}` instead of enabling/disabling parts of the hardcoded pattern manually.  
+
 Theres is a also a bug, which occurs if you try to print a message with arguments with timestamps disabled. This is a known issue and will be resolved very soon.
 ## Using the logger
 ### - Create an instance of BLogger by calling one of the constructors 
