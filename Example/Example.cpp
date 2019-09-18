@@ -44,11 +44,15 @@ int main()
 
     // Log a message with log level 'Trace'
     logger.Trace("Trace message");
-    logger.Trace("Trace with args {}", 25);
+
+    // Use a positional argument
+    logger.Trace("Trace with args {0}", 25);
 
     // Log a message with log level 'Debug'
     logger.Debug("Debug message");
-    logger.Debug("Debug with args {}", "hello");
+
+    // Mix positional / none positional arguments
+    logger.Debug("{1} with args {}", "hello", "Debug");
 
     // Flush the logger 
     // (primarily used to immediately dump all written data to file)
@@ -75,7 +79,7 @@ int main()
     // passing an object of our class
     // which has an overload for ostream operator '<<'
     MySerializableClass mc;
-    logger.Error("Error with user defined args {}", mc);
+    logger.Error("Error with user defined args ({})", mc);
 
     // Log a message with log level 'Critical'
     logger.Critical("Critical message");
