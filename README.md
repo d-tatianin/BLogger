@@ -1,12 +1,17 @@
 # BLogger | [![Build status](https://ci.appveyor.com/api/projects/status/nbwtd4mu4cjmnjcm?svg=true)](https://ci.appveyor.com/project/8infy/blogger) | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/19f939802f724ad4a53854068325f0a3)](https://www.codacy.com/app/8infy/BLogger?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=8infy/BLogger&amp;utm_campaign=Badge_Grade) |
 
-An easy to use modern C++ cross-platform logger which supports colored output console, file logging, log rotation & more!
+An easy to use modern C++14/17 cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
+## WIP notice
+Please note that the logger is currently under active development and is missing some features.
+Some of the features to be released soon:
+-   An asynchronous version of BLogger.
+-   Setting a pattern like `{ts}{lvl}{tag}{msg}` instead of enabling/disabling parts of the hardcoded pattern manually.
 ## Using the logger
 ### - Create an instance of BLogger by calling one of the constructors 
--   `BLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
--   `BLogger(const std::string& tag)` -> Sets the logger name to `name` and the logging filter to `trace`.
--   `BLogger(const std::string& tag, level lvl)` -> Sets the logger name to `name` and the logging filter to `lvl`.
+-   `BlockingLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
+-   `BlockingLogger(const std::string& tag)` -> Sets the logger name to `name` and the logging filter to `trace`.
+-   `BlockingLogger(const std::string& tag, level lvl)` -> Sets the logger name to `name` and the logging filter to `lvl`.
 ---
 ### - Setting up the console logger
 By default, the console logger is disabled.  
@@ -57,7 +62,16 @@ Please note: file logger does not flush after every log message due to performan
 ---
 ### - Logging your messages
 -   `Log(level lvl, const T& message)` -> Logs the message with the given level.  
--   `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the message with the given level. Expects a `printf`-style formatted string as well as any arguments to go with it. Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::stringstream`.  
+-   `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the formatted message with the given level.
+
+### - BLogger log message formatting
+BLogger accepts the following formats:
+-   `{}` a normal argument. Usage example: `logger.Critical("Something went wrong {}", error.message());`.
+-   `{n}` a positional argument. Usage example: `logger.Info("{1} / {0} = 2", 4, 8)` -> prints `8 / 4 = 2`.
+-   You can also mix the two types like so `logger.Info("{2} / {1} = {0}", 2, 4, 8)` -> prints `8 / 4 = 2`.  
+
+Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::ostream`.
+
 ### - The following redundant member functions are also available with the same overloads as `Log()`, however, don't require a level argument
 -   `Trace(...)` -> Logs the given message with logging level `trace`.
 -   `Debug(...)`-> Logs the given message with logging level `debug`.
