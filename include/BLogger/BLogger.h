@@ -27,4 +27,4 @@
    switched to BLoggerAsync
    as soon as it is done.
 */
-typedef BLogger::BLoggerBlock blocking_logger;
+typedef BLogger::BLoggerBlock BlockingLogger;

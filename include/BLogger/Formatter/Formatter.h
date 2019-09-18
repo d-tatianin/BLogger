@@ -46,27 +46,7 @@ namespace BLogger
         {
             std::stringstream ss;
 
-            *this << *dynamic_cast<std::stringstream*>(&(ss << std::forward<T&&>(arg)));
-        }
-        
-        template<typename... Args>
-        void finalize_pack(Args&& ... args)
-        {
-            charT format[BLOGGER_BUFFER_SIZE];
-            MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
-
-            size_t ts_offset = std::strlen(BLOGGER_TS_PATTERN) + 2;
-
-            auto written = ts_offset +  
-                snprintf(
-                    (m_Buffer.data() + ts_offset),
-                    (m_Buffer.size() - ts_offset),
-                    (format + ts_offset),
-                    args...
-                );
-
-            m_Occupied = ts_offset + written;
-            m_Cursor = m_Buffer.data() + m_Occupied;
+            *this << *static_cast<std::stringstream*>(&(ss << std::forward<T&&>(arg)));
         }
 
         void add_space()
@@ -162,11 +142,11 @@ namespace BLogger
             }
         }
     private:
-        blogger_basic_formatter<bufferT>& operator<<(std::stringstream& ss)
+        void operator<<(std::stringstream& ss)
         {
             charT* cursor = get_next_arg();
 
-            if (!cursor) return *this;
+            if (!cursor) return;
 
             *cursor = '%';
             *(cursor + 1) = 's';
@@ -186,8 +166,6 @@ namespace BLogger
 
             m_Occupied = written;
             m_Cursor = m_Buffer.data() + m_Occupied;
-
-            return *this;
         }
 
         void write_to_enclosed(const charT* data, size_t size, charT opening = '[', charT closing = ']')

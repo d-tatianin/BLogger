@@ -275,7 +275,7 @@ namespace BLogger {
                 formattedMsg.size()
             );
 
-            BLOGGER_PACK_BEGIN(formatter, args);
+            BLOGGER_PROCESS_PACK(formatter, args);
 
             formatter.newline();
 
@@ -330,39 +330,39 @@ namespace BLogger {
         }
 
         template<typename T, typename... Args>
-        void Trace(const T& formattedMsg, const Args& ... args)
+        void Trace(const T& formattedMsg, Args&& ... args)
         {
-            Log(level::trace, formattedMsg, args...);
+            Log(level::trace, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename T, typename... Args>
-        void Debug(const T& formattedMsg, const Args& ... args)
+        void Debug(const T& formattedMsg, Args&& ... args)
         {
-            Log(level::debug, formattedMsg, args...);
+            Log(level::debug, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename T, typename... Args>
-        void Info(const T& formattedMsg, const Args& ... args)
+        void Info(const T& formattedMsg, Args&& ... args)
         {
-            Log(level::info, formattedMsg, args...);
+            Log(level::info, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename T, typename... Args>
-        void Warning(const T& formattedMsg, const Args& ... args)
+        void Warning(const T& formattedMsg, Args&& ... args)
         {
-            Log(level::warn, formattedMsg, args...);
+            Log(level::warn, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename T, typename... Args>
-        void Error(const T& formattedMsg, const Args& ... args)
+        void Error(const T& formattedMsg, Args&& ... args)
         {
-            Log(level::error, formattedMsg, args...);
+            Log(level::error, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename T, typename... Args>
-        void Critical(const T& formattedMsg, const Args& ... args)
+        void Critical(const T& formattedMsg, Args&& ... args)
         {
-            Log(level::crit, formattedMsg, args...);
+            Log(level::crit, formattedMsg, std::forward<Args>(args)...);
         }
 
         void SetFilter(level lvl)
