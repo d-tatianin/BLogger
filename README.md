@@ -68,7 +68,7 @@ Please note: file logger does not flush after every log message due to performan
 BLogger accepts the following formats:
 -   `{}` a normal argument. Usage example: `logger.Critical("Something went wrong {}", error.message());`.
 -   `{n}` a positional argument. Usage example: `logger.Info("{1} / {0} = 2", 4, 8)` -> prints `8 / 4 = 2`.
--   You can also mix the two types like so `logger.Info("{2} / {1} = {0}", 2, 4, 8)` -> prints `8 / 4 = 2`.  
+-   You can also mix the two types like so `logger.Info("{1} / {0} = {}", 4, 8, 2)` -> prints `8 / 4 = 2`.  
 
 Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::ostream`.
 
