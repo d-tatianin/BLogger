@@ -158,14 +158,10 @@ namespace BLogger
                 cursor[1] = 's';
 
                 size_t offset = cursor - m_Buffer.data() + 2;
+                charT* begin = m_Buffer.data() + offset + pattern.size() - 2;
+                size_t end = m_Buffer.size() - offset + pattern.size() - 2;
 
-                for (size_t i = 2; i < pattern.size(); i++)
-                {
-                    for (size_t off = offset; off < m_Buffer.size() - 1; off++)
-                    {
-                        m_Buffer[off] = m_Buffer[off + 1];
-                    }
-                }
+                MEMORY_MOVE(m_Buffer.data() + offset, m_Buffer.size(), begin, end);
             }
             else
             {
@@ -180,13 +176,11 @@ namespace BLogger
             charT format[BLOGGER_BUFFER_SIZE];
             MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
-            size_t ts_offset = std::strlen(BLOGGER_TS_PATTERN) + 2;
-
-            auto intended_size = ts_offset +
+            auto intended_size =
                 snprintf(
-                (m_Buffer.data() + ts_offset),
-                    (m_Buffer.size() - ts_offset),
-                    (format + ts_offset),
+                    m_Buffer.data(),
+                    m_Buffer.size(),
+                    format,
                     ss.str().c_str()
                 );
 
