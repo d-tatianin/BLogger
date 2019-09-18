@@ -176,11 +176,13 @@ namespace BLogger
             charT format[BLOGGER_BUFFER_SIZE];
             MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
-            auto intended_size =
+            size_t ts_offset = std::strlen(BLOGGER_TS_PATTERN) + 2;
+
+            auto intended_size = ts_offset +
                 snprintf(
-                    m_Buffer.data(),
-                    m_Buffer.size(),
-                    format,
+                (m_Buffer.data() + ts_offset),
+                    (m_Buffer.size() - ts_offset),
+                    (format + ts_offset),
                     ss.str().c_str()
                 );
 
