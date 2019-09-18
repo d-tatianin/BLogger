@@ -25,11 +25,13 @@ namespace BLogger
         bufferT    m_Buffer;
         charT*     m_Cursor;
         size_t     m_Occupied;
+        size_t     m_ArgCount;
     public:
         blogger_basic_formatter()
             : m_Buffer(),
             m_Cursor(m_Buffer.data()),
-            m_Occupied(0)
+            m_Occupied(0),
+            m_ArgCount(0)
         {
         }
 
@@ -128,6 +130,7 @@ namespace BLogger
         void reset_buffer()
         {
             m_Occupied = 0;
+            m_ArgCount = 0;
             m_Cursor = m_Buffer.data();
             memset(m_Buffer.data(), 0, m_Buffer.size());
         }
@@ -144,12 +147,35 @@ namespace BLogger
     private:
         void operator<<(std::stringstream& ss)
         {
-            charT* cursor = get_next_arg();
+            std::string pattern = "{";
+            pattern += std::to_string(m_ArgCount++);
+            pattern += "}";
+            charT* cursor = get_pos_arg(pattern);
 
-            if (!cursor) return;
+            if (cursor)
+            {
+                cursor[0] = '%';
+                cursor[1] = 's';
 
-            *cursor = '%';
-            *(cursor + 1) = 's';
+                size_t offset = cursor - m_Buffer.data() + 2;
+
+                for (size_t i = 2; i < pattern.size(); i++)
+                {
+                    for (size_t off = offset; off < m_Buffer.size() - 1; off++)
+                    {
+                        m_Buffer[off] = m_Buffer[off + 1];
+                    }
+                }
+            }
+            else
+            {
+                cursor = get_next_arg();
+
+                if (!cursor) return;
+
+                *cursor = '%';
+                *(cursor + 1) = 's';
+            }
 
             charT format[BLOGGER_BUFFER_SIZE];
             MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
@@ -198,6 +224,19 @@ namespace BLogger
             );
 
             return (index != m_Buffer.end() ? &(*index) : nullptr);
+        }
+
+        charT* get_pos_arg(const std::string& pos)
+        {
+            auto cursor = std::search(
+                m_Buffer.begin(),
+                m_Buffer.end(),
+                pos.c_str(),
+                pos.c_str() +
+                pos.size()
+            );
+
+            return (cursor != m_Buffer.end() ? &(*cursor) : nullptr);
         }
     };
 
