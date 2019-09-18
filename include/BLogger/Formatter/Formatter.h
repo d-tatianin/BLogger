@@ -156,7 +156,7 @@ namespace BLogger
 
             size_t ts_offset = std::strlen(BLOGGER_TS_PATTERN) + 2;
 
-            auto written = ts_offset +
+            auto intended_size = ts_offset +
                 snprintf(
                 (m_Buffer.data() + ts_offset),
                     (m_Buffer.size() - ts_offset),
@@ -164,7 +164,12 @@ namespace BLogger
                     ss.str().c_str()
                 );
 
-            m_Occupied = written;
+            // if snprintf returned more bytes than we have
+            // that means that our buffer is full
+            // so we just set the capacity to zero
+            intended_size > m_Buffer.size() ?
+                m_Occupied = m_Buffer.size() :
+                m_Occupied = intended_size;
             m_Cursor = m_Buffer.data() + m_Occupied;
         }
 
