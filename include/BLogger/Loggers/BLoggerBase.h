@@ -20,23 +20,23 @@ namespace BLogger {
     struct LogMsg
     {
     private:
-        BLoggerBuffer buf;
-        size_t buf_elements;
+        BLoggerFormatter fmt;
+        BLoggerPattern ptrn;
         std::tm time_point;
         level lvl;
         bool log_to_stdout;
         bool log_to_file;
     public:
         LogMsg(
-            BLoggerBuffer&& tBuf,
-            size_t size,
+            BLoggerFormatter&& fmt,
+            BLoggerPattern ptrn,
             std::tm tp,
             level lvl,
             bool log_stdout,
             bool log_file
         )
-            : buf(std::move(tBuf)),
-            buf_elements(size),
+            : fmt(std::move(fmt)),
+            ptrn(ptrn),
             time_point(tp),
             lvl(lvl),
             log_to_stdout(log_stdout),
@@ -44,9 +44,14 @@ namespace BLogger {
         {
         }
 
+        void finalize_format()
+        {
+            fmt.merge_pattern(ptrn, time_point_ptr(), lvl);
+        }
+
         charT* data()
         {
-            return buf.data();
+            return fmt.data();
         }
 
         std::tm* time_point_ptr()
@@ -56,7 +61,7 @@ namespace BLogger {
 
         size_t size()
         {
-            return buf_elements;
+            return fmt.size();
         }
 
         level log_level()
@@ -69,15 +74,14 @@ namespace BLogger {
     {
     protected:
         std::string       m_Tag;
+        std::string       m_DirectoryPath;
+        BLoggerPattern    m_Pattern;
         level             m_Filter;
-        bool              m_AppendTimestamp;
         bool              m_LogToConsole;
         bool              m_LogToFile;
         bool              m_RotateLogs;
         bool              m_ColoredOutput;
-        bool              m_ShowTag;
         FILE*             m_File;
-        std::string       m_DirectoryPath;
         size_t            m_BytesPerFile;
         size_t            m_CurrentBytes;
         size_t            m_MaxLogFiles;
@@ -86,7 +90,6 @@ namespace BLogger {
         BLoggerBase()
             : m_Tag("Unnamed"),
             m_Filter(level::trace),
-            m_AppendTimestamp(false),
             m_LogToConsole(false),
             m_LogToFile(false),
             m_ColoredOutput(false),
@@ -95,15 +98,13 @@ namespace BLogger {
             m_CurrentBytes(0),
             m_MaxLogFiles(0),
             m_CurrentLogFiles(0),
-            m_RotateLogs(false),
-            m_ShowTag(true)
+            m_RotateLogs(false)
         {
         }
 
         BLoggerBase(const std::string& tag)
             : m_Tag(tag),
             m_Filter(level::trace),
-            m_AppendTimestamp(false),
             m_LogToConsole(false),
             m_LogToFile(false),
             m_ColoredOutput(false),
@@ -112,15 +113,13 @@ namespace BLogger {
             m_CurrentBytes(0),
             m_MaxLogFiles(0),
             m_CurrentLogFiles(0),
-            m_RotateLogs(false),
-            m_ShowTag(true)
+            m_RotateLogs(false)
         {
         }
 
         BLoggerBase(const std::string& tag, level lvl)
             : m_Tag(tag),
             m_Filter(lvl),
-            m_AppendTimestamp(false),
             m_LogToConsole(false),
             m_LogToFile(false),
             m_ColoredOutput(false),
@@ -129,8 +128,7 @@ namespace BLogger {
             m_CurrentBytes(0),
             m_MaxLogFiles(0),
             m_CurrentLogFiles(0),
-            m_RotateLogs(false),
-            m_ShowTag(true)
+            m_RotateLogs(false)
         {
         }
 
@@ -139,6 +137,12 @@ namespace BLogger {
 
         BLoggerBase(BLoggerBase&& other) = default;
         BLoggerBase& operator=(BLoggerBase&& other) = default;
+
+        void SetPattern(const std::string& pattern)
+        {
+            m_Pattern.init();
+            m_Pattern.set_pattern(pattern, m_Tag);
+        }
 
         bool InitFileLogger(const char* directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs = true)
         {
@@ -211,26 +215,6 @@ namespace BLogger {
             m_ColoredOutput = false;
         }
 
-        void EnableTimestamps()
-        {
-            m_AppendTimestamp = true;
-        }
-
-        void DisableTimestamps()
-        {
-            m_AppendTimestamp = false;
-        }
-
-        void EnableTag()
-        {
-            m_ShowTag = true;
-        }
-
-        void DisableTag()
-        {
-            m_ShowTag = false;
-        }
-
         virtual void Flush() = 0;
 
         template <typename T = std::string>
@@ -238,28 +222,26 @@ namespace BLogger {
         {
             BLoggerFormatter formatter;
 
-            if (!InitMessage(lvl, formatter))
+            if (!ShouldLog(lvl))
                 return;
 
-            formatter.write_to(
+            formatter.process_message(
                 message, 
                 std::strlen(message)
             );
-
-            formatter.newline();
 
             std::tm time_point;
             auto time_now = std::time(nullptr);
             UPDATE_TIME(time_point, time_now);
 
-            post({
-                formatter.release_buffer(),
-                formatter.size(),
+            Post({
+                std::move(formatter),
+                m_Pattern,
                 time_point,
                 lvl,
                 m_LogToConsole,
-                m_LogToFile }
-            );
+                m_LogToFile 
+            });
         }
 
         template<typename... Args>
@@ -267,30 +249,28 @@ namespace BLogger {
         {
             BLoggerFormatter formatter;
 
-            if (!InitMessage(lvl, formatter))
+            if (!ShouldLog(lvl))
                 return;
 
-            formatter.write_to(
+            formatter.process_message(
                 formattedMsg.c_str(), 
                 formattedMsg.size()
             );
 
             BLOGGER_PROCESS_PACK(formatter, args);
 
-            formatter.newline();
-
             std::tm time_point;
             auto time_now = std::time(nullptr);
             UPDATE_TIME(time_point, time_now);
 
-            post({
-                formatter.release_buffer(),
-                formatter.size(),
+            Post({
+                std::move(formatter),
+                m_Pattern,
                 time_point,
                 lvl,
                 m_LogToConsole,
-                m_LogToFile }
-            );
+                m_LogToFile
+            });
         }
 
         template <typename T>
@@ -402,7 +382,7 @@ namespace BLogger {
             OPEN_FILE(m_File, fullPath);
         }
 
-        bool InitMessage(level lvl, BLoggerFormatter& out_format)
+        bool ShouldLog(level lvl)
         {
             if (m_Filter > lvl)
                 return false;
@@ -410,19 +390,9 @@ namespace BLogger {
             if (!m_LogToConsole && !m_LogToFile)
                 return false;
 
-            if (m_AppendTimestamp)
-                out_format.init_timestamp();
-
-            out_format.append_level(lvl);
-
-            if (m_ShowTag)
-                  out_format.append_tag(m_Tag);
-
-            out_format.add_space();
-
             return true;
         }
 
-        virtual void post(LogMsg&& msg) = 0;
+        virtual void Post(LogMsg&& msg) = 0;
     };
 }

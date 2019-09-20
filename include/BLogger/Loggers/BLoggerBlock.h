@@ -36,12 +36,9 @@ namespace BLogger {
         }
 
     private:
-        void post(LogMsg&& msg) override
+        void Post(LogMsg&& msg) override
         {
-            if (m_AppendTimestamp)
-            {
-                BLOGGER_FORMAT_TIMESTAMP(msg, BLOGGER_TS_PATTERN);
-            }
+            msg.finalize_format();
 
             if (m_LogToConsole)
             {

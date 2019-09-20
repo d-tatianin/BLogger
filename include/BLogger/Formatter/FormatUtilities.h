@@ -13,5 +13,3 @@
 #else
     #error "BLogger requires at least /std:c++14"
 #endif
-
-#define BLOGGER_FORMAT_TIMESTAMP(message, pattern) (message.data() [strftime(message.data() + 1,  message.size() - 1, pattern, message.time_point_ptr()) + 1] = ']')
