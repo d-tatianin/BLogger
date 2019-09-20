@@ -401,6 +401,11 @@ namespace BLogger
 
                 MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), copy, m_Occupied);
             }
+
+            if (m_Occupied < m_Buffer.size())
+                m_Buffer[m_Occupied++] = '\n';
+            else
+                m_Buffer[m_Occupied - 1] = '\n';
         }
     private:
         void operator<<(std::stringstream& ss)

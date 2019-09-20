@@ -18,11 +18,15 @@ int main()
     // and a logging filter "Trace"
     BlockingLogger logger("MyLogger", level::trace);
 
+    // Set the pattern of the logger
+    // {ts}  -> timestamp
+    // {lvl} -> log level of the message
+    // {tag} -> current logger tag(name)
+    // {msg} -> the message itself
+    logger.SetPattern("[{ts}][{lvl}][{tag}] {msg}");
+
     // Enable logging to stdout(console)
     logger.EnableConsoleLogger();
-
-    // Enable timestamps before the message
-    logger.EnableTimestamps();
 
     // Enable colored messages for stdout
     // The default colors for each level are defined in BLogger.h
@@ -65,9 +69,6 @@ int main()
     // Set logging filter to 'Warning'
     // The logger will ignore all messages below 'Warning' log level
     logger.SetFilter(level::warn);
-
-    // Don't append the name of the logger
-    logger.DisableTag();
 
     // Log a message with log level 'Warning'
     logger.Warning("Warning message");
