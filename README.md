@@ -6,7 +6,6 @@ An easy to use modern C++14/17 cross-platform logger which supports custom forma
 Please note that the logger is currently under active development and is missing some features.  
 Some of the features to be released soon:
 -   An asynchronous version of BLogger.
--   Setting a pattern like `{ts}{lvl}{tag}{msg}` instead of enabling/disabling parts of the hardcoded pattern manually.  
 
 Theres is a also a bug, which occurs if you try to print a message with arguments with timestamps disabled. This is a known issue and will be resolved very soon.
 ## Using the logger
