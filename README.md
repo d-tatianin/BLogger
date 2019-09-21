@@ -2,18 +2,25 @@
 
 An easy to use modern C++14/17 cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
-## WIP notice
-Please note that the logger is currently under active development and is missing some features.  
-Some of the features to be released soon:
--   An asynchronous version of BLogger.
-
-Theres is a also a bug, which occurs if you try to print a message with arguments with timestamps disabled. This is a known issue and will be resolved very soon.
 ## Using the logger
 ### - Create an instance of BLogger by calling one of the constructors 
 -   `BlockingLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
 -   `BlockingLogger(const std::string& tag)` -> Sets the logger name to `name` and the logging filter to `trace`.
--   `BlockingLogger(const std::string& tag, level lvl)` -> Sets the logger name to `name` and the logging filter to `lvl`.
+-   `BlockingLogger(const std::string& tag, level lvl, bool default_pattern)` -> Sets the logger name to `name` and the logging filter to `lvl`. If `default_pattern` is set to false, BLogger does not create a default pattern.
 ---
+### - Setting the pattern
+NOTE: If you want to use a custom pattern, it is recommended to use the third constructor with the third parameter set to false, as creating a pattern is an expensive operation and you don't want to call it twice for no good reason.  
+
+Arguments you can use for creating a custom pattern:
+- `{ts}` -> timestamp.
+- `{lvl}` -> logging level of the current message.
+- `{tag}` -> logger tag(name).
+- `{msg}` -> the message itself.  
+
+After you've decided on your pattern you can set it by calling `SetPattern(const std::string& pattern)`.
+
+Here's an example of an interesting pattern `"[{ts}][{tag}]\n[{lvl}] -> {msg}\n"`, which looks like this:
+![alt-text](https://i.ibb.co/w0yfBcL/BLogger.png)
 ### - Setting up the console logger
 By default, the console logger is disabled.  
 Activate & decativate with `EnableConsoleLogger()` & `DisableConsoleLogger()` respectively.
