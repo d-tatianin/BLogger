@@ -204,7 +204,7 @@ namespace BLogger
                 return (p - m_Buffer.data());
             }
 
-            size_t new_offset(charT* arg)
+            size_t new_offset(const charT* arg)
             {
                 auto index = std::search(
                     m_Buffer.begin(),
@@ -222,7 +222,7 @@ namespace BLogger
                 m_Buffer[offset] = '%';
                 m_Buffer[offset + 1] = 's';
 
-                int32_t extra_size = std::strlen(arg) - 2;
+                int32_t extra_size = static_cast<int32_t>(std::strlen(arg) - 2);
 
                 charT* arg_end = (&m_Buffer[offset]) + 2;
 
