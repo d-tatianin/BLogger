@@ -416,6 +416,11 @@ namespace BLogger
 
                 MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
             }
+            else if (!ptrn.lvl() && !ptrn.msg() && !ptrn.timestamp())
+            {
+                m_Occupied = ptrn.zero_term();
+                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+            }
 
             if (m_Occupied < m_Buffer.size())
                 m_Buffer[m_Occupied++] = '\n';
