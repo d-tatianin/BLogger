@@ -34,12 +34,12 @@ namespace BLogger
     public:
         void init()
         {
-            m_HasTimestamp      = false;
-            bool m_HasMsg       = false;
-            bool m_MsgFirst     = false;
-            bool m_HasLvl       = false;
-            size_t m_TimeOffset = 0;
-            size_t m_TimeSize   = 0;
+            m_HasTimestamp = false;
+            m_HasMsg       = false;
+            m_MsgFirst     = false;
+            m_HasLvl       = false;
+            m_TimeOffset   = 0;
+            m_TimeSize     = 0;
 
             memset(m_Buffer.data(), 0, m_Buffer.size());
         }
@@ -116,6 +116,11 @@ namespace BLogger
             if (msg_offset != std::string::npos && lvl_offset != std::string::npos)
             {
                 m_MsgFirst = msg_offset < lvl_offset;
+                m_HasMsg = true;
+            }
+            else if (msg_offset != std::string::npos)
+            {
+                m_MsgFirst = true;
                 m_HasMsg = true;
             }
 
@@ -381,7 +386,7 @@ namespace BLogger
                     m_Occupied = m_Buffer.size() :
                     m_Occupied = intended_size;
 
-                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), copy, m_Occupied);
+                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
             }
             else if (ptrn.msg())
             {
@@ -399,7 +404,7 @@ namespace BLogger
                     m_Occupied = m_Buffer.size() :
                     m_Occupied = intended_size;
 
-                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), copy, m_Occupied);
+                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
             }
 
             if (m_Occupied < m_Buffer.size())
