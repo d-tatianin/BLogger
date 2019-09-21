@@ -94,6 +94,13 @@ namespace BLogger
             return m_MsgFirst;
         }
 
+        size_t zero_term()
+        {
+            auto loc = std::find(m_Buffer.begin(), m_Buffer.end(), '\0');
+
+            return loc != m_Buffer.end() ? ptr_to_index(&*loc) : m_Buffer.size();
+        }
+
         bool set_pattern(
             const std::string& pattern,
             const std::string& tag
@@ -340,11 +347,14 @@ namespace BLogger
             if (ptrn.timestamp())
             {
                 charT memorized = ptrn.last_ts_char();
-                auto writtern = strftime(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
+                auto intended_size = strftime(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
                 ptrn.set_memorized(memorized);
 
-                if(!ptrn.lvl() && !ptrn.msg())
+                if (!ptrn.lvl() && !ptrn.msg())
+                {
+                    m_Occupied = ptrn.zero_term();
                     MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+                }
             }
 
             if (ptrn.lvl() && ptrn.msg())
