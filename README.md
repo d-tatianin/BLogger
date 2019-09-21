@@ -12,10 +12,10 @@ An easy to use modern C++14/17 cross-platform logger which supports custom forma
 NOTE: If you want to use a custom pattern, it is recommended to use the third constructor with the third parameter set to false, as creating a pattern is an expensive operation and you don't want to call it twice for no good reason.  
 
 Arguments you can use for creating a custom pattern:
-- `{ts}` -> timestamp.
-- `{lvl}` -> logging level of the current message.
-- `{tag}` -> logger tag(name).
-- `{msg}` -> the message itself.  
+-   `{ts}` -> timestamp.
+-   `{lvl}` -> logging level of the current message.
+-   `{tag}` -> logger tag(name).
+-   `{msg}` -> the message itself.  
 
 After you've decided on your pattern you can set it by calling `SetPattern(const std::string& pattern)`.
 
