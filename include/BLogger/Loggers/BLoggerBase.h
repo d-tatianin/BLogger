@@ -75,6 +75,7 @@ namespace BLogger {
     protected:
         std::string       m_Tag;
         std::string       m_DirectoryPath;
+        std::string       m_CachedPattern;
         BLoggerPattern    m_Pattern;
         level             m_Filter;
         bool              m_LogToConsole;
@@ -89,6 +90,9 @@ namespace BLogger {
     public:
         BLoggerBase()
             : m_Tag("Unnamed"),
+            m_DirectoryPath("none"),
+            m_CachedPattern("[{ts}][{lvl}][{tag}] {msg}"),
+            m_Pattern(),
             m_Filter(level::trace),
             m_LogToConsole(false),
             m_LogToFile(false),
@@ -100,10 +104,14 @@ namespace BLogger {
             m_CurrentLogFiles(0),
             m_RotateLogs(false)
         {
+            SetPattern(m_CachedPattern);
         }
 
         BLoggerBase(const std::string& tag)
             : m_Tag(tag),
+            m_DirectoryPath("none"),
+            m_CachedPattern("[{ts}][{lvl}][{tag}] {msg}"),
+            m_Pattern(),
             m_Filter(level::trace),
             m_LogToConsole(false),
             m_LogToFile(false),
@@ -115,10 +123,18 @@ namespace BLogger {
             m_CurrentLogFiles(0),
             m_RotateLogs(false)
         {
+            SetPattern(m_CachedPattern);
         }
 
-        BLoggerBase(const std::string& tag, level lvl)
+        BLoggerBase(
+            const std::string& tag, 
+            level lvl,
+            bool default_pattern
+        )
             : m_Tag(tag),
+            m_DirectoryPath("none"),
+            m_CachedPattern("[{ts}][{lvl}][{tag}] {msg}"),
+            m_Pattern(),
             m_Filter(lvl),
             m_LogToConsole(false),
             m_LogToFile(false),
@@ -130,6 +146,10 @@ namespace BLogger {
             m_CurrentLogFiles(0),
             m_RotateLogs(false)
         {
+            if (default_pattern)
+            {
+                SetPattern(m_CachedPattern);
+            }
         }
 
         BLoggerBase(const BLoggerBase& other) = delete;
@@ -140,6 +160,7 @@ namespace BLogger {
 
         void SetPattern(const std::string& pattern)
         {
+            m_CachedPattern = pattern;
             m_Pattern.init();
             m_Pattern.set_pattern(pattern, m_Tag);
         }
@@ -353,6 +374,7 @@ namespace BLogger {
         void SetTag(const std::string& tag)
         {
             m_Tag = tag;
+            SetPattern(m_CachedPattern);
         }
 
         virtual ~BLoggerBase()

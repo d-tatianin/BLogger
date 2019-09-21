@@ -16,14 +16,15 @@ int main()
 {
     // Create a blocking logger with name "MyLogger" 
     // and a logging filter "Trace"
-    BlockingLogger logger("MyLogger", level::trace);
+    // Here the pattern is not set implicitly
+    BlockingLogger logger("MyLogger", level::trace, false);
 
     // Set the pattern of the logger
     // {ts}  -> timestamp
     // {lvl} -> log level of the message
     // {tag} -> current logger tag(name)
     // {msg} -> the message itself
-    logger.SetPattern("[{ts}][{lvl}][{tag}] {msg}");
+    logger.SetPattern("[{ts}][{tag}]\n[{lvl}] -> {msg}\n");
 
     // Enable logging to stdout(console)
     logger.EnableConsoleLogger();
@@ -40,8 +41,8 @@ int main()
     // 3rd parameter -> Maximum number of files
     // 4th parameter (default is true) -> Enable log rotation
     // Log rotation means the oldest file gets overwritten once the file limit is hit
-    logger.InitFileLogger("dev/mylogs", BLOGGER_INFINITE, 2, true);
-    logger.EnableFileLogger();
+    //logger.InitFileLogger("dev/mylogs", BLOGGER_INFINITE, 2, true);
+    //logger.EnableFileLogger();
 
     // Change the name of the logger
     logger.SetTag("NewFancyName");

@@ -17,8 +17,12 @@ namespace BLogger {
         {
         }
 
-        BLoggerBlock(const std::string& tag, level lvl)
-            : BLoggerBase(tag, lvl)
+        BLoggerBlock(
+            const std::string& tag, 
+            level lvl, 
+            bool default_pattern = false
+        )
+            : BLoggerBase(tag, lvl, default_pattern)
         {
         }
 
