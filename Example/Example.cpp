@@ -30,7 +30,7 @@ int main()
     logger.EnableConsoleLogger();
 
     // Enable colored messages for stdout
-    // The default colors for each level are defined in BLogger.h
+    // The default colors for each level are defined in LogLevels.h
     // Feel free to change the default colors however you want
     // You can find all availble colors in Colors.h
     logger.EnableColoredOutput();
@@ -56,7 +56,7 @@ int main()
     // Log a message with log level 'Debug'
     logger.Debug("Debug message");
 
-    // Mix positional / none positional arguments
+    // Mix positional / non positional arguments
     logger.Debug("{1} with args {}", "hello", "Debug");
 
     // Flush the logger 
