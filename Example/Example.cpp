@@ -41,8 +41,8 @@ int main()
     // 3rd parameter -> Maximum number of files
     // 4th parameter (default is true) -> Enable log rotation
     // Log rotation means the oldest file gets overwritten once the file limit is hit
-    //logger.InitFileLogger("dev/mylogs", BLOGGER_INFINITE, 2, true);
-    //logger.EnableFileLogger();
+    logger.InitFileLogger("dev/mylogs", BLOGGER_INFINITE, 2, true);
+    logger.EnableFileLogger();
 
     // Change the name of the logger
     logger.SetTag("NewFancyName");
