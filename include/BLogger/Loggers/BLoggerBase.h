@@ -54,11 +54,6 @@ namespace BLogger {
             return fmt.data();
         }
 
-        std::tm* time_point_ptr()
-        {
-            return &time_point;
-        }
-
         size_t size()
         {
             return fmt.size();
@@ -67,6 +62,12 @@ namespace BLogger {
         level log_level()
         {
             return lvl;
+        }
+
+    private:
+        std::tm* time_point_ptr()
+        {
+            return &time_point;
         }
     };
 
