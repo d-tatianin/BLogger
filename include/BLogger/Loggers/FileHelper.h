@@ -128,7 +128,7 @@ namespace BLogger {
 
             m_CurrentBytes += size;
 
-            fwrite(data, 1, size, m_File);
+            fwrite(data, 1, size - 1, m_File);
         }
 
         void flush()
