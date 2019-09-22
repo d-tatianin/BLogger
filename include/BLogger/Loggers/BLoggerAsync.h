@@ -40,7 +40,7 @@ namespace BLogger {
     public:
         log_task(LogMsg&& msg)
             : task(task_type::log),
-            msg(msg)
+            msg(std::move(msg))
         {
         }
 
