@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <sstream>
 
 #include "BLogger/LogLevels.h"
 #include "FormatUtilities.h"
