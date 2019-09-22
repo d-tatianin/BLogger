@@ -18,7 +18,8 @@
    Logs the mesages using
    a dedicated threadpool
    using a message queue.
-   NOTE: not yet available.
+   NOTE: currently in alpha stage.
+   (no file logging/colored output)
 */
 #include "Loggers/BLoggerAsync.h"
 
