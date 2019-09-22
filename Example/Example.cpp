@@ -99,6 +99,16 @@ int main()
     // Disable logging to stdout(console)
     logger.DisableConsoleLogger();
 
+    // Create an async version of BLogger
+    // Uses more memory but is lightning fast
+    AsyncLogger alogger("MyAsyncLogger");
+    alogger.EnableConsoleLogger();
+    alogger.EnableColoredOutput();
+    alogger.Critical("Sent by async logger");
+
     std::cin.get();
+
+    // Will only shutdown after AsyncLogger
+    // has finished all of its tasks
     return 0;
 }

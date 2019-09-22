@@ -17,7 +17,7 @@
 /* Async version of BLogger.
    Logs the mesages using
    a dedicated threadpool
-   using a message queue.
+   and a message queue.
 */
 #include "Loggers/BLoggerAsync.h"
 
