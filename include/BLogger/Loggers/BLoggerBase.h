@@ -1,16 +1,9 @@
 #pragma once
 
-#include <stdio.h>
 #include <ctime>
-#include <iostream>
-
-#include <array>
-#include <string>
-#include <sstream>
 
 #include "BLogger/LogLevels.h"
 #include "BLogger/Formatter/Formatter.h"
-#include "BLogger/OS/Colors.h"
 #include "BLogger/OS/Functions.h"
 
 #define BLOGGER_INFINITE 0u
@@ -26,6 +19,8 @@ namespace BLogger {
         level lvl;
         bool log_to_stdout;
         bool log_to_file;
+        bool colored;
+        uint16_t sender_id;
     public:
         LogMsg(
             BLoggerFormatter&& fmt,
@@ -33,14 +28,18 @@ namespace BLogger {
             std::tm tp,
             level lvl,
             bool log_stdout,
-            bool log_file
+            bool log_file,
+            bool colored,
+            uint16_t sender_id
         )
             : fmt(std::move(fmt)),
             ptrn(ptrn),
             time_point(tp),
             lvl(lvl),
             log_to_stdout(log_stdout),
-            log_to_file(log_file)
+            log_to_file(log_file),
+            colored(colored),
+            sender_id(sender_id)
         {
         }
 
@@ -64,6 +63,25 @@ namespace BLogger {
             return lvl;
         }
 
+        bool color()
+        {
+            return colored;
+        }
+
+        bool console()
+        {
+            return log_to_stdout;
+        }
+
+        bool file()
+        {
+            return log_to_file;
+        }
+
+        uint16_t sender()
+        {
+            return sender_id;
+        }
     private:
         std::tm* time_point_ptr()
         {
@@ -73,56 +91,40 @@ namespace BLogger {
 
     class BLoggerBase
     {
+    private:
+        static uint16_t unique_id;
     protected:
+        const uint16_t    m_ID;
         std::string       m_Tag;
-        std::string       m_DirectoryPath;
         std::string       m_CachedPattern;
         BLoggerPattern    m_Pattern;
         level             m_Filter;
         bool              m_LogToConsole;
         bool              m_LogToFile;
-        bool              m_RotateLogs;
         bool              m_ColoredOutput;
-        FILE*             m_File;
-        size_t            m_BytesPerFile;
-        size_t            m_CurrentBytes;
-        size_t            m_MaxLogFiles;
-        size_t            m_CurrentLogFiles;
     public:
         BLoggerBase()
-            : m_Tag("Unnamed"),
-            m_DirectoryPath("none"),
+            : m_ID(unique_id++),
+            m_Tag("Unnamed"),
             m_CachedPattern("[{ts}][{lvl}][{tag}] {msg}"),
             m_Pattern(),
             m_Filter(level::trace),
             m_LogToConsole(false),
             m_LogToFile(false),
-            m_ColoredOutput(false),
-            m_File(nullptr),
-            m_BytesPerFile(0),
-            m_CurrentBytes(0),
-            m_MaxLogFiles(0),
-            m_CurrentLogFiles(0),
-            m_RotateLogs(false)
+            m_ColoredOutput(false)
         {
             SetPattern(m_CachedPattern);
         }
 
         BLoggerBase(const std::string& tag)
-            : m_Tag(tag),
-            m_DirectoryPath("none"),
+            : m_ID(unique_id++),
+            m_Tag(tag),
             m_CachedPattern("[{ts}][{lvl}][{tag}] {msg}"),
             m_Pattern(),
             m_Filter(level::trace),
             m_LogToConsole(false),
             m_LogToFile(false),
-            m_ColoredOutput(false),
-            m_File(nullptr),
-            m_BytesPerFile(0),
-            m_CurrentBytes(0),
-            m_MaxLogFiles(0),
-            m_CurrentLogFiles(0),
-            m_RotateLogs(false)
+            m_ColoredOutput(false)
         {
             SetPattern(m_CachedPattern);
         }
@@ -132,20 +134,14 @@ namespace BLogger {
             level lvl,
             bool default_pattern
         )
-            : m_Tag(tag),
-            m_DirectoryPath("none"),
+            : m_ID(unique_id++),
+            m_Tag(tag),
             m_CachedPattern("[{ts}][{lvl}][{tag}] {msg}"),
             m_Pattern(),
             m_Filter(lvl),
             m_LogToConsole(false),
             m_LogToFile(false),
-            m_ColoredOutput(false),
-            m_File(nullptr),
-            m_BytesPerFile(0),
-            m_CurrentBytes(0),
-            m_MaxLogFiles(0),
-            m_CurrentLogFiles(0),
-            m_RotateLogs(false)
+            m_ColoredOutput(false)
         {
             if (default_pattern)
             {
@@ -166,55 +162,18 @@ namespace BLogger {
             m_Pattern.set_pattern(pattern, m_Tag);
         }
 
-        bool InitFileLogger(const char* directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs = true)
-        {
-            m_BytesPerFile = bytesPerFile;
-            m_MaxLogFiles = maxLogFiles;
-            m_RotateLogs = rotateLogs;
-            m_CurrentBytes = 0;
-            m_CurrentLogFiles = 1;
+        virtual bool InitFileLogger(
+            const std::string& directoryPath,
+            size_t bytesPerFile,
+            size_t maxLogFiles,
+            bool rotateLogs = true) = 0;
 
-            m_DirectoryPath = directoryPath;
-            m_DirectoryPath += '/';
-
-            std::string fullPath;
-            ConstructFullPath(fullPath);
-
-            OPEN_FILE(m_File, fullPath);
-
-            if (m_File)
-                return true;
-
-            Error("Could not initialize the file logger! Make sure the path is valid.");
-            return false;
-        }
-
-        bool EnableFileLogger()
-        {
-            if (!m_File)
-            {
-                Error("Could not enable the file logger. Did you call InitFileLogger?");
-                return false;
-            }
-
-            m_LogToFile = true;
-            return true;
-        }
+        virtual bool EnableFileLogger() = 0;
+        virtual void TerminateFileLogger() = 0;
 
         void DisableFileLogger()
         {
             m_LogToFile = false;
-        }
-
-        void TerminateFileLogger()
-        {
-            m_LogToFile = false;
-
-            if (m_File)
-            {
-                fclose(m_File);
-                m_File = nullptr;
-            }
         }
 
         void EnableConsoleLogger()
@@ -262,7 +221,9 @@ namespace BLogger {
                 time_point,
                 lvl,
                 m_LogToConsole,
-                m_LogToFile 
+                m_LogToFile,
+                m_ColoredOutput,
+                m_ID
             });
         }
 
@@ -291,7 +252,9 @@ namespace BLogger {
                 time_point,
                 lvl,
                 m_LogToConsole,
-                m_LogToFile
+                m_LogToFile,
+                m_ColoredOutput,
+                m_ID
             });
         }
 
@@ -372,39 +335,10 @@ namespace BLogger {
             m_Filter = lvl;
         }
 
-        void SetTag(const std::string& tag)
-        {
-            m_Tag = tag;
-            SetPattern(m_CachedPattern);
-        }
+        virtual void SetTag(const std::string& tag) = 0;
 
-        virtual ~BLoggerBase()
-        {
-            if (m_File)
-                fclose(m_File);
-        }
-
+        virtual ~BLoggerBase() {}
     protected:
-        void ConstructFullPath(std::string& outPath)
-        {
-            outPath += m_DirectoryPath;
-            outPath += std::string(m_Tag.begin(), m_Tag.end());
-            outPath += '-';
-            outPath += std::to_string(m_CurrentLogFiles);
-            outPath += ".log";
-        }
-
-        void NewLogFile()
-        {
-            fclose(m_File);
-            m_File = nullptr;
-
-            std::string fullPath;
-            ConstructFullPath(fullPath);
-
-            OPEN_FILE(m_File, fullPath);
-        }
-
         bool ShouldLog(level lvl)
         {
             if (m_Filter > lvl)
@@ -418,4 +352,6 @@ namespace BLogger {
 
         virtual void Post(LogMsg&& msg) = 0;
     };
+
+    uint16_t BLoggerBase::unique_id = 1;
 }

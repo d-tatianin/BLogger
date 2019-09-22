@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "BLogger/LogLevels.h"
 #include "FormatUtilities.h"
 #include "BLogger/OS/Functions.h"

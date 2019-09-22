@@ -1,28 +1,35 @@
 #pragma once
 
 #include "BLogger/Loggers/BLoggerBase.h"
+#include "BLogger/LogLevels.h"
+#include "BLogger/Loggers/FileHelper.h"
 
 namespace BLogger {
 
     class BLoggerBlock : public BLoggerBase
     {
+    private:
+        FileHelper m_File;
     public:
         BLoggerBlock()
-            : BLoggerBase()
+            : BLoggerBase(),
+            m_File()
         {
         }
 
         BLoggerBlock(const std::string& tag)
-            : BLoggerBase(tag)
+            : BLoggerBase(tag),
+            m_File()
         {
         }
 
         BLoggerBlock(
-            const std::string& tag, 
-            level lvl, 
-            bool default_pattern = false
+            const std::string& tag,
+            level lvl,
+            bool default_pattern = true
         )
-            : BLoggerBase(tag, lvl, default_pattern)
+           : BLoggerBase(tag, lvl, default_pattern),
+            m_File()
         {
         }
 
@@ -31,12 +38,54 @@ namespace BLogger {
             std::cout.flush();
 
             if (m_File)
-                fflush(m_File);
+                m_File.flush();
+        }
+
+        bool InitFileLogger(
+            const std::string& directoryPath,
+            size_t bytesPerFile,
+            size_t maxLogFiles,
+            bool rotateLogs = true
+        ) override
+        {
+            m_File.init(
+                directoryPath,
+                m_Tag,
+                bytesPerFile,
+                maxLogFiles,
+                rotateLogs
+            );
+
+            return m_File.ok();
+        }
+
+        bool EnableFileLogger() override
+        {
+            if (!m_File)
+            {
+                Error("Could not enable the file logger. Did you call InitFileLogger?");
+                return false;
+            }
+
+            m_LogToFile = true;
+            return true;
+        }
+
+        void TerminateFileLogger() override
+        {
+            m_File.terminate();
+        }
+
+        void SetTag(const std::string& tag) override
+        {
+            m_Tag = tag;
+            SetPattern(m_CachedPattern);
+            m_File.setTag(tag);
         }
 
         ~BLoggerBlock()
         {
-
+            m_File.terminate();
         }
 
     private:
@@ -44,9 +93,9 @@ namespace BLogger {
         {
             msg.finalize_format();
 
-            if (m_LogToConsole)
+            if (msg.console())
             {
-                if (m_ColoredOutput)
+                if (msg.color())
                 {
                     switch (msg.log_level())
                     {
@@ -61,53 +110,15 @@ namespace BLogger {
 
                 std::cout.write(msg.data(), msg.size());
 
-                if (m_ColoredOutput)
+                if (msg.color())
                     set_output_color(BLOGGER_RESET);
             }
 
-            if (m_LogToFile)
+            if (msg.file())
             {
-                if (m_BytesPerFile && msg.size() + 1 > m_BytesPerFile)
-                    return;
-
-                if (m_BytesPerFile && (m_CurrentBytes + msg.size() + 1) > m_BytesPerFile)
-                {
-                    if (m_CurrentLogFiles == m_MaxLogFiles)
-                    {
-                        if (!m_RotateLogs)
-                            return;
-                        else
-                        {
-                            m_CurrentLogFiles = 1;
-                            m_CurrentBytes = 0;
-                            NewLogFile();
-                        }
-                    }
-                    else
-                    {
-                        m_CurrentBytes = 0;
-                        ++m_CurrentLogFiles;
-                        NewLogFile();
-                    }
-
-                }
-
-                m_CurrentBytes += msg.size() + 1;
-
-                fwrite(msg.data(), 1, msg.size(), m_File);
+                if (m_File.ready())
+                    m_File.write(msg.data(), msg.size());
             }
         }
     };
 }
-
-
-
-#undef UPDATE_TIME
-#undef OPEN_FILE
-#undef BLOGGER_TS_PATTERN
-#undef BLOGGER_TRACE_COLOR
-#undef BLOGGER_DEBUG_COLOR
-#undef BLOGGER_INFO_COLOR
-#undef BLOGGER_WARN_COLOR
-#undef BLOGGER_ERROR_COLOR
-#undef BLOGGER_CRIT_COLOR

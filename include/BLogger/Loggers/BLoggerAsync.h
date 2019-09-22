@@ -6,8 +6,11 @@
 #include <deque>
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 
-#include "BLogger/OS/Colors.h"
+#include "BLogger/Loggers/BLoggerBase.h"
+#include "BLogger/Loggers/FileHelper.h"
+#include "BLogger/LogLevels.h"
 
 namespace BLogger {
 
@@ -68,8 +71,12 @@ namespace BLogger {
             task_ptr;
         typedef std::lock_guard<std::mutex>
             locker;
+        typedef std::unordered_map<
+            uint16_t, std::shared_ptr<FileHelper>
+        > logger_to_file;
 
         static thread_pool* instance;
+        logger_to_file m_Files;
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr> m_TaskQueue;
         std::mutex m_QueueAccess;
@@ -84,6 +91,12 @@ namespace BLogger {
             for (uint16_t i = 0; i < thread_count; i++)
                 m_Pool.emplace_back(std::bind(&thread_pool::worker, this));
         }
+
+        thread_pool(const thread_pool& other) = delete;
+        thread_pool(thread_pool&& other) = delete;
+
+        thread_pool& operator=(thread_pool& other) = delete;
+        thread_pool& operator=(thread_pool&& other) = delete;
 
         void worker()
         {
@@ -121,10 +134,35 @@ namespace BLogger {
 
                 task->message().finalize_format();
 
+                if (task->message().console())
                 {
                     locker lock(m_GlobalWrite);
 
+                    if (task->message().color())
+                    {
+                        switch (task->message().log_level())
+                        {
+                        case level::trace: set_output_color(BLOGGER_TRACE_COLOR); break;
+                        case level::debug: set_output_color(BLOGGER_DEBUG_COLOR); break;
+                        case level::info:  set_output_color(BLOGGER_INFO_COLOR);  break;
+                        case level::warn:  set_output_color(BLOGGER_WARN_COLOR);  break;
+                        case level::error: set_output_color(BLOGGER_ERROR_COLOR); break;
+                        case level::crit:  set_output_color(BLOGGER_CRIT_COLOR);  break;
+                        }
+                    }
+
                     std::cout.write(task->message().data(), task->message().size());
+
+                    if (task->message().color())
+                        set_output_color(BLOGGER_RESET);
+                }
+
+                if (task->message().file())
+                {
+                    auto file = m_Files.find(task->message().sender());
+
+                    if (file != m_Files.end()) 
+                        file->second->write(task->message().data(), task->message().size());
                 }
             }
             else if (p->type() == task_type::flush)
@@ -135,10 +173,16 @@ namespace BLogger {
                     std::cout.flush();
                 }
             }
-
             return true;
         }
 
+        void shutdown()
+        {
+            m_Running = false;
+
+            for (auto& worker : m_Pool)
+                worker.join();
+        }
     public:
         static thread_pool* get()
         {
@@ -168,15 +212,22 @@ namespace BLogger {
             m_TaskQueue.emplace_back(new flush_task());
         }
 
-        void shutdown()
+        void add_helper(uint16_t id, std::shared_ptr<FileHelper>& fhptr)
         {
-           if (m_Running)
-           {
-               m_Running = false;
+            m_Files[id] = fhptr;
+        }
 
-               for (auto& worker : m_Pool)
-                   worker.join();
-           }
+        void remove_helper(uint16_t id)
+        {
+            auto itr = m_Files.find(id);
+
+            if (itr != m_Files.end())
+                m_Files.erase(id);
+        }
+
+        ~thread_pool()
+        {
+            shutdown();
         }
     };
 
@@ -184,15 +235,21 @@ namespace BLogger {
 
     class BLoggerAsync : public BLoggerBase
     {
+    private:
+        std::shared_ptr<FileHelper> m_File;
     public:
         BLoggerAsync()
-            : BLoggerBase()
+            : BLoggerBase(),
+            m_File(new FileHelper)
         {
+            thread_pool::get()->add_helper(m_ID, m_File);
         }
 
         BLoggerAsync(const std::string& tag)
-            : BLoggerBase(tag)
+            : BLoggerBase(tag),
+            m_File(new FileHelper)
         {
+            thread_pool::get()->add_helper(m_ID, m_File);
         }
 
         BLoggerAsync(
@@ -200,24 +257,67 @@ namespace BLogger {
             level lvl,
             bool default_pattern = false
         )
-            : BLoggerBase(tag, lvl, default_pattern)
+            : BLoggerBase(tag, lvl, default_pattern),
+            m_File(new FileHelper)
         {
-        }
-
-        ~BLoggerAsync()
-        {
-            thread_pool::get()->shutdown();
-        }
-
-    private:
-        void Post(LogMsg&& msg) override
-        {
-            thread_pool::get()->post(std::move(msg));
+            thread_pool::get()->add_helper(m_ID, m_File);
         }
 
         void Flush() override
         {
             thread_pool::get()->flush();
+        }
+
+        ~BLoggerAsync()
+        {
+            thread_pool::get()->remove_helper(m_ID);
+        }
+
+        bool InitFileLogger(
+            const std::string& directoryPath,
+            size_t bytesPerFile,
+            size_t maxLogFiles,
+            bool rotateLogs = true
+        ) override
+        {
+            m_File->init(
+                directoryPath,
+                m_Tag,
+                bytesPerFile,
+                maxLogFiles,
+                rotateLogs
+            );
+
+            return m_File->ok();
+        }
+
+        bool EnableFileLogger() override
+        {
+            if (!(*m_File))
+            {
+                Error("Could not enable the file logger. Did you call InitFileLogger?");
+                return false;
+            }
+
+            m_LogToFile = true;
+            return true;
+        }
+
+        void TerminateFileLogger() override
+        {
+            m_File->terminate();
+        }
+
+        void SetTag(const std::string& tag) override
+        {
+            m_Tag = tag;
+            SetPattern(m_CachedPattern);
+            m_File->setTag(tag);
+        }
+    private:
+        void Post(LogMsg&& msg) override
+        {
+            thread_pool::get()->post(std::move(msg));
         }
     };
 }
