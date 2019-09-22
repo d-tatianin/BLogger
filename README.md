@@ -1,12 +1,15 @@
 # BLogger | [![Build status](https://ci.appveyor.com/api/projects/status/nbwtd4mu4cjmnjcm?svg=true)](https://ci.appveyor.com/project/8infy/blogger) | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/19f939802f724ad4a53854068325f0a3)](https://www.codacy.com/app/8infy/BLogger?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=8infy/BLogger&amp;utm_campaign=Badge_Grade) |
 
-An easy to use modern C++14/17 cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
+An easy to use modern C++14/17 async cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
 ## Using the logger
-### - Create an instance of BLogger by calling one of the constructors 
--   `BlockingLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
--   `BlockingLogger(const std::string& tag)` -> Sets the logger name to `name` and the logging filter to `trace`.
--   `BlockingLogger(const std::string& tag, level lvl, bool default_pattern)` -> Sets the logger name to `name` and the logging filter to `lvl`. If `default_pattern` is set to false, BLogger does not create a default pattern.
+There are currently 2 versions of BLogger: Async and Blocking.  
+Blocking version takes more time to log but uses less memory.  
+Async version is lightning fast but takes up more memory since it uses a message queue.
+### - Create an instance of BLogger (Async/Blocking) by calling one of the constructors 
+-   `AsyncLogger()` -> Sets the logger name to `"Unnamed"` and the logging filter to `trace`.
+-   `AsyncLogger(const std::string& tag)` -> Sets the logger name to `name` and the logging filter to `trace`.
+-   `AsyncLogger(const std::string& tag, level lvl, bool default_pattern)` -> Sets the logger name to `name` and the logging filter to `lvl`. If `default_pattern` is set to false, BLogger does not create a default pattern.
 ---
 ### - Setting the pattern
 NOTE: If you want to use a custom pattern, it is recommended to use the third constructor with the third parameter set to false, as creating a pattern is an expensive operation and you don't want to call it twice for no good reason.  
