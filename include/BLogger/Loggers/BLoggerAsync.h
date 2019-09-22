@@ -74,8 +74,10 @@ namespace BLogger {
         typedef std::unordered_map<
             uint16_t, std::shared_ptr<FileHelper>
         > logger_to_file;
+        typedef std::unique_ptr<thread_pool>
+            thread_pool_ptr;
 
-        static thread_pool* instance;
+        static thread_pool_ptr instance;
         logger_to_file m_Files;
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr> m_TaskQueue;
@@ -184,11 +186,11 @@ namespace BLogger {
                 worker.join();
         }
     public:
-        static thread_pool* get()
+        static thread_pool_ptr& get()
         {
             if (!instance)
             {
-                instance = new thread_pool(std::thread::hardware_concurrency());
+                instance.reset(new thread_pool(std::thread::hardware_concurrency()));
             }
 
             return instance;
@@ -212,7 +214,7 @@ namespace BLogger {
             m_TaskQueue.emplace_back(new flush_task());
         }
 
-        void add_helper(uint16_t id, std::shared_ptr<FileHelper>& fhptr)
+        void add_helper(uint16_t id, std::shared_ptr<FileHelper> fhptr)
         {
             m_Files[id] = fhptr;
         }
@@ -231,7 +233,7 @@ namespace BLogger {
         }
     };
 
-    thread_pool* thread_pool::instance;
+    thread_pool::thread_pool_ptr thread_pool::instance;
 
     class BLoggerAsync : public BLoggerBase
     {
@@ -268,10 +270,7 @@ namespace BLogger {
             thread_pool::get()->flush();
         }
 
-        ~BLoggerAsync()
-        {
-            thread_pool::get()->remove_helper(m_ID);
-        }
+        ~BLoggerAsync() {}
 
         bool InitFileLogger(
             const std::string& directoryPath,
