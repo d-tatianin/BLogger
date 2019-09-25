@@ -72,8 +72,9 @@ Please note: file logger does not flush after every log message due to performan
 
 ---
 ### - Logging your messages
--   `Log(level lvl, const T& message)` -> Logs the message with the given level.  
--   `Log(level lvl, const T& formattedMsg, const Args& ... args)` -> Logs the formatted message with the given level.
+All logging functions are available in two overloads: one that takes in a c-string (`const char*`), and another one that takes in an `std::string`.
+-   `Log(level lvl, const char* message)` -> Logs the message with the given level.  
+-   `Log(level lvl, const char* formattedMsg, const Args& ... args)` -> Logs the formatted message with the given level.
 
 ### - BLogger log message formatting
 BLogger accepts the following formats:
@@ -94,10 +95,6 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
 -   `SetTag(const std::string& tag)` -> Sets the logger name to the name specified.
--   `EnableTimestamps()` -> Enables timestamps before the message.
--   `DisableTimestamps()` -> Disables timestamps before the message.
--   `EnableTag()` -> Enables tags before the message. On by default.
--   `DisableTag()` -> Disables tags before the message.
 -   `Flush()` -> Flushes the logger.
 ---
 ### There is a total of 6 available logging levels that reside inside the unscoped level_enum inside the level namespace
