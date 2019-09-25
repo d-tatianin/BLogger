@@ -239,8 +239,7 @@ namespace BLogger {
                 m_LogToConsole,
                 m_LogToFile,
                 m_ColoredOutput,
-                m_ID
-                });
+            });
         }
 
         void Trace(const BLoggerInString& message)
