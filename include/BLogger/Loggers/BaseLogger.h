@@ -150,8 +150,7 @@ namespace BLogger {
                 lvl,
                 m_LogToConsole,
                 m_LogToFile,
-                m_ColoredOutput,
-                m_ID
+                m_ColoredOutput
             });
         }
 
@@ -178,8 +177,7 @@ namespace BLogger {
                 lvl,
                 m_LogToConsole,
                 m_LogToFile,
-                m_ColoredOutput,
-                m_ID
+                m_ColoredOutput
                 });
         }
 

@@ -24,8 +24,7 @@ namespace BLogger {
             level lvl,
             bool log_stdout,
             bool log_file,
-            bool colored,
-            uint16_t sender_id
+            bool colored
         )
             : formatted_msg(std::move(formatted_msg)),
             ptrn(ptrn),
