@@ -6,20 +6,20 @@
    Responsible for message formatting
    and main logging functions.
 */ 
-#include "Loggers/BLoggerBase.h"
+#include "Loggers/BaseLogger.h"
 
 /* Blocking version of BLogger.
    All logging happens on a
    single thread.
 */
-#include "Loggers/BLoggerBlock.h"
+#include "Loggers/BlockingLogger.h"
 
 /* Async version of BLogger.
    Logs the mesages using
    a dedicated threadpool
    and a message queue.
 */
-#include "Loggers/BLoggerAsync.h"
+#include "Loggers/AsyncLogger.h"
 
 typedef BLogger::BLoggerBlock BlockingLogger;
 typedef BLogger::BLoggerAsync AsyncLogger;

@@ -8,10 +8,10 @@
 
 namespace BLogger {
 
-    class FileHelper
+    class FileManager
     {
     private:
-        FILE* m_File;
+        FILE*                m_File;
         std::string          m_DirectoryPath;
         std::string          m_CachedTag;
         size_t               m_BytesPerFile;
@@ -25,7 +25,7 @@ namespace BLogger {
         typedef std::lock_guard<std::mutex>
             locker;
     public:
-        FileHelper()
+        FileManager()
             : m_File(nullptr),
             m_DirectoryPath("none"),
             m_BytesPerFile(0),
@@ -77,14 +77,12 @@ namespace BLogger {
 
         void terminate()
         {
-            {
-                locker loc(m_FileAccess);
+            locker lock(m_FileAccess);
 
-                if (m_File)
-                {
-                    fclose(m_File);
-                    m_File = nullptr;
-                }
+            if (m_File)
+            {
+                fclose(m_File);
+                m_File = nullptr;
             }
         }
 
@@ -97,7 +95,7 @@ namespace BLogger {
         {
             locker lock(m_FileAccess);
 
-            if (!m_State)
+            if (!ready())
                 return;
 
             ++size;
@@ -151,7 +149,7 @@ namespace BLogger {
             return static_cast<bool>(m_File);
         }
 
-        ~FileHelper()
+        ~FileManager()
         {
             if (m_File)
                 fclose(m_File);

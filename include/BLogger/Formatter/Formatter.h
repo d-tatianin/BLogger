@@ -1,7 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <array>
+#include <string>
 #include <sstream>
+#include <vector>
+#include <mutex>
 
 #include "BLogger/LogLevels.h"
 #include "FormatUtilities.h"
@@ -13,18 +17,21 @@
 
 namespace BLogger
 {
-    typedef char charT;
+    typedef char bl_char;
+    typedef std::basic_string<bl_char> BLoggerInString;
+    typedef std::vector<char> bl_string;
 
-    template<size_t size>
-    using internal_buffer = std::array<charT, size>;
+    using internal_buffer = bl_string;
 
-    typedef internal_buffer<BLOGGER_BUFFER_SIZE>
+    typedef internal_buffer
         BLoggerBuffer;
 
     template<typename bufferT>
     class blogger_basic_pattern
     {
     private:
+        uint16_t m_OwnerID;
+
         bufferT m_Buffer;
 
         bool m_HasTimestamp;
@@ -35,8 +42,27 @@ namespace BLogger
         size_t m_TimeOffset;
         size_t m_TimeSize;
     public:
+        blogger_basic_pattern(uint16_t owner_id)
+            : m_OwnerID(owner_id),
+            m_Buffer(BLOGGER_BUFFER_SIZE),
+            m_HasTimestamp(false),
+            m_HasMsg(false),
+            m_MsgFirst(false),
+            m_HasLvl(false),
+            m_TimeOffset(0),
+            m_TimeSize(0)
+        {
+        }
+
+        uint16_t owner()
+        {
+            return m_OwnerID;
+        }
+
         void init()
         {
+            m_Buffer.resize(BLOGGER_BUFFER_SIZE);
+
             m_HasTimestamp = false;
             m_HasMsg       = false;
             m_MsgFirst     = false;
@@ -47,7 +73,7 @@ namespace BLogger
             memset(m_Buffer.data(), 0, m_Buffer.size());
         }
 
-        charT* ts_begin()
+        bl_char* ts_begin()
         {
             return m_Buffer.data() + m_TimeOffset;
         }
@@ -57,12 +83,12 @@ namespace BLogger
             return m_TimeSize;
         }
 
-        charT last_ts_char()
+        bl_char last_ts_char()
         {
             return m_Buffer[ptr_to_index(ts_begin() + m_TimeSize)];
         }
 
-        charT* data()
+        bl_char* data()
         {
             return m_Buffer.data();
         }
@@ -72,7 +98,7 @@ namespace BLogger
             return m_Buffer.size();
         }
 
-        void set_memorized(charT symbol)
+        void set_memorized(bl_char symbol)
         {
             m_Buffer[ptr_to_index(ts_begin() + m_TimeSize)] = symbol;
         }
@@ -201,13 +227,27 @@ namespace BLogger
 
             return true;
         }
+
+        blogger_basic_pattern<bufferT>& operator=(const blogger_basic_pattern<bufferT>& other)
+        {
+            this->m_Buffer = other.m_Buffer;
+            this->m_HasTimestamp = other.m_HasTimestamp;
+            this->m_HasMsg = other.m_HasMsg;
+            this->m_MsgFirst = other.m_MsgFirst;
+            this->m_HasLvl = other.m_HasLvl;
+            this->m_TimeOffset = other.m_TimeOffset;
+            this->m_TimeSize = other.m_TimeSize;
+
+            return *this;
+        }
+
         private:
-            size_t ptr_to_index(charT* p)
+            size_t ptr_to_index(bl_char* p)
             {
                 return (p - m_Buffer.data());
             }
 
-            size_t new_offset(const charT* arg)
+            size_t new_offset(const bl_char* arg)
             {
                 auto index = std::search(
                     m_Buffer.begin(),
@@ -220,21 +260,21 @@ namespace BLogger
                 return ptr_to_index(&*index);
             }
 
-            void set_arg(size_t offset, const charT* pattern, const charT* arg)
+            void set_arg(size_t offset, const bl_char* pattern, const bl_char* arg)
             {
                 m_Buffer[offset] = '%';
                 m_Buffer[offset + 1] = 's';
 
                 int32_t extra_size = static_cast<int32_t>(std::strlen(arg) - 2);
 
-                charT* arg_end = (&m_Buffer[offset]) + 2;
+                bl_char* arg_end = (&m_Buffer[offset]) + 2;
 
                 if (extra_size > 0)
                 {
                     MEMORY_MOVE(arg_end, m_Buffer.size() - ptr_to_index(arg_end), arg_end + extra_size, m_Buffer.size() - ptr_to_index(arg_end + extra_size));
                 }
 
-                charT copy[BLOGGER_BUFFER_SIZE];
+                bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
                 auto size = m_Buffer.size() -
@@ -251,18 +291,20 @@ namespace BLogger
 
     typedef blogger_basic_pattern<BLoggerBuffer>
         BLoggerPattern;
+    typedef std::shared_ptr<BLoggerPattern>
+        BLoggerSharedPattern;
 
     template<typename bufferT>
     class blogger_basic_formatter
     {
     protected:
         bufferT    m_Buffer;
-        charT*     m_Cursor;
+        bl_char*   m_Cursor;
         size_t     m_Occupied;
         size_t     m_ArgCount;
     public:
         blogger_basic_formatter()
-            : m_Buffer(),
+            : m_Buffer(BLOGGER_BUFFER_SIZE),
             m_Cursor(m_Buffer.data()),
             m_Occupied(0),
             m_ArgCount(0)
@@ -283,12 +325,12 @@ namespace BLogger
                    static_cast<int32_t>(m_Occupied);
         }
 
-        charT* data()
+        bl_char* data()
         {
             return m_Buffer.data();
         }
 
-        charT* cursor()
+        bl_char* cursor()
         {
             return m_Cursor;
         }
@@ -311,18 +353,20 @@ namespace BLogger
 
         BLoggerBuffer&& release_buffer()
         {
+            m_Buffer.resize(m_Occupied);
             return std::move(m_Buffer);
         }
 
         void reset_buffer()
         {
+            m_Buffer.resize(BLOGGER_BUFFER_SIZE);
             m_Occupied = 0;
             m_ArgCount = 0;
             m_Cursor = m_Buffer.data();
             memset(m_Buffer.data(), 0, m_Buffer.size());
         }
 
-        void write_to(const charT* data, size_t size)
+        void write_to(const bl_char* data, size_t size)
         {
             if ((m_Buffer.size() - m_Occupied) >= size)
             {
@@ -332,37 +376,42 @@ namespace BLogger
             }
         }
 
-        void process_message(const charT* msg, size_t size)
+        void process_message(const bl_char* msg, size_t size)
         {
             write_to(msg, size);
         }
 
-        void merge_pattern(
-            BLoggerPattern& ptrn, 
+        static void merge_pattern(
+            bl_string& formatted_msg,
+            BLoggerSharedPattern global_pattern,
             std::tm* time_ptr, 
             level lvl
         )
         {
-            charT* message = static_cast<charT*>(STACK_ALLOC(m_Occupied + 1));
-            message[m_Occupied] = '\0';
-            MEMORY_COPY(message, m_Occupied, m_Buffer.data(), m_Occupied);
+            BLoggerPattern ptrn(0);
+            ptrn = *global_pattern;
+
+            size_t message_size = formatted_msg.size() + 1;
+            bl_char* message = static_cast<bl_char*>(STACK_ALLOC(message_size));
+            message[message_size - 1] = '\0';
+            MEMORY_COPY(message, message_size, formatted_msg.data(), formatted_msg.size());
 
             if (ptrn.timestamp())
             {
-                charT memorized = ptrn.last_ts_char();
+                bl_char memorized = ptrn.last_ts_char();
                 auto intended_size = strftime(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
                 ptrn.set_memorized(memorized);
 
                 if (!ptrn.lvl() && !ptrn.msg())
                 {
-                    m_Occupied = ptrn.zero_term();
-                    MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+                    formatted_msg.resize(ptrn.zero_term());
+                    MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
                 }
             }
 
             if (ptrn.lvl() && ptrn.msg())
             {
-                charT copy[BLOGGER_BUFFER_SIZE];
+                bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
                 auto intended_size = snprintf(
@@ -377,15 +426,15 @@ namespace BLogger
                     message)
                 );
 
-                intended_size > m_Buffer.size() ?
-                    m_Occupied = m_Buffer.size() :
-                    m_Occupied = intended_size;
+                intended_size > BLOGGER_BUFFER_SIZE ?
+                    formatted_msg.resize(BLOGGER_BUFFER_SIZE):
+                    formatted_msg.resize(intended_size);
 
-                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), ptrn.zero_term());
             }
             else if(ptrn.lvl())
             {
-                charT copy[BLOGGER_BUFFER_SIZE];
+                bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
                 auto intended_size = snprintf(
@@ -395,15 +444,15 @@ namespace BLogger
                     LevelToString(lvl)
                 );
 
-                intended_size > m_Buffer.size() ?
-                    m_Occupied = m_Buffer.size() :
-                    m_Occupied = intended_size;
+                intended_size > BLOGGER_BUFFER_SIZE ?
+                    formatted_msg.resize(BLOGGER_BUFFER_SIZE):
+                    formatted_msg.resize(intended_size);
 
-                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
             }
             else if (ptrn.msg())
             {
-                charT copy[BLOGGER_BUFFER_SIZE];
+                bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
                 auto intended_size = snprintf(
@@ -413,22 +462,22 @@ namespace BLogger
                     message
                 );
 
-                intended_size > m_Buffer.size() ?
-                    m_Occupied = m_Buffer.size() :
-                    m_Occupied = intended_size;
+                intended_size > BLOGGER_BUFFER_SIZE ?
+                    formatted_msg.resize(BLOGGER_BUFFER_SIZE):
+                    formatted_msg.resize(intended_size);
 
-                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
             }
             else if (!ptrn.lvl() && !ptrn.msg() && !ptrn.timestamp())
             {
-                m_Occupied = ptrn.zero_term();
-                MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), ptrn.data(), m_Occupied);
+                formatted_msg.resize(ptrn.zero_term());
+                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
             }
 
-            if (m_Occupied < m_Buffer.size())
-                m_Buffer[m_Occupied++] = '\n';
+            if (formatted_msg.size() < BLOGGER_BUFFER_SIZE)
+                formatted_msg.emplace_back('\n');
             else
-                m_Buffer[m_Occupied - 1] = '\n';
+                formatted_msg[formatted_msg.size() - 1] = '\n';
         }
     private:
         void operator<<(std::stringstream& ss)
@@ -436,7 +485,7 @@ namespace BLogger
             std::string pattern = "{";
             pattern += std::to_string(m_ArgCount++);
             pattern += "}";
-            charT* cursor = get_pos_arg(pattern);
+            bl_char* cursor = get_pos_arg(pattern);
 
             if (cursor)
             {
@@ -444,7 +493,7 @@ namespace BLogger
                 cursor[1] = 's';
 
                 size_t offset = cursor - m_Buffer.data() + 2;
-                charT* begin = m_Buffer.data() + offset + pattern.size() - 2;
+                bl_char* begin = m_Buffer.data() + offset + pattern.size() - 2;
                 size_t end = m_Buffer.size() - offset + pattern.size() - 2;
 
                 MEMORY_MOVE(m_Buffer.data() + offset, m_Buffer.size(), begin, end);
@@ -459,7 +508,7 @@ namespace BLogger
                 *(cursor + 1) = 's';
             }
 
-            charT format[BLOGGER_BUFFER_SIZE];
+            bl_char format[BLOGGER_BUFFER_SIZE];
             MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
             auto intended_size =
@@ -479,7 +528,7 @@ namespace BLogger
             m_Cursor = m_Buffer.data() + m_Occupied;
         }
 
-        void write_to_enclosed(const charT* data, size_t size, charT opening = '[', charT closing = ']')
+        void write_to_enclosed(const bl_char* data, size_t size, bl_char opening = '[', bl_char closing = ']')
         {
             if ((m_Buffer.size() - m_Occupied) >= size + 2)
             {
@@ -493,7 +542,7 @@ namespace BLogger
             }
         }
 
-        charT* get_next_arg()
+        bl_char* get_next_arg()
         {
             auto index = std::search(
                 m_Buffer.begin(),
@@ -506,7 +555,7 @@ namespace BLogger
             return (index != m_Buffer.end() ? &(*index) : nullptr);
         }
 
-        charT* get_pos_arg(const std::string& pos)
+        bl_char* get_pos_arg(const std::string& pos)
         {
             auto cursor = std::search(
                 m_Buffer.begin(),

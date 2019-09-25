@@ -1,15 +1,15 @@
 #pragma once
 
-#include "BLogger/Loggers/BLoggerBase.h"
+#include "BLogger/Loggers/BaseLogger.h"
 #include "BLogger/LogLevels.h"
-#include "BLogger/Loggers/FileHelper.h"
+#include "BLogger/Loggers/FileManager.h"
 
 namespace BLogger {
 
     class BLoggerBlock : public BLoggerBase
     {
     private:
-        FileHelper m_File;
+        FileManager m_File;
     public:
         BLoggerBlock()
             : BLoggerBase(),
@@ -17,14 +17,14 @@ namespace BLogger {
         {
         }
 
-        BLoggerBlock(const std::string& tag)
+        BLoggerBlock(const BLoggerInString& tag)
             : BLoggerBase(tag),
             m_File()
         {
         }
 
         BLoggerBlock(
-            const std::string& tag,
+            const BLoggerInString& tag,
             level lvl,
             bool default_pattern = true
         )
@@ -42,7 +42,7 @@ namespace BLogger {
         }
 
         bool InitFileLogger(
-            const std::string& directoryPath,
+            const BLoggerInString& directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -76,7 +76,7 @@ namespace BLogger {
             m_File.terminate();
         }
 
-        void SetTag(const std::string& tag) override
+        void SetTag(const BLoggerInString& tag) override
         {
             m_Tag = tag;
             SetPattern(m_CachedPattern);
@@ -89,13 +89,13 @@ namespace BLogger {
         }
 
     private:
-        void Post(LogMsg&& msg) override
+        void Post(BLoggerLogMessage&& msg) override
         {
             msg.finalize_format();
 
-            if (msg.console())
+            if (msg.console_logger())
             {
-                if (msg.color())
+                if (msg.colored())
                 {
                     switch (msg.log_level())
                     {
@@ -110,11 +110,11 @@ namespace BLogger {
 
                 std::cout.write(msg.data(), msg.size());
 
-                if (msg.color())
+                if (msg.colored())
                     set_output_color(BLOGGER_RESET);
             }
 
-            if (msg.file())
+            if (msg.file_logger())
             {
                 if (m_File.ready())
                     m_File.write(msg.data(), msg.size());
