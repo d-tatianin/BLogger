@@ -55,10 +55,18 @@ namespace BLogger {
 
     class flush_task : public task
     {
+    private:
+        uint16_t sender_id;
     public:
-        flush_task()
-            : task(task_type::flush)
+        flush_task(uint16_t sender_id)
+            : task(task_type::flush),
+            sender_id(sender_id)
         {
+        }
+
+        uint16_t sender()
+        {
+            return sender_id;
         }
     };
 
@@ -173,6 +181,13 @@ namespace BLogger {
 
                     std::cout.flush();
                 }
+
+                flush_task* task = static_cast<flush_task*>(p.get());
+
+                auto file = m_Files.find(task->sender());
+
+                if (file != m_Files.end())
+                    file->second->flush();
             }
             return true;
         }
@@ -205,10 +220,10 @@ namespace BLogger {
             m_TaskQueue.emplace_back(new log_task(std::move(message)));
         }
 
-        void flush()
+        void flush(uint16_t logger_id)
         {
             locker lock(m_QueueAccess);
-            m_TaskQueue.emplace_back(new flush_task());
+            m_TaskQueue.emplace_back(new flush_task(logger_id));
         }
 
         void add_manager(uint16_t id, std::shared_ptr<FileManager> fmanager)
@@ -264,7 +279,7 @@ namespace BLogger {
 
         void Flush() override
         {
-            thread_pool::get()->flush();
+            thread_pool::get()->flush(m_ID);
         }
 
         ~BLoggerAsync() {}
