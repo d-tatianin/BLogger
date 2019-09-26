@@ -90,11 +90,11 @@ namespace BLogger {
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr> m_TaskQueue;
         std::mutex m_QueueAccess;
-        std::mutex m_GlobalWrite;
+        std::mutex& m_GlobalWrite;
         bool m_Running;
 
         thread_pool(uint16_t thread_count)
-            : m_Running(true)
+            : m_Running(true), m_GlobalWrite(BLoggerBase::GetGlobalWriteLock())
         {
             m_Pool.reserve(std::thread::hardware_concurrency());
 

@@ -17,7 +17,11 @@ namespace BLogger {
     private:
         static uint16_t unique_id;
     protected:
-        const uint16_t       m_ID;
+        typedef std::lock_guard<std::mutex>
+            locker;
+
+        static std::mutex    m_GlobalWrite;
+        const  uint16_t      m_ID;
         BLoggerInString      m_Tag;
         BLoggerInString      m_CachedPattern;
         BLoggerSharedPattern m_CurrentPattern;
@@ -380,6 +384,11 @@ namespace BLogger {
 
         virtual void SetTag(const std::string& tag) = 0;
 
+        static std::mutex& GetGlobalWriteLock()
+        {
+            return m_GlobalWrite;
+        }
+
         virtual ~BLoggerBase() {}
     protected:
         bool ShouldLog(level lvl)
@@ -396,5 +405,6 @@ namespace BLogger {
         virtual void Post(BLoggerLogMessage&& msg) = 0;
     };
 
-    uint16_t BLoggerBase::unique_id = 1;
+    uint16_t   BLoggerBase::unique_id = 1;
+    std::mutex BLoggerBase::m_GlobalWrite;
 }

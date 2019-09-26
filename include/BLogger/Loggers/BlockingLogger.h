@@ -95,6 +95,8 @@ namespace BLogger {
 
             if (msg.console_logger())
             {
+                locker lock(m_GlobalWrite);
+
                 if (msg.colored())
                 {
                     switch (msg.log_level())
