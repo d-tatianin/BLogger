@@ -101,6 +101,7 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
 -   `SetTag(const std::string& tag)` -> Sets the logger name to the name specified.
 -   `Flush()` -> Flushes the logger.
+-   `BLoggerBase::GetGlobalWriteLock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
 ---
 ### There is a total of 6 available logging levels that reside inside the unscoped level_enum inside the level namespace
 -   `trace`
