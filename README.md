@@ -2,6 +2,11 @@
 
 An easy to use modern C++14/17 async cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
+## Building the Example project
+1. Clone the repository `git clone https://github.com/8infy/BLogger`
+2. Build the project `cd BLogger && mkdir build && cd build && cmake .. && cmake --build .` 
+
+In order to use BLogger in your own project simply add BLogger's include folder into your project's include directories.
 ## Using the logger
 There are currently 2 versions of BLogger: Async and Blocking.  
 Blocking version takes more time to log but uses less memory.  
