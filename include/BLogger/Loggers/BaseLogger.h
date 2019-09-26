@@ -178,7 +178,7 @@ namespace BLogger {
                 m_LogToConsole,
                 m_LogToFile,
                 m_ColoredOutput
-                });
+            });
         }
 
         template<typename... Args>
