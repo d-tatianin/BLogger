@@ -8,7 +8,7 @@
     #define OPEN_FILE(file, path) fopen_s(&file, path.c_str(), "w")
     #define MEMORY_COPY(dst, dst_size, src, src_size) memcpy_s(dst, dst_size, src, src_size)
     #define MEMORY_MOVE(dst, dst_size, src, src_size) memmove_s(dst, dst_size, src, src_size)
-    #define STACK_ALLOC(size) _malloca(size)
+    #define STACK_ALLOC(size) _alloca(size)
 #else
     #include <cstring>
     #include <algorithm>
