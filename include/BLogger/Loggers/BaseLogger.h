@@ -65,7 +65,7 @@ namespace BLogger {
         )
             : m_ID(s_UniqueID++),
             m_Tag(tag),
-            m_CachedPattern(BLOGGER_DEFAULT_PATTERN),
+            m_CachedPattern(""),
             m_CurrentPattern(new BLoggerPattern(m_ID)),
             m_Filter(lvl),
             m_LogToConsole(false),
@@ -74,6 +74,7 @@ namespace BLogger {
         {
             if (default_pattern)
             {
+                m_CachedPattern = BLOGGER_DEFAULT_PATTERN;
                 m_CurrentPattern->init();
                 m_CurrentPattern->set_pattern(BLOGGER_DEFAULT_PATTERN, m_Tag);
             }
@@ -397,6 +398,9 @@ namespace BLogger {
                 return false;
 
             if (!m_LogToConsole && !m_LogToFile)
+                return false;
+
+            if (m_CachedPattern.empty())
                 return false;
 
             return true;

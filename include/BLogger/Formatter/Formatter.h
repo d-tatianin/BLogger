@@ -122,6 +122,9 @@ namespace BLogger
             BLoggerInString tag
         )
         {
+            if (pattern.empty())
+                return true;
+
             #define BLOGGER_TS_PATTERN  "{ts}"
             #define BLOGGER_TAG_PATTERN "{tag}"
             #define BLOGGER_LVL_PATTERN "{lvl}"
