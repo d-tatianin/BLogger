@@ -11,16 +11,16 @@ namespace BLogger {
     class FileManager
     {
     private:
-        FILE*                m_File;
-        std::string          m_DirectoryPath;
-        std::string          m_CachedTag;
-        size_t               m_BytesPerFile;
-        size_t               m_CurrentBytes;
-        size_t               m_MaxLogFiles;
-        size_t               m_CurrentLogFiles;
-        bool                 m_RotateLogs;
-        bool                 m_State;
-        std::mutex           m_FileAccess;
+        FILE*       m_File;
+        BLoggerString m_DirectoryPath;
+        BLoggerString m_CachedTag;
+        size_t      m_BytesPerFile;
+        size_t      m_CurrentBytes;
+        size_t      m_MaxLogFiles;
+        size_t      m_CurrentLogFiles;
+        bool        m_RotateLogs;
+        bool        m_State;
+        std::mutex  m_FileAccess;
 
         typedef std::lock_guard<std::mutex>
             locker;
@@ -37,15 +37,15 @@ namespace BLogger {
         {
         }
 
-        void setTag(const std::string& tag)
+        void setTag(BLoggerInString tag)
         {
             locker loc(m_FileAccess);
             m_CachedTag = tag;
         }
 
         bool init(
-            const std::string& directoryPath,
-            const std::string& loggerTag,
+            BLoggerInString directoryPath,
+            BLoggerInString loggerTag,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -156,7 +156,7 @@ namespace BLogger {
         }
     private:
         void constructFullPath(
-            std::string& outPath
+            BLoggerString& outPath
         )
         {
             outPath += m_DirectoryPath;
@@ -174,7 +174,7 @@ namespace BLogger {
                 m_File = nullptr;
             }
 
-            std::string fullPath;
+            BLoggerString fullPath;
             constructFullPath(fullPath);
 
             OPEN_FILE(m_File, fullPath);

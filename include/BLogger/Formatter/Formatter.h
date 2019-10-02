@@ -11,21 +11,8 @@
 #include "FormatUtilities.h"
 #include "BLogger/OS/Functions.h"
 
-#define BLOGGER_BUFFER_SIZE 128
-#define BLOGGER_TIMESTAMP "%H:%M:%S"
-#define BLOGGER_ARG_PATTERN "{}"
-
 namespace BLogger
 {
-    typedef char bl_char;
-    typedef std::basic_string<bl_char> BLoggerInString;
-    typedef std::vector<char> bl_string;
-
-    using internal_buffer = bl_string;
-
-    typedef internal_buffer
-        BLoggerBuffer;
-
     template<typename bufferT>
     class blogger_basic_pattern
     {
@@ -131,8 +118,8 @@ namespace BLogger
         }
 
         bool set_pattern(
-            const std::string& pattern,
-            const std::string& tag
+            BLoggerInString pattern,
+            BLoggerInString tag
         )
         {
             #define BLOGGER_TS_PATTERN  "{ts}"
@@ -140,7 +127,7 @@ namespace BLogger
             #define BLOGGER_LVL_PATTERN "{lvl}"
             #define BLOGGER_MSG_PATTERN "{msg}"
 
-            MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), pattern.c_str(), pattern.size());
+            MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), pattern.data(), pattern.size());
 
             auto ts_offset  = pattern.find(BLOGGER_TS_PATTERN);
             auto tag_offset = pattern.find(BLOGGER_TAG_PATTERN);
@@ -149,12 +136,12 @@ namespace BLogger
 
             bool first_arg = true;
 
-            if (msg_offset != std::string::npos && lvl_offset != std::string::npos)
+            if (msg_offset != BLoggerString::npos && lvl_offset != BLoggerString::npos)
             {
                 m_MsgFirst = msg_offset < lvl_offset;
                 m_HasMsg = true;
             }
-            else if (msg_offset != std::string::npos)
+            else if (msg_offset != BLoggerString::npos)
             {
                 m_MsgFirst = true;
                 m_HasMsg = true;
@@ -162,7 +149,7 @@ namespace BLogger
 
             for (size_t i = 0; i < pattern.size(); i++)
             {
-                if (ts_offset != std::string::npos && ts_offset == i)
+                if (ts_offset != BLoggerString::npos && ts_offset == i)
                 {
                     m_HasTimestamp = true;
 
@@ -183,20 +170,20 @@ namespace BLogger
                     first_arg = false;
                 }
 
-                if (tag_offset != std::string::npos && tag_offset == i)
+                if (tag_offset != BLoggerString::npos && tag_offset == i)
                 {
                     set_arg(
                         first_arg ?
                         tag_offset :
                         new_offset(BLOGGER_TAG_PATTERN),
-                        tag.c_str(),
+                        tag.data(),
                         BLOGGER_TAG_PATTERN
                     );
 
                     first_arg = false;
                 }
 
-                if (lvl_offset != std::string::npos && lvl_offset == i)
+                if (lvl_offset != BLoggerString::npos && lvl_offset == i)
                 {
                     m_HasLvl = true;
 
@@ -211,7 +198,7 @@ namespace BLogger
                     first_arg = false;
                 }
 
-                if (msg_offset != std::string::npos && msg_offset == i)
+                if (msg_offset != BLoggerString::npos && msg_offset == i)
                 {
                     set_arg(
                         first_arg ?
@@ -271,7 +258,15 @@ namespace BLogger
 
                 if (extra_size > 0)
                 {
-                    MEMORY_MOVE(arg_end, m_Buffer.size() - ptr_to_index(arg_end), arg_end + extra_size, m_Buffer.size() - ptr_to_index(arg_end + extra_size));
+                    MEMORY_MOVE(
+                        arg_end,
+                        m_Buffer.size() -
+                        ptr_to_index(arg_end),
+                        arg_end +
+                        extra_size,
+                        m_Buffer.size() -
+                        ptr_to_index(arg_end + extra_size)
+                    );
                 }
 
                 bl_char copy[BLOGGER_BUFFER_SIZE];
@@ -314,9 +309,9 @@ namespace BLogger
         template<typename T>
         void handle_pack(T&& arg)
         {
-            std::stringstream ss;
+            BLoggerStringStream ss;
 
-            *this << *static_cast<std::stringstream*>(&(ss << std::forward<T&&>(arg)));
+            *this << *static_cast<BLoggerStringStream*>(&(ss << std::forward<T&&>(arg)));
         }
 
         int32_t remaining()
@@ -480,9 +475,9 @@ namespace BLogger
                 formatted_msg[formatted_msg.size() - 1] = '\n';
         }
     private:
-        void operator<<(std::stringstream& ss)
+        void operator<<(BLoggerStringStream& ss)
         {
-            std::string pattern = "{";
+            BLoggerString pattern = "{";
             pattern += std::to_string(m_ArgCount++);
             pattern += "}";
             bl_char* cursor = get_pos_arg(pattern);
@@ -555,13 +550,13 @@ namespace BLogger
             return (index != m_Buffer.end() ? &(*index) : nullptr);
         }
 
-        bl_char* get_pos_arg(const std::string& pos)
+        bl_char* get_pos_arg(BLoggerInString pos)
         {
             auto cursor = std::search(
                 m_Buffer.begin(),
                 m_Buffer.end(),
-                pos.c_str(),
-                pos.c_str() +
+                pos.data(),
+                pos.data() +
                 pos.size()
             );
 

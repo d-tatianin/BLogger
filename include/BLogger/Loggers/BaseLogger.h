@@ -15,15 +15,15 @@ namespace BLogger {
     class BLoggerBase
     {
     private:
-        static uint16_t unique_id;
+        static uint16_t s_UniqueID;
     protected:
         typedef std::lock_guard<std::mutex>
             locker;
 
-        static std::mutex    m_GlobalWrite;
+        static std::mutex    s_GlobalWrite;
         const  uint16_t      m_ID;
-        BLoggerInString      m_Tag;
-        BLoggerInString      m_CachedPattern;
+        BLoggerString        m_Tag;
+        BLoggerString        m_CachedPattern;
         BLoggerSharedPattern m_CurrentPattern;
         level                m_Filter;
         bool                 m_LogToConsole;
@@ -31,7 +31,7 @@ namespace BLogger {
         bool                 m_ColoredOutput;
     public:
         BLoggerBase()
-            : m_ID(unique_id++),
+            : m_ID(s_UniqueID++),
             m_Tag("Unnamed"),
             m_CachedPattern(BLOGGER_DEFAULT_PATTERN),
             m_CurrentPattern(new BLoggerPattern(m_ID)),
@@ -44,8 +44,8 @@ namespace BLogger {
             m_CurrentPattern->set_pattern(BLOGGER_DEFAULT_PATTERN, m_Tag);
         }
 
-        BLoggerBase(const BLoggerInString& tag)
-            : m_ID(unique_id++),
+        BLoggerBase(BLoggerInString tag)
+            : m_ID(s_UniqueID++),
             m_Tag(tag),
             m_CachedPattern(BLOGGER_DEFAULT_PATTERN),
             m_CurrentPattern(new BLoggerPattern(m_ID)),
@@ -59,11 +59,11 @@ namespace BLogger {
         }
 
         BLoggerBase(
-            const BLoggerInString& tag,
+            BLoggerInString tag,
             level lvl,
             bool default_pattern
         )
-            : m_ID(unique_id++),
+            : m_ID(s_UniqueID++),
             m_Tag(tag),
             m_CachedPattern(BLOGGER_DEFAULT_PATTERN),
             m_CurrentPattern(new BLoggerPattern(m_ID)),
@@ -85,7 +85,7 @@ namespace BLogger {
         BLoggerBase(BLoggerBase&& other) = default;
         BLoggerBase& operator=(BLoggerBase&& other) = default;
 
-        void SetPattern(const BLoggerInString& pattern)
+        void SetPattern(BLoggerInString pattern)
         {
             m_CachedPattern = pattern;
             BLoggerPattern* newPattern = new BLoggerPattern(m_ID);
@@ -96,7 +96,7 @@ namespace BLogger {
         }
 
         virtual bool InitFileLogger(
-            const BLoggerInString& directoryPath,
+            BLoggerInString directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true) = 0;
@@ -131,7 +131,7 @@ namespace BLogger {
 
         virtual void Flush() = 0;
 
-        void Log(level lvl, const BLoggerInString& message)
+        void Log(level lvl, BLoggerInString message)
         {
             BLoggerFormatter formatter;
 
@@ -186,7 +186,7 @@ namespace BLogger {
         }
 
         template<typename... Args>
-        void Log(level lvl, const BLoggerInString& formattedMsg, Args&& ... args)
+        void Log(level lvl, BLoggerInString formattedMsg, Args&& ... args)
         {
             BLoggerFormatter formatter;
 
@@ -245,32 +245,32 @@ namespace BLogger {
             });
         }
 
-        void Trace(const BLoggerInString& message)
+        void Trace(BLoggerInString message)
         {
             Log(level::trace, message);
         }
 
-        void Debug(const BLoggerInString& message)
+        void Debug(BLoggerInString message)
         {
             Log(level::debug, message);
         }
 
-        void Info(const BLoggerInString& message)
+        void Info(BLoggerInString message)
         {
             Log(level::info, message);
         }
 
-        void Warning(const BLoggerInString& message)
+        void Warning(BLoggerInString message)
         {
             Log(level::warn, message);
         }
 
-        void Error(const BLoggerInString& message)
+        void Error(BLoggerInString message)
         {
             Log(level::error, message);
         }
 
-        void Critical(const BLoggerInString& message)
+        void Critical(BLoggerInString message)
         {
             Log(level::crit, message);
         }
@@ -306,37 +306,37 @@ namespace BLogger {
         }
 
         template<typename... Args>
-        void Trace(const BLoggerInString& formattedMsg, Args&& ... args)
+        void Trace(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::trace, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Debug(const BLoggerInString& formattedMsg, Args&& ... args)
+        void Debug(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::debug, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Info(const BLoggerInString& formattedMsg, Args&& ... args)
+        void Info(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::info, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Warning(const BLoggerInString& formattedMsg, Args&& ... args)
+        void Warning(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::warn, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Error(const BLoggerInString& formattedMsg, Args&& ... args)
+        void Error(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::error, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Critical(const BLoggerInString& formattedMsg, Args&& ... args)
+        void Critical(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::crit, formattedMsg, std::forward<Args>(args)...);
         }
@@ -382,11 +382,11 @@ namespace BLogger {
             m_Filter = lvl;
         }
 
-        virtual void SetTag(const std::string& tag) = 0;
+        virtual void SetTag(BLoggerInString tag) = 0;
 
         static std::mutex& GetGlobalWriteLock()
         {
-            return m_GlobalWrite;
+            return s_GlobalWrite;
         }
 
         virtual ~BLoggerBase() {}
@@ -405,6 +405,6 @@ namespace BLogger {
         virtual void Post(BLoggerLogMessage&& msg) = 0;
     };
 
-    uint16_t   BLoggerBase::unique_id = 1;
-    std::mutex BLoggerBase::m_GlobalWrite;
+    uint16_t   BLoggerBase::s_UniqueID = 1;
+    std::mutex BLoggerBase::s_GlobalWrite;
 }

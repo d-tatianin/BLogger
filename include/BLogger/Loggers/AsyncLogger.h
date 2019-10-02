@@ -84,19 +84,19 @@ namespace BLogger {
         > logger_to_file;
         typedef std::unique_ptr<thread_pool>
             thread_pool_ptr;
-
-        static thread_pool_ptr instance;
+    private:
+        static thread_pool_ptr s_Instance;
         logger_to_file m_Files;
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr> m_TaskQueue;
         std::mutex m_QueueAccess;
         std::mutex& m_GlobalWrite;
         bool m_Running;
-
+    private:
         thread_pool(uint16_t thread_count)
             : m_Running(true), m_GlobalWrite(BLoggerBase::GetGlobalWriteLock())
         {
-            m_Pool.reserve(std::thread::hardware_concurrency());
+            m_Pool.reserve(thread_count);
 
             for (uint16_t i = 0; i < thread_count; i++)
                 m_Pool.emplace_back(std::bind(&thread_pool::worker, this));
@@ -202,12 +202,12 @@ namespace BLogger {
     public:
         static thread_pool_ptr& get()
         {
-            if (!instance)
+            if (!s_Instance)
             {
-                instance.reset(new thread_pool(std::thread::hardware_concurrency()));
+                s_Instance.reset(new thread_pool(std::thread::hardware_concurrency()));
             }
 
-            return instance;
+            return s_Instance;
         }
 
         void post(BLoggerLogMessage&& message)
@@ -245,7 +245,7 @@ namespace BLogger {
         }
     };
 
-    thread_pool::thread_pool_ptr thread_pool::instance;
+    thread_pool::thread_pool_ptr thread_pool::s_Instance;
 
     class BLoggerAsync : public BLoggerBase
     {
@@ -259,7 +259,7 @@ namespace BLogger {
             thread_pool::get()->add_manager(m_ID, m_File);
         }
 
-        BLoggerAsync(const BLoggerInString& tag)
+        BLoggerAsync(BLoggerInString tag)
             : BLoggerBase(tag),
             m_File(new FileManager)
         {
@@ -267,7 +267,7 @@ namespace BLogger {
         }
 
         BLoggerAsync(
-            const BLoggerInString& tag,
+            BLoggerInString tag,
             level lvl,
             bool default_pattern = true
         )
@@ -285,7 +285,7 @@ namespace BLogger {
         ~BLoggerAsync() {}
 
         bool InitFileLogger(
-            const BLoggerInString& directoryPath,
+            BLoggerInString directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -319,7 +319,7 @@ namespace BLogger {
             m_File->terminate();
         }
 
-        void SetTag(const BLoggerInString& tag) override
+        void SetTag(BLoggerInString tag) override
         {
             m_Tag = tag;
             SetPattern(m_CachedPattern);

@@ -17,14 +17,14 @@ namespace BLogger {
         {
         }
 
-        BLoggerBlock(const BLoggerInString& tag)
+        BLoggerBlock(BLoggerInString tag)
             : BLoggerBase(tag),
             m_File()
         {
         }
 
         BLoggerBlock(
-            const BLoggerInString& tag,
+            BLoggerInString tag,
             level lvl,
             bool default_pattern = true
         )
@@ -42,7 +42,7 @@ namespace BLogger {
         }
 
         bool InitFileLogger(
-            const BLoggerInString& directoryPath,
+            BLoggerInString directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -76,7 +76,7 @@ namespace BLogger {
             m_File.terminate();
         }
 
-        void SetTag(const BLoggerInString& tag) override
+        void SetTag(BLoggerInString tag) override
         {
             m_Tag = tag;
             SetPattern(m_CachedPattern);
@@ -95,7 +95,7 @@ namespace BLogger {
 
             if (msg.console_logger())
             {
-                locker lock(m_GlobalWrite);
+                locker lock(s_GlobalWrite);
 
                 if (msg.colored())
                 {
