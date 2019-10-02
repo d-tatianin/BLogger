@@ -1,12 +1,15 @@
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <vector>
-#include <deque>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
+
+#include <vector>
+#include <deque>
 #include <unordered_map>
+
+#include <functional>
+#include <memory>
 
 #include "BLogger/Loggers/BaseLogger.h"
 #include "BLogger/Loggers/FileManager.h"
@@ -85,13 +88,14 @@ namespace BLogger {
         typedef std::unique_ptr<thread_pool>
             thread_pool_ptr;
     private:
-        static thread_pool_ptr s_Instance;
-        logger_to_file m_Files;
+        static thread_pool_ptr   s_Instance;
+        logger_to_file           m_Files;
         std::vector<std::thread> m_Pool;
-        std::deque<task_ptr> m_TaskQueue;
-        std::mutex m_QueueAccess;
-        std::mutex& m_GlobalWrite;
-        bool m_Running;
+        std::deque<task_ptr>     m_TaskQueue;
+        std::mutex               m_QueueAccess;
+        std::mutex&              m_GlobalWrite;
+        std::condition_variable  m_Notifier;
+        bool                     m_Running;
     private:
         thread_pool(uint16_t thread_count)
             : m_Running(true), m_GlobalWrite(BLoggerBase::GetGlobalWriteLock())
@@ -111,11 +115,16 @@ namespace BLogger {
         void worker()
         {
             bool did_work = true;
+            std::mutex worker_lock;
+            std::unique_lock<std::mutex> task_waiter(worker_lock);
 
             while (m_Running || did_work)
             {
                 if (!did_work)
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    m_Notifier.wait_for(
+                        task_waiter,
+                        std::chrono::seconds(5)
+                    );
 
                 did_work = do_work();
             }
@@ -195,6 +204,7 @@ namespace BLogger {
         void shutdown()
         {
             m_Running = false;
+            m_Notifier.notify_all();
 
             for (auto& worker : m_Pool)
                 worker.join();
@@ -212,12 +222,16 @@ namespace BLogger {
 
         void post(BLoggerLogMessage&& message)
         {
-            locker lock(m_QueueAccess);
-           
-            if (m_TaskQueue.size() == BLOGGER_TASK_LIMIT)
-                m_TaskQueue.pop_front();
-           
-            m_TaskQueue.emplace_back(new log_task(std::move(message)));
+            {
+                locker lock(m_QueueAccess);
+
+                if (m_TaskQueue.size() == BLOGGER_TASK_LIMIT)
+                    m_TaskQueue.pop_front();
+
+                m_TaskQueue.emplace_back(new log_task(std::move(message)));
+            }
+
+            m_Notifier.notify_one();
         }
 
         void flush(uint16_t logger_id)
