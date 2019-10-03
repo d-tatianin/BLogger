@@ -109,7 +109,7 @@ namespace BLogger {
         thread_pool(const thread_pool& other) = delete;
         thread_pool(thread_pool&& other) = delete;
 
-        thread_pool& operator=(thread_pool& other) = delete;
+        thread_pool& operator=(const thread_pool& other) = delete;
         thread_pool& operator=(thread_pool&& other) = delete;
 
         void worker()
