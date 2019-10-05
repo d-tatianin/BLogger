@@ -2,6 +2,18 @@
 
 An easy to use modern C++14/17 async cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
+## Performance
+BlockingLogger:
+1. Debug: 140μs/message (~7,142/sec).
+2. Release: 110μs/message (~9,900/sec).  
+---
+AsyncLogger:
+1. Debug: 12μs/message (~83,333/sec).
+2. Release: 1μs/message (~1,000,000/sec).
+
+The tests were done with all functionality enabled aside from the file logger.  
+RAM usage peaked at about 10MB with full queue (10,000 log messages).
+
 ## Building the Example project
 1. Clone the repository `git clone https://github.com/8infy/BLogger`
 2. Build the project `cd BLogger && mkdir build && cd build && cmake .. && cmake --build .` 
