@@ -3,11 +3,11 @@
 An easy to use modern C++14/17 async cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
 
 ## Performance
-BlockingLogger:
+BlockingLogger
 1. Debug: 140μs/message (~7,142/sec).
 2. Release: 110μs/message (~9,900/sec).  
----
-AsyncLogger:
+
+AsyncLogger
 1. Debug: 12μs/message (~83,333/sec).
 2. Release: 1μs/message (~1,000,000/sec).
 
