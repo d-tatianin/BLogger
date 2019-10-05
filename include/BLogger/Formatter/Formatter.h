@@ -390,7 +390,7 @@ namespace BLogger
             ptrn = *global_pattern;
 
             size_t message_size = formatted_msg.size() + 1;
-            bl_char* message = static_cast<bl_char*>(STACK_ALLOC(message_size));
+            bl_char* message; STACK_ALLOC(message_size, message);
             message[message_size - 1] = '\0';
             MEMORY_COPY(message, message_size, formatted_msg.data(), formatted_msg.size());
 

@@ -6,7 +6,7 @@
 typedef char bl_char;
 typedef std::basic_string<bl_char, std::char_traits<bl_char>> BLoggerString;
 typedef std::basic_stringstream<bl_char, std::char_traits<bl_char>> BLoggerStringStream;
-typedef std::vector<char> bl_string;
+typedef std::vector<bl_char> bl_string;
 using internal_buffer = bl_string;
 typedef internal_buffer BLoggerBuffer;
 
