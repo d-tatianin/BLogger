@@ -17,8 +17,6 @@ namespace BLogger
     class blogger_basic_pattern
     {
     private:
-        uint16_t m_OwnerID;
-
         bufferT m_Buffer;
 
         bool m_HasTimestamp;
@@ -29,9 +27,8 @@ namespace BLogger
         size_t m_TimeOffset;
         size_t m_TimeSize;
     public:
-        blogger_basic_pattern(uint16_t owner_id)
-            : m_OwnerID(owner_id),
-            m_Buffer(BLOGGER_BUFFER_SIZE),
+        blogger_basic_pattern()
+            : m_Buffer(BLOGGER_BUFFER_SIZE),
             m_HasTimestamp(false),
             m_HasMsg(false),
             m_MsgFirst(false),
@@ -39,11 +36,6 @@ namespace BLogger
             m_TimeOffset(0),
             m_TimeSize(0)
         {
-        }
-
-        uint16_t owner()
-        {
-            return m_OwnerID;
         }
 
         void init()
@@ -386,7 +378,7 @@ namespace BLogger
             level lvl
         )
         {
-            BLoggerPattern ptrn(0);
+            BLoggerPattern ptrn;
             ptrn = *global_pattern;
 
             size_t message_size = formatted_msg.size() + 1;

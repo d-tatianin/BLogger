@@ -9,6 +9,7 @@ typedef std::basic_stringstream<bl_char, std::char_traits<bl_char>> BLoggerStrin
 typedef std::vector<bl_char> bl_string;
 using internal_buffer = bl_string;
 typedef internal_buffer BLoggerBuffer;
+typedef std::lock_guard<std::mutex> locker;
 
 // ---- C++14/17 specific stuff ----
 #if _MSVC_LANG >= 201703L || __cplusplus >= 201703L

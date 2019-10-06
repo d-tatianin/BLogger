@@ -11,8 +11,11 @@
 #include <functional>
 #include <memory>
 
+#include "BLogger/Formatter/FormatUtilities.h"
 #include "BLogger/Loggers/BaseLogger.h"
-#include "BLogger/Loggers/FileManager.h"
+#include "BLogger/Sinks/FileSink.h"
+#include "BLogger/Sinks/StdoutSink.h"
+#include "BLogger/Sinks/ColoredStdoutSink.h"
 #include "BLogger/LogLevels.h"
 
 namespace BLogger {
@@ -27,15 +30,24 @@ namespace BLogger {
     {
     private:
         task_type t;
+        BLoggerSharedSinkList log_sinks;
     protected:
-        task(task_type t)
-            : t(t)
+        task(
+            task_type t,
+            BLoggerSharedSinkList& sinks
+        ) : t(t),
+            log_sinks(sinks)
         {
         }
     public:
         task_type type()
         {
             return t;
+        }
+
+        BLoggerSharedSinkList& sinks()
+        {
+            return log_sinks;
         }
     };
 
@@ -44,8 +56,10 @@ namespace BLogger {
     private:
         BLoggerLogMessage msg;
     public:
-        log_task(BLoggerLogMessage&& msg)
-            : task(task_type::log),
+        log_task(
+            BLoggerLogMessage&& msg,
+            BLoggerSharedSinkList& sinks
+        ) : task(task_type::log, sinks),
             msg(std::move(msg))
         {
         }
@@ -58,18 +72,10 @@ namespace BLogger {
 
     class flush_task : public task
     {
-    private:
-        uint16_t sender_id;
     public:
-        flush_task(uint16_t sender_id)
-            : task(task_type::flush),
-            sender_id(sender_id)
+        flush_task(BLoggerSharedSinkList& sinks)
+            : task(task_type::flush, sinks)
         {
-        }
-
-        uint16_t sender()
-        {
-            return sender_id;
         }
     };
 
@@ -82,23 +88,18 @@ namespace BLogger {
             task_ptr;
         typedef std::lock_guard<std::mutex>
             locker;
-        typedef std::unordered_map<
-            uint16_t, std::shared_ptr<FileManager>
-        > logger_to_file;
         typedef std::unique_ptr<thread_pool>
             thread_pool_ptr;
     private:
         static thread_pool_ptr   s_Instance;
-        logger_to_file           m_Files;
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr>     m_TaskQueue;
         std::mutex               m_QueueAccess;
-        std::mutex&              m_GlobalWrite;
         std::condition_variable  m_Notifier;
         bool                     m_Running;
     private:
         thread_pool(uint16_t thread_count)
-            : m_Running(true), m_GlobalWrite(BLoggerBase::GetGlobalWriteLock())
+            : m_Running(true)
         {
             m_Pool.reserve(thread_count);
 
@@ -147,56 +148,23 @@ namespace BLogger {
 
             if (p->type() == task_type::log)
             {
-
                 log_task* task = static_cast<log_task*>(p.get());
 
                 task->message().finalize_format();
 
-                if (task->message().console_logger())
+                for (auto& sink : *task->sinks())
                 {
-                    locker lock(m_GlobalWrite);
-
-                    if (task->message().colored())
-                    {
-                        switch (task->message().log_level())
-                        {
-                        case level::trace: set_output_color(BLOGGER_TRACE_COLOR); break;
-                        case level::debug: set_output_color(BLOGGER_DEBUG_COLOR); break;
-                        case level::info:  set_output_color(BLOGGER_INFO_COLOR);  break;
-                        case level::warn:  set_output_color(BLOGGER_WARN_COLOR);  break;
-                        case level::error: set_output_color(BLOGGER_ERROR_COLOR); break;
-                        case level::crit:  set_output_color(BLOGGER_CRIT_COLOR);  break;
-                        }
-                    }
-
-                    std::cout.write(task->message().data(), task->message().size());
-
-                    if (task->message().colored())
-                        set_output_color(BLOGGER_RESET);
-                }
-
-                if (task->message().file_logger())
-                {
-                    auto file = m_Files.find(task->message().sender());
-
-                    if (file != m_Files.end()) 
-                        file->second->write(task->message().data(), task->message().size());
+                    sink->write(task->message());
                 }
             }
             else if (p->type() == task_type::flush)
             {
-                {
-                    locker lock(m_GlobalWrite);
-
-                    std::cout.flush();
-                }
-
                 flush_task* task = static_cast<flush_task*>(p.get());
 
-                auto file = m_Files.find(task->sender());
-
-                if (file != m_Files.end())
-                    file->second->flush();
+                for (auto& sink : *task->sinks())
+                {
+                    sink->flush();
+                }
             }
             return true;
         }
@@ -220,7 +188,7 @@ namespace BLogger {
             return s_Instance;
         }
 
-        void post(BLoggerLogMessage&& message)
+        void post_message(BLoggerLogMessage&& message, BLoggerSharedSinkList& sinks)
         {
             {
                 locker lock(m_QueueAccess);
@@ -228,29 +196,16 @@ namespace BLogger {
                 if (m_TaskQueue.size() == BLOGGER_TASK_LIMIT)
                     m_TaskQueue.pop_front();
 
-                m_TaskQueue.emplace_back(new log_task(std::move(message)));
+                m_TaskQueue.emplace_back(new log_task(std::move(message), sinks));
             }
 
             m_Notifier.notify_one();
         }
 
-        void flush(uint16_t logger_id)
+        void post_flush(BLoggerSharedSinkList& sinks)
         {
             locker lock(m_QueueAccess);
-            m_TaskQueue.emplace_back(new flush_task(logger_id));
-        }
-
-        void add_manager(uint16_t id, std::shared_ptr<FileManager> fmanager)
-        {
-            m_Files[id] = fmanager;
-        }
-
-        void remove_manager(uint16_t id)
-        {
-            auto itr = m_Files.find(id);
-
-            if (itr != m_Files.end())
-                m_Files.erase(id);
+            m_TaskQueue.emplace_back(new flush_task(sinks));
         }
 
         ~thread_pool()
@@ -261,88 +216,28 @@ namespace BLogger {
 
     thread_pool::thread_pool_ptr thread_pool::s_Instance;
 
-    class BLoggerAsync : public BLoggerBase
+    class AsyncLogger : public BaseLogger
     {
-    private:
-        std::shared_ptr<FileManager> m_File;
     public:
-        BLoggerAsync()
-            : BLoggerBase(),
-            m_File(new FileManager)
-        {
-            thread_pool::get()->add_manager(m_ID, m_File);
-        }
-
-        BLoggerAsync(BLoggerInString tag)
-            : BLoggerBase(tag),
-            m_File(new FileManager)
-        {
-            thread_pool::get()->add_manager(m_ID, m_File);
-        }
-
-        BLoggerAsync(
+        AsyncLogger(
             BLoggerInString tag,
             level lvl,
             bool default_pattern = true
         )
-            : BLoggerBase(tag, lvl, default_pattern),
-            m_File(new FileManager)
+            : BaseLogger(tag, lvl, default_pattern)
         {
-            thread_pool::get()->add_manager(m_ID, m_File);
         }
 
         void Flush() override
         {
-            thread_pool::get()->flush(m_ID);
+            thread_pool::get()->post_flush(m_Sinks);
         }
 
-        ~BLoggerAsync() {}
-
-        bool InitFileLogger(
-            BLoggerInString directoryPath,
-            size_t bytesPerFile,
-            size_t maxLogFiles,
-            bool rotateLogs = true
-        ) override
-        {
-            m_File->init(
-                directoryPath,
-                m_Tag,
-                bytesPerFile,
-                maxLogFiles,
-                rotateLogs
-            );
-
-            return m_File->ok();
-        }
-
-        bool EnableFileLogger() override
-        {
-            if (!(*m_File))
-            {
-                Error("Could not enable the file logger. Did you call InitFileLogger?");
-                return false;
-            }
-
-            m_LogToFile = true;
-            return true;
-        }
-
-        void TerminateFileLogger() override
-        {
-            m_File->terminate();
-        }
-
-        void SetTag(BLoggerInString tag) override
-        {
-            m_Tag = tag;
-            SetPattern(m_CachedPattern);
-            m_File->setTag(tag);
-        }
+        ~AsyncLogger() {}
     private:
         void Post(BLoggerLogMessage&& msg) override
         {
-            thread_pool::get()->post(std::move(msg));
+            thread_pool::get()->post_message(std::move(msg), m_Sinks);
         }
     };
 }

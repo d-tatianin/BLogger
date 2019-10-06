@@ -4,75 +4,60 @@
 #include <string>
 #include <mutex>
 
+#include "BLogger/Sinks/BaseSink.h"
 #include "BLogger/OS/Functions.h"
 
 namespace BLogger {
 
-    class FileManager
+    class FileSink : public BaseSink
     {
     private:
-        FILE*       m_File;
+        FILE*         m_File;
         BLoggerString m_DirectoryPath;
         BLoggerString m_CachedTag;
-        size_t      m_BytesPerFile;
-        size_t      m_CurrentBytes;
-        size_t      m_MaxLogFiles;
-        size_t      m_CurrentLogFiles;
-        bool        m_RotateLogs;
-        bool        m_State;
-        std::mutex  m_FileAccess;
+        size_t        m_BytesPerFile;
+        size_t        m_CurrentBytes;
+        size_t        m_MaxLogFiles;
+        size_t        m_CurrentLogFiles;
+        bool          m_RotateLogs;
+        std::mutex    m_FileAccess;
 
         typedef std::lock_guard<std::mutex>
             locker;
     public:
-        FileManager()
-            : m_File(nullptr),
-            m_DirectoryPath("none"),
-            m_BytesPerFile(0),
-            m_CurrentBytes(0),
-            m_MaxLogFiles(0),
-            m_CurrentLogFiles(0),
-            m_RotateLogs(false),
-            m_State(true)
-        {
-        }
-
-        void setTag(BLoggerInString tag)
-        {
-            locker loc(m_FileAccess);
-            m_CachedTag = tag;
-        }
-
-        bool init(
+        FileSink(
             BLoggerInString directoryPath,
             BLoggerInString loggerTag,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
-        )
+        ) : m_File(nullptr),
+            m_DirectoryPath(directoryPath),
+            m_BytesPerFile(bytesPerFile),
+            m_CurrentBytes(0),
+            m_MaxLogFiles(0),
+            m_CurrentLogFiles(0),
+            m_RotateLogs(rotateLogs),
+            m_FileAccess()
         {
-            {
-                locker loc(m_FileAccess);
+            m_CachedTag = loggerTag;
 
-                m_CachedTag = loggerTag;
+            m_BytesPerFile = bytesPerFile;
+            m_MaxLogFiles = maxLogFiles;
+            m_RotateLogs = rotateLogs;
+            m_CurrentBytes = 0;
+            m_CurrentLogFiles = 1;
 
-                m_BytesPerFile = bytesPerFile;
-                m_MaxLogFiles = maxLogFiles;
-                m_RotateLogs = rotateLogs;
-                m_CurrentBytes = 0;
-                m_CurrentLogFiles = 1;
+            m_DirectoryPath = directoryPath;
+            m_DirectoryPath += '/';
 
-                m_DirectoryPath = directoryPath;
-                m_DirectoryPath += '/';
+            newLogFile();
+        }
 
-                newLogFile();
-            }
-           
-
-            if (m_File)
-                return true;
-
-            return false;
+        void set_tag(BLoggerInString tag) override
+        {
+            locker loc(m_FileAccess);
+            m_CachedTag = tag;
         }
 
         void terminate()
@@ -88,14 +73,16 @@ namespace BLogger {
 
         bool ok()
         {
-            return m_State;
+            return static_cast<bool>(m_File);
         }
 
-        void write(void* data, size_t size)
+        void write(BLoggerLogMessage& msg) override
         {
+            size_t size = msg.size();
+
             locker lock(m_FileAccess);
 
-            if (!ready())
+            if (!ok())
                 return;
 
             ++size;
@@ -126,10 +113,10 @@ namespace BLogger {
 
             m_CurrentBytes += size;
 
-            fwrite(data, 1, size - 1, m_File);
+            fwrite(msg.data(), 1, size - 1, m_File);
         }
 
-        void flush()
+        void flush() override
         {
             locker lock(m_FileAccess);
 
@@ -139,17 +126,10 @@ namespace BLogger {
 
         operator bool()
         {
-            locker lock(m_FileAccess);
-
-            return ok() && ready();
+            return ok();
         }
 
-        bool ready()
-        {
-            return static_cast<bool>(m_File);
-        }
-
-        ~FileManager()
+        ~FileSink()
         {
             if (m_File)
                 fclose(m_File);
@@ -178,8 +158,6 @@ namespace BLogger {
             constructFullPath(fullPath);
 
             OPEN_FILE(m_File, fullPath);
-
-            m_File ? m_State = true : m_State = false;
         }
     };
 }

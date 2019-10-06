@@ -1,76 +1,42 @@
 #pragma once
 
 #include <ctime>
+#include <list>
 
 #include "BLogger/LogLevels.h"
 #include "BLogger/Formatter/Formatter.h"
 #include "BLogger/OS/Functions.h"
 #include "BLogger/Loggers/LogMessage.h"
+#include "BLogger/Sinks/BaseSink.h"
 
 #define BLOGGER_INFINITE 0u
 #define BLOGGER_DEFAULT_PATTERN "[{ts}][{lvl}][{tag}] {msg}"
 
 namespace BLogger {
 
-    class BLoggerBase
+    typedef std::list<std::unique_ptr<BaseSink>>
+        sink_list;
+    typedef std::shared_ptr<sink_list>
+        BLoggerSharedSinkList;
+
+    class BaseLogger
     {
-    private:
-        static uint16_t s_UniqueID;
     protected:
-        typedef std::lock_guard<std::mutex>
-            locker;
-
-        static std::mutex    s_GlobalWrite;
-        const  uint16_t      m_ID;
-        BLoggerString        m_Tag;
-        BLoggerString        m_CachedPattern;
-        BLoggerSharedPattern m_CurrentPattern;
-        level                m_Filter;
-        bool                 m_LogToConsole;
-        bool                 m_LogToFile;
-        bool                 m_ColoredOutput;
+        BLoggerString         m_Tag;
+        BLoggerString         m_CachedPattern;
+        BLoggerSharedPattern  m_CurrentPattern;
+        BLoggerSharedSinkList m_Sinks;
+        level                 m_Filter;
     public:
-        BLoggerBase()
-            : m_ID(s_UniqueID++),
-            m_Tag("Unnamed"),
-            m_CachedPattern(BLOGGER_DEFAULT_PATTERN),
-            m_CurrentPattern(new BLoggerPattern(m_ID)),
-            m_Filter(level::trace),
-            m_LogToConsole(false),
-            m_LogToFile(false),
-            m_ColoredOutput(false)
-        {
-            m_CurrentPattern->init();
-            m_CurrentPattern->set_pattern(BLOGGER_DEFAULT_PATTERN, m_Tag);
-        }
-
-        BLoggerBase(BLoggerInString tag)
-            : m_ID(s_UniqueID++),
-            m_Tag(tag),
-            m_CachedPattern(BLOGGER_DEFAULT_PATTERN),
-            m_CurrentPattern(new BLoggerPattern(m_ID)),
-            m_Filter(level::trace),
-            m_LogToConsole(false),
-            m_LogToFile(false),
-            m_ColoredOutput(false)
-        {
-            m_CurrentPattern->init();
-            m_CurrentPattern->set_pattern(BLOGGER_DEFAULT_PATTERN, m_Tag);
-        }
-
-        BLoggerBase(
+        BaseLogger(
             BLoggerInString tag,
             level lvl,
             bool default_pattern
-        )
-            : m_ID(s_UniqueID++),
-            m_Tag(tag),
+        ) : m_Tag(tag),
             m_CachedPattern(""),
-            m_CurrentPattern(new BLoggerPattern(m_ID)),
-            m_Filter(lvl),
-            m_LogToConsole(false),
-            m_LogToFile(false),
-            m_ColoredOutput(false)
+            m_CurrentPattern(new BLoggerPattern()),
+            m_Sinks(new sink_list()),
+            m_Filter(lvl)
         {
             if (default_pattern)
             {
@@ -80,64 +46,30 @@ namespace BLogger {
             }
         }
 
-        BLoggerBase(const BLoggerBase& other) = delete;
-        BLoggerBase& operator=(const BLoggerBase& other) = delete;
+        BaseLogger(const BaseLogger& other) = delete;
+        BaseLogger& operator=(const BaseLogger& other) = delete;
 
-        BLoggerBase(BLoggerBase&& other) = default;
-        BLoggerBase& operator=(BLoggerBase&& other) = default;
+        BaseLogger(BaseLogger&& other) = default;
+        BaseLogger& operator=(BaseLogger&& other) = default;
 
         void SetPattern(BLoggerInString pattern)
         {
             m_CachedPattern = pattern;
-            BLoggerPattern* newPattern = new BLoggerPattern(m_ID);
+            BLoggerPattern* newPattern = new BLoggerPattern();
             newPattern->init();
             newPattern->set_pattern(pattern, m_Tag);
 
             m_CurrentPattern.reset(newPattern);
         }
 
-        virtual bool InitFileLogger(
-            BLoggerInString directoryPath,
-            size_t bytesPerFile,
-            size_t maxLogFiles,
-            bool rotateLogs = true) = 0;
-
-        virtual bool EnableFileLogger() = 0;
-        virtual void TerminateFileLogger() = 0;
-
-        void DisableFileLogger()
-        {
-            m_LogToFile = false;
-        }
-
-        void EnableConsoleLogger()
-        {
-            m_LogToConsole = true;
-        }
-
-        void DisableConsoleLogger()
-        {
-            m_LogToConsole = false;
-        }
-
-        void EnableColoredOutput()
-        {
-            m_ColoredOutput = true;
-        }
-
-        void DisableColoredOutput()
-        {
-            m_ColoredOutput = false;
-        }
-
         virtual void Flush() = 0;
 
         void Log(level lvl, BLoggerInString message)
         {
-            BLoggerFormatter formatter;
-
             if (!ShouldLog(lvl))
                 return;
+
+            BLoggerFormatter formatter;
 
             formatter.process_message(
                 message.data(),
@@ -152,19 +84,16 @@ namespace BLogger {
                 formatter.release_buffer(),
                 m_CurrentPattern,
                 time_point,
-                lvl,
-                m_LogToConsole,
-                m_LogToFile,
-                m_ColoredOutput
+                lvl
             });
         }
 
         void Log(level lvl, const bl_char* message)
         {
-            BLoggerFormatter formatter;
-
             if (!ShouldLog(lvl))
                 return;
+
+            BLoggerFormatter formatter;
 
             formatter.process_message(
                 message,
@@ -176,23 +105,20 @@ namespace BLogger {
             UPDATE_TIME(time_point, time_now);
 
             Post({
-                formatter.release_buffer(),
+                formatter.release_buffer(), 
                 m_CurrentPattern,
                 time_point,
-                lvl,
-                m_LogToConsole,
-                m_LogToFile,
-                m_ColoredOutput
+                lvl
             });
         }
 
         template<typename... Args>
         void Log(level lvl, BLoggerInString formattedMsg, Args&& ... args)
         {
-            BLoggerFormatter formatter;
-
             if (!ShouldLog(lvl))
                 return;
+
+            BLoggerFormatter formatter;
 
             formatter.process_message(
                 formattedMsg.data(), 
@@ -207,22 +133,19 @@ namespace BLogger {
 
             Post({
                 formatter.release_buffer(),
-                m_CurrentPattern,
+                m_CurrentPattern
                 time_point,
-                lvl,
-                m_LogToConsole,
-                m_LogToFile,
-                m_ColoredOutput
+                lvl
             });
         }
 
         template<typename... Args>
         void Log(level lvl, const bl_char* formattedMsg, Args&& ... args)
         {
-            BLoggerFormatter formatter;
-
             if (!ShouldLog(lvl))
                 return;
+
+            BLoggerFormatter formatter;
 
             formatter.process_message(
                 formattedMsg,
@@ -239,10 +162,7 @@ namespace BLogger {
                 formatter.release_buffer(),
                 m_CurrentPattern,
                 time_point,
-                lvl,
-                m_LogToConsole,
-                m_LogToFile,
-                m_ColoredOutput
+                lvl
             });
         }
 
@@ -383,21 +303,28 @@ namespace BLogger {
             m_Filter = lvl;
         }
 
-        virtual void SetTag(BLoggerInString tag) = 0;
-
-        static std::mutex& GetGlobalWriteLock()
+        void SetTag(BLoggerInString tag)
         {
-            return s_GlobalWrite;
+            for (auto& sink : *m_Sinks)
+            {
+                sink->set_tag(tag);
+            }
         }
 
-        virtual ~BLoggerBase() {}
+        void AddSink(BaseSink* sink)
+        {
+            m_Sinks->emplace_back(std::unique_ptr<BaseSink>(sink));
+            m_Sinks->back()->set_tag(m_Tag);
+        }
+
+        virtual ~BaseLogger() {}
     protected:
         bool ShouldLog(level lvl)
         {
             if (m_Filter > lvl)
                 return false;
 
-            if (!m_LogToConsole && !m_LogToFile)
+            if (m_Sinks->empty())
                 return false;
 
             if (m_CachedPattern.empty())
@@ -408,7 +335,4 @@ namespace BLogger {
 
         virtual void Post(BLoggerLogMessage&& msg) = 0;
     };
-
-    uint16_t   BLoggerBase::s_UniqueID = 1;
-    std::mutex BLoggerBase::s_GlobalWrite;
 }
