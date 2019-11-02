@@ -87,14 +87,14 @@ namespace BLogger {
     private:
         typedef std::shared_ptr<task>
             task_ptr;
-        typedef std::lock_guard<std::mutex>
+        typedef std::lock_guard<std::recursive_mutex>
             locker;
         typedef std::unique_ptr<thread_pool>
             thread_pool_ptr;
     private:
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr>     m_TaskQueue;
-        std::mutex               m_QueueAccess;
+        std::recursive_mutex     m_QueueAccess;
         std::condition_variable  m_Notifier;
         bool                     m_Running;
     private:
@@ -177,14 +177,46 @@ namespace BLogger {
             for (auto& worker : m_Pool)
                 worker.join();
         }
+
     public:
+        static void reset()
+        {
+            // Don't block any other threads
+            // while we delete the current thread pool
+
+            thread_pool* xtp = nullptr;
+
+            {
+                auto& tpc = lifetime_controller();
+                locker lock(tpc);
+
+                xtp = get().release();
+                get().reset(nullptr);
+            }
+
+            delete xtp;
+        }
+
+        static std::recursive_mutex& lifetime_controller()
+        {
+            static std::recursive_mutex controller;
+
+            return controller;
+        }
+
         static thread_pool_ptr& get()
         {
             static thread_pool_ptr instance;
 
+            auto& tpc = lifetime_controller();
+            locker lock(tpc);
+
             if (!instance)
             {
-                instance.reset(new thread_pool(std::thread::hardware_concurrency()));
+                instance.reset(
+                    new thread_pool(
+                        std::thread::hardware_concurrency()
+                    ));
             }
 
             return instance;
@@ -242,7 +274,9 @@ namespace BLogger {
             Refs()--;
 
             if (!Refs())
-                thread_pool::get().reset();
+            {
+                thread_pool::reset();
+            }
         }
     private:
         atomui16_t& Refs()
