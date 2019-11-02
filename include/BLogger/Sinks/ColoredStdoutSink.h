@@ -15,7 +15,8 @@ namespace BLogger {
     {
         void write(BLoggerLogMessage& msg) override
         {
-            locker lock(s_GlobalWrite);
+            auto& wl = GetGlobalWriteLock();
+            locker lock(wl);
 
             switch (msg.log_level())
             {
@@ -37,7 +38,8 @@ namespace BLogger {
 
         void flush() override
         {
-            locker lock(s_GlobalWrite);
+            auto& wl = GetGlobalWriteLock();
+            locker lock(wl);
             std::cout.flush();
         }
     };

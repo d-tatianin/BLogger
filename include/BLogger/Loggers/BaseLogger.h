@@ -133,7 +133,7 @@ namespace BLogger {
 
             Post({
                 formatter.release_buffer(),
-                m_CurrentPattern,
+                m_CurrentPattern
                 time_point,
                 lvl
             });

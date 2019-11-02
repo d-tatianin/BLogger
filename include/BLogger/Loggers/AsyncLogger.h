@@ -91,7 +91,6 @@ namespace BLogger {
         typedef std::unique_ptr<thread_pool>
             thread_pool_ptr;
     private:
-        static thread_pool_ptr   s_Instance;
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr>     m_TaskQueue;
         std::mutex               m_QueueAccess;
@@ -180,12 +179,14 @@ namespace BLogger {
     public:
         static thread_pool_ptr& get()
         {
-            if (!s_Instance)
+            static thread_pool_ptr instance;
+
+            if (!instance)
             {
-                s_Instance.reset(new thread_pool(std::thread::hardware_concurrency()));
+                instance.reset(new thread_pool(std::thread::hardware_concurrency()));
             }
 
-            return s_Instance;
+            return instance;
         }
 
         void post_message(BLoggerLogMessage&& message, BLoggerSharedSinkList& sinks)
@@ -213,8 +214,6 @@ namespace BLogger {
             shutdown();
         }
     };
-
-    thread_pool::thread_pool_ptr thread_pool::s_Instance;
 
     class AsyncLogger : public BaseLogger
     {

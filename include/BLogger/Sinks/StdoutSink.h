@@ -10,17 +10,17 @@ namespace BLogger {
 
     class StdoutSink : public BaseSink
     {
-    protected:
-        static std::mutex s_GlobalWrite;
     public:
         static std::mutex& GetGlobalWriteLock()
         {
-            return s_GlobalWrite;
+            static std::mutex globalWrite;
+            return globalWrite;
         }
 
         void write(BLoggerLogMessage& msg) override
         {
-            locker lock(s_GlobalWrite);
+            auto& wl = GetGlobalWriteLock();
+            locker lock(wl);
 
             std::cout.write(
                 msg.data(),
@@ -30,10 +30,10 @@ namespace BLogger {
 
         void flush() override
         {
-            locker lock(s_GlobalWrite);
+            auto& wl = GetGlobalWriteLock();
+            locker lock(wl);
+
             std::cout.flush();
         }
     };
 }
-
-std::mutex BLogger::StdoutSink::s_GlobalWrite;
