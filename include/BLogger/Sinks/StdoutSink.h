@@ -13,8 +13,12 @@ namespace BLogger {
     public:
         static std::mutex& GetGlobalWriteLock()
         {
-            static std::mutex globalWrite;
-            return globalWrite;
+            // A little workaround to extend
+            // the lifetime of this object
+            static std::mutex* globalWrite 
+                = new std::mutex();
+
+            return *globalWrite;
         }
 
         void write(BLoggerLogMessage& msg) override

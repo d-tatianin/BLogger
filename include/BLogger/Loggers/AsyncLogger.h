@@ -87,14 +87,14 @@ namespace BLogger {
     private:
         typedef std::shared_ptr<task>
             task_ptr;
-        typedef std::lock_guard<std::recursive_mutex>
+        typedef std::lock_guard<std::mutex>
             locker;
         typedef std::unique_ptr<thread_pool>
             thread_pool_ptr;
     private:
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr>     m_TaskQueue;
-        std::recursive_mutex     m_QueueAccess;
+        std::mutex               m_QueueAccess;
         std::condition_variable  m_Notifier;
         bool                     m_Running;
     private:
@@ -112,6 +112,14 @@ namespace BLogger {
 
         thread_pool& operator=(const thread_pool& other) = delete;
         thread_pool& operator=(thread_pool&& other) = delete;
+
+        static std::mutex& HelperMutex()
+        {
+            static std::mutex* ihelper
+                = new std::mutex();
+
+            return *ihelper;
+        }
 
         void worker()
         {
@@ -176,40 +184,17 @@ namespace BLogger {
 
             for (auto& worker : m_Pool)
                 worker.join();
+
+            delete &HelperMutex();
         }
 
     public:
-        static void reset()
-        {
-            // Don't block any other threads
-            // while we delete the current thread pool
-
-            thread_pool* xtp = nullptr;
-
-            {
-                auto& tpc = lifetime_controller();
-                locker lock(tpc);
-
-                xtp = get().release();
-                get().reset(nullptr);
-            }
-
-            delete xtp;
-        }
-
-        static std::recursive_mutex& lifetime_controller()
-        {
-            static std::recursive_mutex controller;
-
-            return controller;
-        }
-
         static thread_pool_ptr& get()
         {
             static thread_pool_ptr instance;
-
-            auto& tpc = lifetime_controller();
-            locker lock(tpc);
+            
+            auto& helper = HelperMutex();
+            locker lock(helper);
 
             if (!instance)
             {
@@ -250,9 +235,6 @@ namespace BLogger {
 
     class AsyncLogger : public BaseLogger
     {
-    private:
-        typedef std::atomic<uint16_t>
-            atomui16_t;
     public:
         AsyncLogger(
             BLoggerInString tag,
@@ -261,7 +243,6 @@ namespace BLogger {
         )
             : BaseLogger(tag, lvl, default_pattern)
         {
-            Refs()++;
         }
 
         void Flush() override
@@ -269,22 +250,8 @@ namespace BLogger {
             thread_pool::get()->post_flush(m_Sinks);
         }
 
-        ~AsyncLogger() 
-        {
-            Refs()--;
-
-            if (!Refs())
-            {
-                thread_pool::reset();
-            }
-        }
+        ~AsyncLogger() {}
     private:
-        atomui16_t& Refs()
-        {
-            static atomui16_t refs = 0;
-            return refs;
-        }
-
         void Post(BLoggerLogMessage&& msg) override
         {
             thread_pool::get()->post_message(std::move(msg), m_Sinks);
