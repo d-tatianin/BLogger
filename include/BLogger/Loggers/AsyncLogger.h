@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 #include <vector>
 #include <deque>
@@ -217,6 +218,9 @@ namespace BLogger {
 
     class AsyncLogger : public BaseLogger
     {
+    private:
+        typedef std::atomic<uint16_t>
+            atomui16_t;
     public:
         AsyncLogger(
             BLoggerInString tag,
@@ -225,6 +229,7 @@ namespace BLogger {
         )
             : BaseLogger(tag, lvl, default_pattern)
         {
+            Refs()++;
         }
 
         void Flush() override
@@ -232,8 +237,20 @@ namespace BLogger {
             thread_pool::get()->post_flush(m_Sinks);
         }
 
-        ~AsyncLogger() {}
+        ~AsyncLogger() 
+        {
+            Refs()--;
+
+            if (!Refs())
+                thread_pool::get().reset();
+        }
     private:
+        atomui16_t& Refs()
+        {
+            static atomui16_t refs = 0;
+            return refs;
+        }
+
         void Post(BLoggerLogMessage&& msg) override
         {
             thread_pool::get()->post_message(std::move(msg), m_Sinks);
