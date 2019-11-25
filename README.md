@@ -96,6 +96,12 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 -   `Warning(...)` -> Logs the given message with logging level `warn`.
 -   `Error(...)` -> Logs the given message with logging level `error`.
 -   `Critical(...)` -> Logs the given message with logging level `crit`.
+--- 
+### - Unicode logging
+In order to enable Unicode mode type `#define BLOGGER_UNICODE_MODE` before including BLogger in any translation unit (aka .cpp), it's recommended that you create a separate file like `logger.h` where you set the logging mode, instead of typing the unicode-enabling macro in every file where BLogger is included.
+
+Please note that using `std::cout` when Unicode mode is enabled can result in undefined behavior. Please use `std::wcout` and all the wide-string counterparts from the STL. BLogger also provides useful defines so that you don't have to worry about looking for the correct function/type. Such defines as `BLOGGER_MAKE_UNICODE`, `BLOGGER_COUT` and `COMPATIBLE_OSTREAM` are available (in Core.h) in case you want to make the logger mode hot swappable.
+
 ---
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
