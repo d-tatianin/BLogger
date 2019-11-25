@@ -78,19 +78,15 @@ namespace BLogger {
 
         void write(BLoggerLogMessage& msg) override
         {
-            size_t size = msg.size();
-
             locker lock(m_FileAccess);
 
             if (!ok())
                 return;
 
-            ++size;
-
-            if (m_BytesPerFile && size > m_BytesPerFile)
+            if (m_BytesPerFile && msg.size() > m_BytesPerFile)
                 return;
 
-            if (m_BytesPerFile && (m_CurrentBytes + size) > m_BytesPerFile)
+            if (m_BytesPerFile && (m_CurrentBytes + msg.size()) > m_BytesPerFile)
             {
                 if (m_CurrentLogFiles == m_MaxLogFiles)
                 {
@@ -111,9 +107,9 @@ namespace BLogger {
                 }
             }
 
-            m_CurrentBytes += size;
+            m_CurrentBytes += msg.size();
 
-            fwrite(msg.data(), 1, size - 1, m_File);
+            fwrite(msg.data(), sizeof(bl_char), msg.size(), m_File);
         }
 
         void flush() override
@@ -141,9 +137,9 @@ namespace BLogger {
         {
             outPath += m_DirectoryPath;
             outPath += m_CachedTag;
-            outPath += '-';
-            outPath += std::to_string(m_CurrentLogFiles);
-            outPath += ".log";
+            outPath += BLOGGER_MAKE_UNICODE('-');
+            outPath += TO_STRING(m_CurrentLogFiles);
+            outPath += BLOGGER_MAKE_UNICODE(".log");
         }
 
         void newLogFile()

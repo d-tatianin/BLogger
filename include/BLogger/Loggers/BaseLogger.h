@@ -3,14 +3,15 @@
 #include <ctime>
 #include <list>
 
-#include "BLogger/LogLevels.h"
-#include "BLogger/Formatter/Formatter.h"
-#include "BLogger/OS/Functions.h"
+#include "BLogger/Formatter.h"
 #include "BLogger/Loggers/LogMessage.h"
+#include "BLogger/OS/Functions.h"
 #include "BLogger/Sinks/BaseSink.h"
+#include "BLogger/LogLevels.h"
 
 #define BLOGGER_INFINITE 0u
-#define BLOGGER_DEFAULT_PATTERN "[{ts}][{lvl}][{tag}] {msg}"
+
+#define BLOGGER_DEFAULT_PATTERN BLOGGER_MAKE_UNICODE("[{ts}][{lvl}][{tag}] {msg}")
 
 namespace BLogger {
 
@@ -33,7 +34,7 @@ namespace BLogger {
             level lvl,
             bool default_pattern
         ) : m_Tag(tag),
-            m_CachedPattern(""),
+            m_CachedPattern(BLOGGER_MAKE_UNICODE("")),
             m_CurrentPattern(new BLoggerPattern()),
             m_Sinks(new sink_list()),
             m_Filter(lvl)
@@ -97,7 +98,7 @@ namespace BLogger {
 
             formatter.process_message(
                 message,
-                strlen(message)
+                STRING_LENGTH(message)
             );
 
             std::tm time_point;
@@ -133,7 +134,7 @@ namespace BLogger {
 
             Post({
                 formatter.release_buffer(),
-                m_CurrentPattern
+                m_CurrentPattern,
                 time_point,
                 lvl
             });
@@ -149,7 +150,7 @@ namespace BLogger {
 
             formatter.process_message(
                 formattedMsg,
-                strlen(formattedMsg)
+                STRING_LENGTH(formattedMsg)
             );
 
             BLOGGER_PROCESS_PACK(formatter, args);
@@ -305,6 +306,9 @@ namespace BLogger {
 
         void SetTag(BLoggerInString tag)
         {
+            m_Tag = tag;
+            SetPattern(m_CachedPattern);
+
             for (auto& sink : *m_Sinks)
             {
                 sink->set_tag(tag);

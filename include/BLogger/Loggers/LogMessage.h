@@ -1,7 +1,7 @@
 #pragma once
 
+#include "BLogger/Formatter.h"
 #include "BLogger/LogLevels.h"
-#include "BLogger/Formatter/Formatter.h"
 
 namespace BLogger {
 

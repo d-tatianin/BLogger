@@ -7,9 +7,21 @@
 #include <vector>
 #include <mutex>
 
-#include "BLogger/LogLevels.h"
-#include "FormatUtilities.h"
 #include "BLogger/OS/Functions.h"
+#include "BLogger/LogLevels.h"
+
+#ifdef BLOGGER_UNICODE_MODE
+    #ifdef _WIN32
+        #define INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE('s')
+        #define FULL_INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE("%s")
+    #elif defined(__linux__)
+        #define INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE('S')
+        #define FULL_INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE("%S")
+    #endif
+#else
+    #define INTERNAL_FORMAT_ARG 's'
+    #define FULL_INTERNAL_FORMAT_ARG "%s"
+#endif
 
 namespace BLogger
 {
@@ -104,7 +116,7 @@ namespace BLogger
 
         size_t zero_term()
         {
-            auto loc = std::find(m_Buffer.begin(), m_Buffer.end(), '\0');
+            auto loc = std::find(m_Buffer.begin(), m_Buffer.end(), BLOGGER_MAKE_UNICODE('\0'));
 
             return loc != m_Buffer.end() ? ptr_to_index(&*loc) : m_Buffer.size();
         }
@@ -117,10 +129,10 @@ namespace BLogger
             if (pattern.empty())
                 return true;
 
-            #define BLOGGER_TS_PATTERN  "{ts}"
-            #define BLOGGER_TAG_PATTERN "{tag}"
-            #define BLOGGER_LVL_PATTERN "{lvl}"
-            #define BLOGGER_MSG_PATTERN "{msg}"
+            #define BLOGGER_TS_PATTERN  BLOGGER_MAKE_UNICODE("{ts}")
+            #define BLOGGER_TAG_PATTERN BLOGGER_MAKE_UNICODE("{tag}")
+            #define BLOGGER_LVL_PATTERN BLOGGER_MAKE_UNICODE("{lvl}")
+            #define BLOGGER_MSG_PATTERN BLOGGER_MAKE_UNICODE("{msg}")
 
             MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), pattern.data(), pattern.size());
 
@@ -152,7 +164,7 @@ namespace BLogger
                        ts_offset :
                        new_offset(BLOGGER_TS_PATTERN);
 
-                    m_TimeSize = strlen(BLOGGER_TIMESTAMP);
+                    m_TimeSize = STRING_LENGTH(BLOGGER_TIMESTAMP);
 
                     set_arg(
                         first_arg ? 
@@ -186,7 +198,7 @@ namespace BLogger
                         first_arg ?
                         lvl_offset :
                         new_offset(BLOGGER_LVL_PATTERN),
-                        "%s", 
+                        FULL_INTERNAL_FORMAT_ARG, 
                         BLOGGER_LVL_PATTERN
                     );
 
@@ -199,7 +211,7 @@ namespace BLogger
                         first_arg ?
                         msg_offset :
                         new_offset(BLOGGER_MSG_PATTERN),
-                        "%s",
+                        FULL_INTERNAL_FORMAT_ARG,
                         BLOGGER_MSG_PATTERN
                     );
 
@@ -236,7 +248,7 @@ namespace BLogger
                     m_Buffer.end(),
                     arg,
                     arg +
-                    std::strlen(arg)
+                    STRING_LENGTH(arg)
                 );
 
                 return ptr_to_index(&*index);
@@ -244,10 +256,10 @@ namespace BLogger
 
             void set_arg(size_t offset, const bl_char* pattern, const bl_char* arg)
             {
-                m_Buffer[offset] = '%';
-                m_Buffer[offset + 1] = 's';
+                m_Buffer[offset] = BLOGGER_MAKE_UNICODE('%');
+                m_Buffer[offset + 1] = INTERNAL_FORMAT_ARG;
 
-                int32_t extra_size = static_cast<int32_t>(std::strlen(arg) - 2);
+                int32_t extra_size = static_cast<int32_t>(STRING_LENGTH(arg) - 2);
 
                 bl_char* arg_end = (&m_Buffer[offset]) + 2;
 
@@ -270,7 +282,7 @@ namespace BLogger
                 auto size = m_Buffer.size() -
                     ptr_to_index(arg_end);
 
-                snprintf(
+                FORMAT_STRING(
                     &m_Buffer[offset],
                     size,
                     copy + offset,
@@ -371,6 +383,9 @@ namespace BLogger
             write_to(msg, size);
         }
 
+        #pragma warning(push)
+        #pragma warning(disable:6054) // String might not be zero-terminated (we don't care)
+
         static void merge_pattern(
             bl_string& formatted_msg,
             BLoggerSharedPattern global_pattern,
@@ -389,7 +404,7 @@ namespace BLogger
             if (ptrn.timestamp())
             {
                 bl_char memorized = ptrn.last_ts_char();
-                auto intended_size = strftime(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
+                auto intended_size = TIME_TO_STRING(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
                 ptrn.set_memorized(memorized);
 
                 if (!ptrn.lvl() && !ptrn.msg())
@@ -404,7 +419,7 @@ namespace BLogger
                 bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
-                auto intended_size = snprintf(
+                auto intended_size = FORMAT_STRING(
                     ptrn.data(),
                     ptrn.size(),
                     copy,
@@ -427,7 +442,7 @@ namespace BLogger
                 bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
-                auto intended_size = snprintf(
+                auto intended_size = FORMAT_STRING(
                     ptrn.data(),
                     ptrn.size(),
                     copy,
@@ -445,7 +460,7 @@ namespace BLogger
                 bl_char copy[BLOGGER_BUFFER_SIZE];
                 MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
-                auto intended_size = snprintf(
+                auto intended_size = FORMAT_STRING(
                     ptrn.data(),
                     ptrn.size(),
                     copy,
@@ -472,15 +487,15 @@ namespace BLogger
     private:
         void operator<<(BLoggerStringStream& ss)
         {
-            BLoggerString pattern = "{";
-            pattern += std::to_string(m_ArgCount++);
-            pattern += "}";
+            BLoggerString pattern = BLOGGER_MAKE_UNICODE("{");
+            pattern += TO_STRING(m_ArgCount++);
+            pattern += BLOGGER_MAKE_UNICODE("}");
             bl_char* cursor = get_pos_arg(pattern);
 
             if (cursor)
             {
                 cursor[0] = '%';
-                cursor[1] = 's';
+                cursor[1] = INTERNAL_FORMAT_ARG;
 
                 size_t offset = cursor - m_Buffer.data() + 2;
                 bl_char* begin = m_Buffer.data() + offset + pattern.size() - 2;
@@ -495,21 +510,21 @@ namespace BLogger
                 if (!cursor) return;
 
                 *cursor = '%';
-                *(cursor + 1) = 's';
+                *(cursor + 1) = INTERNAL_FORMAT_ARG;
             }
 
             bl_char format[BLOGGER_BUFFER_SIZE];
             MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
             auto intended_size =
-                snprintf(
+                FORMAT_STRING(
                     m_Buffer.data(),
                     m_Buffer.size(),
                     format,
                     ss.str().c_str()
                 );
 
-            // if snprintf returned more bytes than we have
+            // if FORMAT_STRING returned more bytes than we have
             // that means that our buffer is full
             // so we just set the capacity to zero
             intended_size > m_Buffer.size() ?
@@ -517,6 +532,7 @@ namespace BLogger
                 m_Occupied = intended_size;
             m_Cursor = m_Buffer.data() + m_Occupied;
         }
+        #pragma warning(pop) // 6054 ^
 
         void write_to_enclosed(const bl_char* data, size_t size, bl_char opening = '[', bl_char closing = ']')
         {
@@ -539,7 +555,7 @@ namespace BLogger
                 m_Buffer.end(),
                 BLOGGER_ARG_PATTERN,
                 BLOGGER_ARG_PATTERN +
-                std::strlen(BLOGGER_ARG_PATTERN)
+                STRING_LENGTH(BLOGGER_ARG_PATTERN)
             );
 
             return (index != m_Buffer.end() ? &(*index) : nullptr);

@@ -50,11 +50,11 @@ struct BLoggerProps
         : async(true),
         console_logger(true),
         colored(true),
-        tag("Unnamed"),
-        pattern(""),
+        tag(BLOGGER_MAKE_UNICODE("Unnamed")),
+        pattern(BLOGGER_MAKE_UNICODE("")),
         filter(level::trace),
         file_logger(false),
-        path(""),
+        path(BLOGGER_MAKE_UNICODE("")),
         bytes_per_file(BLOGGER_INFINITE),
         log_files(0),
         rotate_logs(true)
@@ -86,7 +86,7 @@ public:
         if (!props.pattern.empty())
             out_logger->SetPattern(props.pattern);
 
-        if (props.tag.empty()) props.tag = "Unnamed";
+        if (props.tag.empty()) props.tag = BLOGGER_MAKE_UNICODE("Unnamed");
 
         if (props.console_logger)
         {

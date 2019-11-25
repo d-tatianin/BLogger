@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OS/Colors.h"
+#include "Core.h"
 
 enum class level : int
 {
@@ -12,16 +13,16 @@ enum class level : int
     crit
 };
 
-inline const char* LevelToString(level lvl)
+inline const bl_char* LevelToString(level lvl)
 {
     switch (lvl)
     {
-    case level::trace:  return "TRACE";
-    case level::debug:  return "DEBUG";
-    case level::info:   return "INFO";
-    case level::warn:   return "WARNING";
-    case level::error:  return "ERROR";
-    case level::crit:   return "CRITICAL";
+    case level::trace:  return BLOGGER_MAKE_UNICODE("TRACE");
+    case level::debug:  return BLOGGER_MAKE_UNICODE("DEBUG");
+    case level::info:   return BLOGGER_MAKE_UNICODE("INFO");
+    case level::warn:   return BLOGGER_MAKE_UNICODE("WARNING");
+    case level::error:  return BLOGGER_MAKE_UNICODE("ERROR");
+    case level::crit:   return BLOGGER_MAKE_UNICODE("CRITICAL");
     default:            return nullptr;
     }
 }

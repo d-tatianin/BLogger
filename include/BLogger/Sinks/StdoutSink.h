@@ -2,15 +2,19 @@
 
 #include <iostream>
 
+#include "BaseSink.h"
 #include "BLogger/Loggers/BaseLogger.h"
-#include "BLogger/Formatter/FormatUtilities.h"
-#include "BLogger/Sinks/BaseSink.h"
 
 namespace BLogger {
 
     class StdoutSink : public BaseSink
     {
     public:
+        StdoutSink()
+        {
+            INIT_UNICODE_MODE();
+        }
+
         static std::mutex& GetGlobalWriteLock()
         {
             // A little workaround to extend
@@ -26,7 +30,7 @@ namespace BLogger {
             auto& wl = GetGlobalWriteLock();
             locker lock(wl);
 
-            std::cout.write(
+            BLOGGER_COUT.write(
                 msg.data(),
                 msg.size()
             );
@@ -37,7 +41,7 @@ namespace BLogger {
             auto& wl = GetGlobalWriteLock();
             locker lock(wl);
 
-            std::cout.flush();
+            BLOGGER_COUT.flush();
         }
     };
 }

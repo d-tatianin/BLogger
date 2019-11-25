@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-#include "BLogger/Formatter/FormatUtilities.h"
+#include "BLogger/Core.h"
 #include "BLogger/Loggers/BaseLogger.h"
 #include "BLogger/Sinks/FileSink.h"
 #include "BLogger/Sinks/StdoutSink.h"

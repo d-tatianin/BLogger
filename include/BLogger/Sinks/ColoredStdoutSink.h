@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "BLogger/Loggers/BaseLogger.h"
-#include "BLogger/Formatter/FormatUtilities.h"
+#include "BLogger/Core.h"
 #include "BLogger/Sinks/BaseSink.h"
 #include "BLogger/Sinks/StdoutSink.h"
 
@@ -28,7 +28,7 @@ namespace BLogger {
                 case level::crit:  set_output_color(BLOGGER_CRIT_COLOR);  break;
             }
 
-            std::cout.write(
+            BLOGGER_COUT.write(
                 msg.data(),
                 msg.size()
             );
@@ -40,7 +40,7 @@ namespace BLogger {
         {
             auto& wl = GetGlobalWriteLock();
             locker lock(wl);
-            std::cout.flush();
+            BLOGGER_COUT.flush();
         }
     };
 }
