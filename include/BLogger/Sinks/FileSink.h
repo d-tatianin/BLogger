@@ -109,7 +109,7 @@ namespace BLogger {
 
             m_CurrentBytes += msg.size();
 
-            fwrite(msg.data(), sizeof(bl_char), msg.size(), m_File);
+            FILE_WRITE(msg.data(), msg.size(), m_File);
         }
 
         void flush() override

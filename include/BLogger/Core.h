@@ -5,6 +5,14 @@
 #include <vector>
 #include <mutex>
 
+#ifdef _WIN32
+    #ifndef BLOGGER_FULL_WINDOWS
+        #define NOMINMAX
+        #define WIN32_MEAN_AND_LEAN
+    #endif
+    #include <windows.h>
+#endif
+
 // ---- Custom BLogger types ----
 
 #ifdef BLOGGER_UNICODE_MODE
@@ -14,7 +22,7 @@
     #define BLOGGER_MAKE_UNICODE(str) L##str
     #define BLOGGER_COUT ::std::wcout
     #ifdef _WIN32
-        #define BLOGGER_FILEMODE BLOGGER_MAKE_UNICODE("w, ccs=UTF-8")
+        #define BLOGGER_FILEMODE BLOGGER_MAKE_UNICODE("w")
     #elif defined(__linux__)
         #define BLOGGER_FILEMODE "w"
     #endif

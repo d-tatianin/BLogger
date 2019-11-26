@@ -31,14 +31,6 @@
 #endif
 
 #ifdef _WIN32
-
-    // make windows.h less evil by default
-    #ifndef BLOGGER_FULL_WINDOWS
-        #define NOMINMAX
-        #define WIN32_MEAN_AND_LEAN
-    #endif
-    #include <Windows.h>
-
     typedef WORD blogger_color;
 
     inline void set_output_color(blogger_color color)
