@@ -73,7 +73,7 @@ Currently supported colors:
 -   `BLOGGER_RESET` -> used to reset the sink to its default color.
 -   `BLOGGER_DEFAULT` -> same as `BLOGGER_RESET`.
 
-Current stdout color is set with `set_output_color(blogger_color color)` defined inside Colors.h, it's automatically managed by BLogger, however, feel free to use it for your own purposes.  
+Current stdout color is set with `set_output_color(color color)` defined inside Colors.h, it's automatically managed by BLogger, however, feel free to use it for your own purposes.  
 
 ---
 ### - Logging your messages
@@ -97,11 +97,9 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 -   `Error(...)` -> Logs the given message with logging level `error`.
 -   `Critical(...)` -> Logs the given message with logging level `crit`.
 --- 
-### - Unicode logging
-In order to enable Unicode mode type `#define BLOGGER_UNICODE_MODE` before including BLogger in any translation unit (aka .cpp), it's recommended that you create a separate file like `logger.h` where you set the logging mode, instead of typing the unicode-enabling macro in every file where BLogger is included.
-
-Please note that using `std::cout` when Unicode mode is enabled can result in undefined behavior. Please use `std::wcout` and all the wide-string counterparts from the STL. BLogger also provides useful defines so that you don't have to worry about looking for the correct function/type. Such defines as `BLOGGER_MAKE_UNICODE`, `BLOGGER_COUT` and `COMPATIBLE_OSTREAM` are available (in Core.h) in case you want to make the logger mode hot swappable.
-
+### - Unicode logging  
+-   In order to enable Unicode mode type `#define BLOGGER_UNICODE_MODE` before including BLogger.h in any translation unit (aka .cpp).  
+-   When Unicode mode is enabled, all functions expect wide strings and `const wchar_t*` for literals, wide string literal is defined by typing `L` before the opening quotes. Same way `std::ostream` is replaced with `std::wostream` for passing a user defined data type. As a way to make you life easier BLogger offers a bunch of useful defines to make switching modes easier: `BLOGGER_WIDEN_IF_NEEDED(string)`, `BLOGGER_OSTREAM`, `BLOGGER_COUT` are safe to use in both modes. 
 ---
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
