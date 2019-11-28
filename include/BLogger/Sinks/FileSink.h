@@ -86,7 +86,7 @@ namespace BLogger {
                 return;
 
             size_t byte_limit = msg.size() * 2;
-            char* narrow; STACK_ALLOC(byte_limit, narrow);
+            char* narrow; BLOGGER_STACK_ALLOC(byte_limit, narrow);
             auto mb_size =
                 WideCharToMultiByte(
                     CP_UTF8, NULL,
@@ -136,7 +136,7 @@ namespace BLogger {
                 return;
 
             size_t byte_limit = msg.size() * 2;
-            char* narrow; STACK_ALLOC(byte_limit, narrow);
+            char* narrow; BLOGGER_STACK_ALLOC(byte_limit, narrow);
 
             auto mb_size = wcstombs(narrow, msg.data(), byte_limit);
 
@@ -205,7 +205,7 @@ namespace BLogger {
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(msg.size());
 
-            FILE_WRITE(msg.data(), msg.size(), m_File);
+            BLOGGER_FILE_WRITE(msg.data(), msg.size(), m_File);
         }
 #endif
 
@@ -234,9 +234,9 @@ namespace BLogger {
         {
             outPath += m_DirectoryPath;
             outPath += m_CachedTag;
-            outPath += BLOGGER_MAKE_UNICODE('-');
-            outPath += TO_STRING(m_CurrentLogFiles);
-            outPath += BLOGGER_MAKE_UNICODE(".log");
+            outPath += BLOGGER_WIDEN_IF_NEEDED('-');
+            outPath += BLOGGER_TO_STRING(m_CurrentLogFiles);
+            outPath += BLOGGER_WIDEN_IF_NEEDED(".log");
         }
 
         void newLogFile()
@@ -250,7 +250,7 @@ namespace BLogger {
             BLoggerString fullPath;
             constructFullPath(fullPath);
 
-            OPEN_FILE(m_File, fullPath);
+            BLOGGER_OPEN_FILE(m_File, fullPath);
         }
     };
 }

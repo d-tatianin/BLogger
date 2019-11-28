@@ -11,7 +11,7 @@
 
 #define BLOGGER_INFINITE 0u
 
-#define BLOGGER_DEFAULT_PATTERN BLOGGER_MAKE_UNICODE("[{ts}][{lvl}][{tag}] {msg}")
+#define BLOGGER_DEFAULT_PATTERN BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}")
 
 namespace BLogger {
 
@@ -34,12 +34,12 @@ namespace BLogger {
             level lvl,
             bool default_pattern
         ) : m_Tag(tag),
-            m_CachedPattern(BLOGGER_MAKE_UNICODE("")),
+            m_CachedPattern(BLOGGER_WIDEN_IF_NEEDED("")),
             m_CurrentPattern(new BLoggerPattern()),
             m_Sinks(new sink_list()),
             m_Filter(lvl)
         {
-            INIT_UNICODE_MODE();
+            BLOGGER_INIT_UNICODE_MODE();
 
             if (default_pattern)
             {
@@ -81,7 +81,7 @@ namespace BLogger {
 
             std::tm time_point;
             auto time_now = std::time(nullptr);
-            UPDATE_TIME(time_point, time_now);
+            BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
                 formatter.release_buffer(),
@@ -100,12 +100,12 @@ namespace BLogger {
 
             formatter.process_message(
                 message,
-                STRING_LENGTH(message)
+                BLOGGER_STRING_LENGTH(message)
             );
 
             std::tm time_point;
             auto time_now = std::time(nullptr);
-            UPDATE_TIME(time_point, time_now);
+            BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
                 formatter.release_buffer(), 
@@ -132,7 +132,7 @@ namespace BLogger {
 
             std::tm time_point;
             auto time_now = std::time(nullptr);
-            UPDATE_TIME(time_point, time_now);
+            BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
                 formatter.release_buffer(),
@@ -152,14 +152,14 @@ namespace BLogger {
 
             formatter.process_message(
                 formattedMsg,
-                STRING_LENGTH(formattedMsg)
+                BLOGGER_STRING_LENGTH(formattedMsg)
             );
 
             BLOGGER_PROCESS_PACK(formatter, args);
 
             std::tm time_point;
             auto time_now = std::time(nullptr);
-            UPDATE_TIME(time_point, time_now);
+            BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
                 formatter.release_buffer(),

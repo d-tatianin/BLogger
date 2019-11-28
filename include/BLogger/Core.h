@@ -19,29 +19,29 @@
     #include <wchar.h>
     #include <cwchar>
     typedef wchar_t bl_char;
-    #define BLOGGER_MAKE_UNICODE(str) L##str
+    #define BLOGGER_WIDEN_IF_NEEDED(str) L##str
     #define BLOGGER_COUT ::std::wcout
     #ifdef _WIN32
-        #define BLOGGER_FILEMODE BLOGGER_MAKE_UNICODE("w")
+        #define BLOGGER_FILEMODE BLOGGER_WIDEN_IF_NEEDED("w")
     #elif defined(__linux__)
         #define BLOGGER_EXTRA_BYTES 0
         #define BLOGGER_FILEMODE "w"
     #endif
-    #define STRING_LENGTH(string) wcslen(string)
-    #define TIME_TO_STRING(out, out_size, in_format, in_time) wcsftime(out, out_size, in_format, in_time)
-    #define FORMAT_STRING(out, out_size, in_format, ...) swprintf(out, out_size, in_format, __VA_ARGS__)
-    #define TO_STRING(what) ::std::to_wstring(what)
-    #define COMPATIBLE_OSTREAM ::std::wostream
+    #define BLOGGER_STRING_LENGTH(string) wcslen(string)
+    #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) wcsftime(out, out_size, in_format, in_time)
+    #define BLOGGER_FORMAT_STRING(out, out_size, in_format, ...) swprintf(out, out_size, in_format, __VA_ARGS__)
+    #define BLOGGER_TO_STRING(what) ::std::to_wstring(what)
+    #define BLOGGER_OSTREAM ::std::wostream
 #else
     typedef char bl_char;
-    #define BLOGGER_MAKE_UNICODE(str) str
+    #define BLOGGER_WIDEN_IF_NEEDED(str) str
     #define BLOGGER_COUT ::std::cout
     #define BLOGGER_FILEMODE "w"
-    #define STRING_LENGTH(string) strlen(string)
-    #define TIME_TO_STRING(out, out_size, in_format, in_time) strftime(out, out_size, in_format, in_time)
-    #define FORMAT_STRING(out, out_size, in_format, ...) snprintf(out, out_size, in_format, __VA_ARGS__)
-    #define TO_STRING(what) ::std::to_string((what))
-    #define COMPATIBLE_OSTREAM ::std::ostream
+    #define BLOGGER_STRING_LENGTH(string) strlen(string)
+    #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) strftime(out, out_size, in_format, in_time)
+    #define BLOGGER_FORMAT_STRING(out, out_size, in_format, ...) snprintf(out, out_size, in_format, __VA_ARGS__)
+    #define BLOGGER_TO_STRING(what) ::std::to_string((what))
+    #define BLOGGER_OSTREAM ::std::ostream
 #endif
 
 #ifdef _WIN32 // CLRF?
@@ -53,8 +53,7 @@
 typedef std::basic_string<bl_char, std::char_traits<bl_char>> BLoggerString;
 typedef std::basic_stringstream<bl_char, std::char_traits<bl_char>> BLoggerStringStream;
 typedef std::vector<bl_char> bl_string;
-using internal_buffer = bl_string;
-typedef internal_buffer BLoggerBuffer;
+typedef bl_string BLoggerBuffer;
 typedef std::lock_guard<std::mutex> locker;
 
 // ---- C++14/17 specific stuff ----
@@ -71,5 +70,5 @@ typedef std::lock_guard<std::mutex> locker;
 
 // ---- Some useful defines ----
 #define BLOGGER_BUFFER_SIZE 128
-#define BLOGGER_TIMESTAMP BLOGGER_MAKE_UNICODE("%H:%M:%S") // should be made customizable later
-#define BLOGGER_ARG_PATTERN BLOGGER_MAKE_UNICODE("{}")
+#define BLOGGER_TIMESTAMP BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S") // should be made customizable later
+#define BLOGGER_ARG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{}")

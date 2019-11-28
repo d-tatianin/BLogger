@@ -50,11 +50,11 @@ struct BLoggerProps
         : async(true),
         console_logger(true),
         colored(true),
-        tag(BLOGGER_MAKE_UNICODE("Unnamed")),
-        pattern(BLOGGER_MAKE_UNICODE("")),
+        tag(BLOGGER_WIDEN_IF_NEEDED("Unnamed")),
+        pattern(BLOGGER_WIDEN_IF_NEEDED("")),
         filter(level::trace),
         file_logger(false),
-        path(BLOGGER_MAKE_UNICODE("")),
+        path(BLOGGER_WIDEN_IF_NEEDED("")),
         bytes_per_file(BLOGGER_INFINITE),
         log_files(0),
         rotate_logs(true)
@@ -86,7 +86,7 @@ public:
         if (!props.pattern.empty())
             out_logger->SetPattern(props.pattern);
 
-        if (props.tag.empty()) props.tag = BLOGGER_MAKE_UNICODE("Unnamed");
+        if (props.tag.empty()) props.tag = BLOGGER_WIDEN_IF_NEEDED("Unnamed");
 
         if (props.console_logger)
         {
@@ -158,3 +158,26 @@ public:
         return out_logger;
     }
 };
+
+#undef BLOGGER_INIT_UNICODE_MODE
+#undef BLOGGER_PROCESS_PACK
+#undef BLOGGER_INTERNAL_FORMAT_ARG
+#undef BLOGGER_FULL_INTERNAL_FORMAT_ARG
+#undef BLOGGER_TRUE_SIZE
+#undef BLOGGER_BUFFER_SIZE
+#undef BLOGGER_OPEN_FILE
+#undef BLOGGER_FILEMODE
+#undef BLOGGER_FILE_WRITE
+#undef BLOGGER_FORMAT_STRING
+#undef BLOGGER_TIME_TO_STRING
+#undef BLOGGER_TO_STRING
+#undef BLOGGER_STRING_LENGTH
+#undef BLOGGER_STACK_ALLOC
+#undef BLOGGER_MEMORY_COPY
+#undef BLOGGER_MEMORY_MOVE
+#undef BLOGGER_TIMESTAMP
+#undef BLOGGER_ARG_PATTERN
+#undef BLOGGER_TS_PATTERN
+#undef BLOGGER_LVL_PATTERN
+#undef BLOGGER_TAG_PATTERN
+#undef BLOGGER_MSG_PATTERN

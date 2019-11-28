@@ -12,15 +12,15 @@
 
 #ifdef BLOGGER_UNICODE_MODE
     #ifdef _WIN32
-        #define INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE('s')
-        #define FULL_INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE("%s")
+        #define BLOGGER_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED('s')
+        #define BLOGGER_FULL_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED("%s")
     #elif defined(__linux__)
-        #define INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE('S')
-        #define FULL_INTERNAL_FORMAT_ARG BLOGGER_MAKE_UNICODE("%S")
+        #define BLOGGER_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED('S')
+        #define BLOGGER_FULL_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED("%S")
     #endif
 #else
-    #define INTERNAL_FORMAT_ARG 's'
-    #define FULL_INTERNAL_FORMAT_ARG "%s"
+    #define BLOGGER_INTERNAL_FORMAT_ARG 's'
+    #define BLOGGER_FULL_INTERNAL_FORMAT_ARG "%s"
 #endif
 
 namespace BLogger
@@ -116,7 +116,7 @@ namespace BLogger
 
         size_t zero_term()
         {
-            auto loc = std::find(m_Buffer.begin(), m_Buffer.end(), BLOGGER_MAKE_UNICODE('\0'));
+            auto loc = std::find(m_Buffer.begin(), m_Buffer.end(), BLOGGER_WIDEN_IF_NEEDED('\0'));
 
             return loc != m_Buffer.end() ? ptr_to_index(&*loc) : m_Buffer.size();
         }
@@ -129,12 +129,12 @@ namespace BLogger
             if (pattern.empty())
                 return true;
 
-            #define BLOGGER_TS_PATTERN  BLOGGER_MAKE_UNICODE("{ts}")
-            #define BLOGGER_TAG_PATTERN BLOGGER_MAKE_UNICODE("{tag}")
-            #define BLOGGER_LVL_PATTERN BLOGGER_MAKE_UNICODE("{lvl}")
-            #define BLOGGER_MSG_PATTERN BLOGGER_MAKE_UNICODE("{msg}")
+            #define BLOGGER_TS_PATTERN  BLOGGER_WIDEN_IF_NEEDED("{ts}")
+            #define BLOGGER_TAG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{tag}")
+            #define BLOGGER_LVL_PATTERN BLOGGER_WIDEN_IF_NEEDED("{lvl}")
+            #define BLOGGER_MSG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{msg}")
 
-            MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), pattern.data(), pattern.size());
+            BLOGGER_MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), pattern.data(), pattern.size());
 
             auto ts_offset  = pattern.find(BLOGGER_TS_PATTERN);
             auto tag_offset = pattern.find(BLOGGER_TAG_PATTERN);
@@ -164,7 +164,7 @@ namespace BLogger
                        ts_offset :
                        new_offset(BLOGGER_TS_PATTERN);
 
-                    m_TimeSize = STRING_LENGTH(BLOGGER_TIMESTAMP);
+                    m_TimeSize = BLOGGER_STRING_LENGTH(BLOGGER_TIMESTAMP);
 
                     set_arg(
                         first_arg ? 
@@ -198,7 +198,7 @@ namespace BLogger
                         first_arg ?
                         lvl_offset :
                         new_offset(BLOGGER_LVL_PATTERN),
-                        FULL_INTERNAL_FORMAT_ARG, 
+                        BLOGGER_FULL_INTERNAL_FORMAT_ARG, 
                         BLOGGER_LVL_PATTERN
                     );
 
@@ -211,7 +211,7 @@ namespace BLogger
                         first_arg ?
                         msg_offset :
                         new_offset(BLOGGER_MSG_PATTERN),
-                        FULL_INTERNAL_FORMAT_ARG,
+                        BLOGGER_FULL_INTERNAL_FORMAT_ARG,
                         BLOGGER_MSG_PATTERN
                     );
 
@@ -248,7 +248,7 @@ namespace BLogger
                     m_Buffer.end(),
                     arg,
                     arg +
-                    STRING_LENGTH(arg)
+                    BLOGGER_STRING_LENGTH(arg)
                 );
 
                 return ptr_to_index(&*index);
@@ -256,16 +256,16 @@ namespace BLogger
 
             void set_arg(size_t offset, const bl_char* pattern, const bl_char* arg)
             {
-                m_Buffer[offset] = BLOGGER_MAKE_UNICODE('%');
-                m_Buffer[offset + 1] = INTERNAL_FORMAT_ARG;
+                m_Buffer[offset] = BLOGGER_WIDEN_IF_NEEDED('%');
+                m_Buffer[offset + 1] = BLOGGER_INTERNAL_FORMAT_ARG;
 
-                int32_t extra_size = static_cast<int32_t>(STRING_LENGTH(arg) - 2);
+                int32_t extra_size = static_cast<int32_t>(BLOGGER_STRING_LENGTH(arg) - 2);
 
                 bl_char* arg_end = (&m_Buffer[offset]) + 2;
 
                 if (extra_size > 0)
                 {
-                    MEMORY_MOVE(
+                    BLOGGER_MEMORY_MOVE(
                         arg_end,
                         m_Buffer.size() -
                         ptr_to_index(arg_end),
@@ -277,12 +277,12 @@ namespace BLogger
                 }
 
                 bl_char copy[BLOGGER_BUFFER_SIZE];
-                MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
+                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
                 auto size = m_Buffer.size() -
                     ptr_to_index(arg_end);
 
-                FORMAT_STRING(
+                BLOGGER_FORMAT_STRING(
                     &m_Buffer[offset],
                     size,
                     copy + offset,
@@ -372,7 +372,7 @@ namespace BLogger
         {
             if ((m_Buffer.size() - m_Occupied) >= size)
             {
-                MEMORY_COPY(m_Cursor, remaining(), data, size);
+                BLOGGER_MEMORY_COPY(m_Cursor, remaining(), data, size);
                 m_Cursor += size;
                 m_Occupied += size;
             }
@@ -397,29 +397,29 @@ namespace BLogger
             ptrn = *global_pattern;
 
             size_t message_size = formatted_msg.size() + 1;
-            bl_char* message; STACK_ALLOC(message_size, message);
+            bl_char* message; BLOGGER_STACK_ALLOC(message_size, message);
             message[message_size - 1] = '\0';
-            MEMORY_COPY(message, message_size, formatted_msg.data(), formatted_msg.size());
+            BLOGGER_MEMORY_COPY(message, message_size, formatted_msg.data(), formatted_msg.size());
 
             if (ptrn.timestamp())
             {
                 bl_char memorized = ptrn.last_ts_char();
-                auto intended_size = TIME_TO_STRING(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
+                auto intended_size = BLOGGER_TIME_TO_STRING(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
                 ptrn.set_memorized(memorized);
 
                 if (!ptrn.lvl() && !ptrn.msg())
                 {
                     formatted_msg.resize(ptrn.zero_term());
-                    MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
+                    BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
                 }
             }
 
             if (ptrn.lvl() && ptrn.msg())
             {
                 bl_char copy[BLOGGER_BUFFER_SIZE];
-                MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
+                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
-                auto intended_size = FORMAT_STRING(
+                auto intended_size = BLOGGER_FORMAT_STRING(
                     ptrn.data(),
                     ptrn.size(),
                     copy,
@@ -435,14 +435,14 @@ namespace BLogger
                     formatted_msg.resize(BLOGGER_BUFFER_SIZE):
                     formatted_msg.resize(intended_size);
 
-                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), ptrn.zero_term());
+                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), ptrn.zero_term());
             }
             else if(ptrn.lvl())
             {
                 bl_char copy[BLOGGER_BUFFER_SIZE];
-                MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
+                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
-                auto intended_size = FORMAT_STRING(
+                auto intended_size = BLOGGER_FORMAT_STRING(
                     ptrn.data(),
                     ptrn.size(),
                     copy,
@@ -453,14 +453,14 @@ namespace BLogger
                     formatted_msg.resize(BLOGGER_BUFFER_SIZE):
                     formatted_msg.resize(intended_size);
 
-                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
+                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
             }
             else if (ptrn.msg())
             {
                 bl_char copy[BLOGGER_BUFFER_SIZE];
-                MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
+                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
 
-                auto intended_size = FORMAT_STRING(
+                auto intended_size = BLOGGER_FORMAT_STRING(
                     ptrn.data(),
                     ptrn.size(),
                     copy,
@@ -471,12 +471,12 @@ namespace BLogger
                     formatted_msg.resize(BLOGGER_BUFFER_SIZE):
                     formatted_msg.resize(intended_size);
 
-                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
+                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
             }
             else if (!ptrn.lvl() && !ptrn.msg() && !ptrn.timestamp())
             {
                 formatted_msg.resize(ptrn.zero_term());
-                MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
+                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
             }
 
             if (formatted_msg.size() < BLOGGER_BUFFER_SIZE)
@@ -487,21 +487,21 @@ namespace BLogger
     private:
         void operator<<(BLoggerStringStream& ss)
         {
-            BLoggerString pattern = BLOGGER_MAKE_UNICODE("{");
-            pattern += TO_STRING(m_ArgCount++);
-            pattern += BLOGGER_MAKE_UNICODE("}");
+            BLoggerString pattern = BLOGGER_WIDEN_IF_NEEDED("{");
+            pattern += BLOGGER_TO_STRING(m_ArgCount++);
+            pattern += BLOGGER_WIDEN_IF_NEEDED("}");
             bl_char* cursor = get_pos_arg(pattern);
 
             if (cursor)
             {
                 cursor[0] = '%';
-                cursor[1] = INTERNAL_FORMAT_ARG;
+                cursor[1] = BLOGGER_INTERNAL_FORMAT_ARG;
 
                 size_t offset = cursor - m_Buffer.data() + 2;
                 bl_char* begin = m_Buffer.data() + offset + pattern.size() - 2;
                 size_t end = m_Buffer.size() - offset + pattern.size() - 2;
 
-                MEMORY_MOVE(m_Buffer.data() + offset, m_Buffer.size(), begin, end);
+                BLOGGER_MEMORY_MOVE(m_Buffer.data() + offset, m_Buffer.size(), begin, end);
             }
             else
             {
@@ -510,21 +510,21 @@ namespace BLogger
                 if (!cursor) return;
 
                 *cursor = '%';
-                *(cursor + 1) = INTERNAL_FORMAT_ARG;
+                *(cursor + 1) = BLOGGER_INTERNAL_FORMAT_ARG;
             }
 
             bl_char format[BLOGGER_BUFFER_SIZE];
-            MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
+            BLOGGER_MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
 
             auto intended_size =
-                FORMAT_STRING(
+                BLOGGER_FORMAT_STRING(
                     m_Buffer.data(),
                     m_Buffer.size(),
                     format,
                     ss.str().c_str()
                 );
 
-            // if FORMAT_STRING returned more bytes than we have
+            // if BLOGGER_FORMAT_STRING returned more bytes than we have
             // that means that our buffer is full
             // so we just set the capacity to zero
             intended_size > m_Buffer.size() ?
@@ -540,7 +540,7 @@ namespace BLogger
             {
                 *(m_Cursor++) = opening;
                 ++m_Occupied;
-                MEMORY_COPY(m_Cursor, remaining(), data, size);
+                BLOGGER_MEMORY_COPY(m_Cursor, remaining(), data, size);
                 m_Occupied += size;
                 m_Cursor += size;
                 *(m_Cursor++) = closing;
@@ -555,7 +555,7 @@ namespace BLogger
                 m_Buffer.end(),
                 BLOGGER_ARG_PATTERN,
                 BLOGGER_ARG_PATTERN +
-                STRING_LENGTH(BLOGGER_ARG_PATTERN)
+                BLOGGER_STRING_LENGTH(BLOGGER_ARG_PATTERN)
             );
 
             return (index != m_Buffer.end() ? &(*index) : nullptr);
@@ -578,6 +578,3 @@ namespace BLogger
     typedef blogger_basic_formatter<BLoggerBuffer>
         BLoggerFormatter;
 }
-
-#undef BLOGGER_BUFFER_SIZE
-#undef BLOGGER_ARG_PATTERN

@@ -17,12 +17,12 @@ inline const bl_char* LevelToString(level lvl)
 {
     switch (lvl)
     {
-    case level::trace:  return BLOGGER_MAKE_UNICODE("TRACE");
-    case level::debug:  return BLOGGER_MAKE_UNICODE("DEBUG");
-    case level::info:   return BLOGGER_MAKE_UNICODE("INFO");
-    case level::warn:   return BLOGGER_MAKE_UNICODE("WARNING");
-    case level::error:  return BLOGGER_MAKE_UNICODE("ERROR");
-    case level::crit:   return BLOGGER_MAKE_UNICODE("CRITICAL");
+    case level::trace:  return BLOGGER_WIDEN_IF_NEEDED("TRACE");
+    case level::debug:  return BLOGGER_WIDEN_IF_NEEDED("DEBUG");
+    case level::info:   return BLOGGER_WIDEN_IF_NEEDED("INFO");
+    case level::warn:   return BLOGGER_WIDEN_IF_NEEDED("WARNING");
+    case level::error:  return BLOGGER_WIDEN_IF_NEEDED("ERROR");
+    case level::crit:   return BLOGGER_WIDEN_IF_NEEDED("CRITICAL");
     default:            return nullptr;
     }
 }
