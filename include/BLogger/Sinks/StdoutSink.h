@@ -12,7 +12,6 @@ namespace BLogger {
     public:
         StdoutSink()
         {
-            INIT_UNICODE_MODE();
         }
 
         static std::mutex& GetGlobalWriteLock()

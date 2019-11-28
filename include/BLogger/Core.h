@@ -24,6 +24,7 @@
     #ifdef _WIN32
         #define BLOGGER_FILEMODE BLOGGER_MAKE_UNICODE("w")
     #elif defined(__linux__)
+        #define BLOGGER_EXTRA_BYTES 0
         #define BLOGGER_FILEMODE "w"
     #endif
     #define STRING_LENGTH(string) wcslen(string)
@@ -41,6 +42,12 @@
     #define FORMAT_STRING(out, out_size, in_format, ...) snprintf(out, out_size, in_format, __VA_ARGS__)
     #define TO_STRING(what) ::std::to_string((what))
     #define COMPATIBLE_OSTREAM ::std::ostream
+#endif
+
+#ifdef _WIN32 // CLRF?
+    #define BLOGGER_TRUE_SIZE(size) static_cast<size_t>(size) + 3
+#elif defined(__linux__)
+    #define BLOGGER_TRUE_SIZE(size) size
 #endif
 
 typedef std::basic_string<bl_char, std::char_traits<bl_char>> BLoggerString;

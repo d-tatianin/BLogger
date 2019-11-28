@@ -76,6 +76,8 @@ namespace BLogger {
             return static_cast<bool>(m_File);
         }
 
+#ifdef BLOGGER_UNICODE_MODE
+    #ifdef _WIN32
         void write(BLoggerLogMessage& msg) override
         {
             locker lock(m_FileAccess);
@@ -83,10 +85,24 @@ namespace BLogger {
             if (!ok())
                 return;
 
-            if (m_BytesPerFile && msg.size() > m_BytesPerFile)
+            size_t byte_limit = msg.size() * 2;
+            char* narrow; STACK_ALLOC(byte_limit, narrow);
+            auto mb_size =
+                WideCharToMultiByte(
+                    CP_UTF8, NULL,
+                    msg.data(),
+                    static_cast<int32_t>(msg.size()),
+                    narrow,
+                    static_cast<int32_t>(byte_limit),
+                    NULL, NULL
+                );
+
+            if (!mb_size) return; // TODO: handle this later
+
+            if (m_BytesPerFile && BLOGGER_TRUE_SIZE(mb_size) > m_BytesPerFile)
                 return;
 
-            if (m_BytesPerFile && (m_CurrentBytes + msg.size()) > m_BytesPerFile)
+            if (m_BytesPerFile && (m_CurrentBytes + BLOGGER_TRUE_SIZE(mb_size)) > m_BytesPerFile)
             {
                 if (m_CurrentLogFiles == m_MaxLogFiles)
                 {
@@ -107,10 +123,91 @@ namespace BLogger {
                 }
             }
 
-            m_CurrentBytes += msg.size();
+            m_CurrentBytes += BLOGGER_TRUE_SIZE(mb_size);
+
+            fwrite(narrow, sizeof(char), mb_size, m_File);
+        }
+    #elif defined(__linux__)
+        void write(BLoggerLogMessage& msg) override
+        {
+            locker lock(m_FileAccess);
+
+            if (!ok())
+                return;
+
+            size_t byte_limit = msg.size() * 2;
+            char* narrow; STACK_ALLOC(byte_limit, narrow);
+
+            auto mb_size = wcstombs(narrow, msg.data(), byte_limit);
+
+            if (mb_size == SIZE_MAX) return; // TODO: handle this later
+
+            if (m_BytesPerFile && BLOGGER_TRUE_SIZE(mb_size) > m_BytesPerFile)
+                return;
+
+            if (m_BytesPerFile && (m_CurrentBytes + BLOGGER_TRUE_SIZE(mb_size)) > m_BytesPerFile)
+            {
+                if (m_CurrentLogFiles == m_MaxLogFiles)
+                {
+                    if (!m_RotateLogs)
+                        return;
+                    else
+                    {
+                        m_CurrentLogFiles = 1;
+                        m_CurrentBytes = 0;
+                        newLogFile();
+                    }
+                }
+                else
+                {
+                    m_CurrentBytes = 0;
+                    ++m_CurrentLogFiles;
+                    newLogFile();
+                }
+            }
+
+            m_CurrentBytes += BLOGGER_TRUE_SIZE(mb_size);
+
+            fwrite(narrow, sizeof(char), mb_size, m_File);
+        }
+    #endif
+#else
+        void write(BLoggerLogMessage& msg) override
+        {
+            locker lock(m_FileAccess);
+
+            if (!ok())
+                return;
+
+            if (m_BytesPerFile && BLOGGER_TRUE_SIZE(msg.size()) > m_BytesPerFile)
+                return;
+
+            if (m_BytesPerFile && (m_CurrentBytes + BLOGGER_TRUE_SIZE(msg.size())) > m_BytesPerFile)
+            {
+                if (m_CurrentLogFiles == m_MaxLogFiles)
+                {
+                    if (!m_RotateLogs)
+                        return;
+                    else
+                    {
+                        m_CurrentLogFiles = 1;
+                        m_CurrentBytes = 0;
+                        newLogFile();
+                    }
+                }
+                else
+                {
+                    m_CurrentBytes = 0;
+                    ++m_CurrentLogFiles;
+                    newLogFile();
+                }
+            }
+
+            m_CurrentBytes += BLOGGER_TRUE_SIZE(msg.size());
 
             FILE_WRITE(msg.data(), msg.size(), m_File);
         }
+#endif
 
         void flush() override
         {

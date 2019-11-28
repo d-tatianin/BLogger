@@ -39,6 +39,8 @@ namespace BLogger {
             m_Sinks(new sink_list()),
             m_Filter(lvl)
         {
+            INIT_UNICODE_MODE();
+
             if (default_pattern)
             {
                 m_CachedPattern = BLOGGER_DEFAULT_PATTERN;

@@ -48,23 +48,6 @@
                 ignored =      _setmode(_fileno(stdin), _O_U16TEXT);
                 ignored =      _setmode(_fileno(stderr), _O_U16TEXT);
             }
-
-            static inline void unicode_file_write(bl_char* data, size_t size, FILE* file)
-            {
-                size_t byte_limit = size * 2;
-                char* narrow; STACK_ALLOC(byte_limit, narrow);
-                    auto result =
-                    WideCharToMultiByte(
-                        CP_UTF8, NULL,
-                        data,
-                        static_cast<int32_t>(size),
-                        narrow,
-                        static_cast<int32_t>(byte_limit),
-                        NULL, NULL
-                    );
-                if (!result) throw ""; // handle this later
-                fwrite(narrow, 1, result, file);
-            }
         }
         #define FILE_WRITE(data, size, file) ::BLogger::unicode_file_write(data, size, file)
         #define INIT_UNICODE_MODE ::BLogger::init_unicode
@@ -101,15 +84,6 @@
                 auto fptr = fopen(free_me, BLOGGER_FILEMODE);
                 delete[] free_me;
                 out_file = fptr;
-            }
-
-            static inline void unicode_file_write(bl_char* data, size_t size, FILE* file)
-            {
-                size_t byte_limit = size * 2;
-                char* narrow; STACK_ALLOC(byte_limit, narrow);
-                auto result = wcstombs(narrow, data, byte_limit);
-                if (result == -1) throw ""; // TODO: handle this later
-                fwrite(narrow, 1, result, file);
             }
         }
         #define FILE_WRITE(data, size, file) ::BLogger::unicode_file_write(data, size, file)
