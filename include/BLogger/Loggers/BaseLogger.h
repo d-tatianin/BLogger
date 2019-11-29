@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ctime>
-#include <list>
 
 #include "BLogger/Formatter.h"
 #include "BLogger/Loggers/LogMessage.h"
@@ -15,10 +14,12 @@
 
 namespace BLogger {
 
-    typedef std::list<std::unique_ptr<BaseSink>>
-        sink_list;
-    typedef std::shared_ptr<sink_list>
-        BLoggerSharedSinkList;
+    typedef std::unique_ptr<BaseSink>
+        BLoggerSinkPtr;
+    typedef std::vector<BLoggerSinkPtr>
+        BLoggerSinks;
+    typedef std::shared_ptr<BLoggerSinks>
+        BLoggerSharedSinks;
 
     class BaseLogger
     {
@@ -26,7 +27,7 @@ namespace BLogger {
         BLoggerString         m_Tag;
         BLoggerString         m_CachedPattern;
         BLoggerSharedPattern  m_CurrentPattern;
-        BLoggerSharedSinkList m_Sinks;
+        BLoggerSharedSinks    m_Sinks;
         level                 m_Filter;
     public:
         BaseLogger(
@@ -35,8 +36,8 @@ namespace BLogger {
             bool default_pattern
         ) : m_Tag(tag),
             m_CachedPattern(BLOGGER_WIDEN_IF_NEEDED("")),
-            m_CurrentPattern(new BLoggerPattern()),
-            m_Sinks(new sink_list()),
+            m_CurrentPattern(std::make_shared<BLoggerPattern>()),
+            m_Sinks(std::make_shared<BLoggerSinks>()),
             m_Filter(lvl)
         {
             BLOGGER_INIT_UNICODE_MODE();
@@ -45,7 +46,7 @@ namespace BLogger {
             {
                 m_CachedPattern = BLOGGER_DEFAULT_PATTERN;
                 m_CurrentPattern->init();
-                m_CurrentPattern->set_pattern(BLOGGER_DEFAULT_PATTERN, m_Tag);
+                m_CurrentPattern->set(BLOGGER_DEFAULT_PATTERN, m_Tag);
             }
         }
 
@@ -58,11 +59,14 @@ namespace BLogger {
         void SetPattern(BLoggerInString pattern)
         {
             m_CachedPattern = pattern;
-            BLoggerPattern* newPattern = new BLoggerPattern();
-            newPattern->init();
-            newPattern->set_pattern(pattern, m_Tag);
 
-            m_CurrentPattern.reset(newPattern);
+            BLoggerSharedPattern newPattern =
+                std::make_shared<BLoggerPattern>();
+
+            newPattern->init();
+            newPattern->set(pattern, m_Tag);
+
+            m_CurrentPattern = std::move(newPattern);
         }
 
         virtual void Flush() = 0;
@@ -317,9 +321,9 @@ namespace BLogger {
             }
         }
 
-        void AddSink(BaseSink* sink)
+        void AddSink(BLoggerSinkPtr sink)
         {
-            m_Sinks->emplace_back(std::unique_ptr<BaseSink>(sink));
+            m_Sinks->emplace_back(std::move(sink));
             m_Sinks->back()->set_tag(m_Tag);
         }
 

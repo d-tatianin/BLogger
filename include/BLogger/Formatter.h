@@ -121,7 +121,7 @@ namespace BLogger
             return loc != m_Buffer.end() ? ptr_to_index(&*loc) : m_Buffer.size();
         }
 
-        bool set_pattern(
+        bool set(
             BLoggerInString pattern,
             BLoggerInString tag
         )

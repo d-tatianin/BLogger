@@ -91,9 +91,13 @@ public:
         if (props.console_logger)
         {
             if (props.colored)
-                out_logger->AddSink(new BLogger::ColoredStdoutSink());
+                out_logger->AddSink(
+                    std::make_unique<BLogger::ColoredStdoutSink>()
+                );
             else
-                out_logger->AddSink(new BLogger::StdoutSink());
+                out_logger->AddSink(
+                    std::make_unique<BLogger::StdoutSink>()
+                );
         }
 
         if (props.file_logger)
@@ -101,7 +105,7 @@ public:
             if (!props.path.empty())
             {
                 out_logger->AddSink(
-                    new BLogger::FileSink(
+                    std::make_unique<BLogger::FileSink>(
                         props.path, props.tag,
                         props.bytes_per_file,
                         props.log_files,
@@ -129,9 +133,13 @@ public:
             );
 
         if (colored)
-            out_logger->AddSink(new BLogger::ColoredStdoutSink());
+            out_logger->AddSink(
+                std::make_unique<BLogger::ColoredStdoutSink>()
+            );
         else
-            out_logger->AddSink(new BLogger::StdoutSink());
+            out_logger->AddSink(
+                std::make_unique<BLogger::StdoutSink>()
+            );
 
         return out_logger;
     }
@@ -151,14 +159,19 @@ public:
             );
 
         if (colored)
-            out_logger->AddSink(new BLogger::ColoredStdoutSink());
+            out_logger->AddSink(
+                std::make_unique<BLogger::ColoredStdoutSink>()
+            );
         else
-            out_logger->AddSink(new BLogger::StdoutSink());
+            out_logger->AddSink(
+                std::make_unique<BLogger::StdoutSink>()
+            );
 
         return out_logger;
     }
 };
 
+#undef BLOGGER_TASK_LIMIT
 #undef BLOGGER_INIT_UNICODE_MODE
 #undef BLOGGER_PROCESS_PACK
 #undef BLOGGER_INTERNAL_FORMAT_ARG
