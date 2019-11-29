@@ -166,12 +166,16 @@ namespace BLogger {
 
         void post_task(std::unique_ptr<task> t)
         {
-            locker lock(m_QueueAccess);
+            {
+                locker lock(m_QueueAccess);
 
-            if (m_TaskQueue.size() == BLOGGER_TASK_LIMIT)
-                m_TaskQueue.pop_front();
+                if (m_TaskQueue.size() == BLOGGER_TASK_LIMIT)
+                    m_TaskQueue.pop_front();
 
-            m_TaskQueue.emplace_back(std::move(t));
+                m_TaskQueue.emplace_back(std::move(t));
+            }
+
+            m_Notifier.notify_one();
         }
 
         ~thread_pool()
@@ -189,7 +193,7 @@ namespace BLogger {
             bool default_pattern = true
         ): BaseLogger(tag, lvl, default_pattern)
         {
-            thread_pool::get();
+            //thread_pool::get();
         }
 
         void Flush() override
