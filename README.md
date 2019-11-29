@@ -1,6 +1,6 @@
 # BLogger | [![Build status](https://ci.appveyor.com/api/projects/status/nbwtd4mu4cjmnjcm?svg=true)](https://ci.appveyor.com/project/8infy/blogger) | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/19f939802f724ad4a53854068325f0a3)](https://www.codacy.com/app/8infy/BLogger?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=8infy/BLogger&amp;utm_campaign=Badge_Grade) |
 
-An easy to use modern C++14/17 async cross-platform logger which supports custom formatting/pattern, colored output console, file logging, log rotation & more!
+An easy to use modern C++14/17 async cross-platform logger which supports custom formatting/patterns, colored output, Unicode, file logging, log rotation & more!
 
 ## Performance
 BlockingLogger
@@ -20,7 +20,7 @@ RAM usage peaked at about 10MB with full queue (10,000 log messages).
 
 In order to use BLogger in your own project simply add BLogger's include folder into your project's include directories.
 ## Using the logger  
-The preferred way of creating a logger is using the BLogger factory in combination with `BLoggerProps`.  
+The preferred way of creating a logger is using the BLogger factory in combination with `BLoggerProps` since the factory initializes static BLogger variables in the correct order, which is safer. 
 The factory always returns a shared pointer to the logger.  
 
 Currently available factory functions:
@@ -30,7 +30,7 @@ Currently available factory functions:
 
 So in your code you would write: `auto logger = CreateLogger::AsyncConsole("MyLogger", level::trace);`  
 
-You can also create the logger by calling the constructor directly, and then adding a sink you want by calling `AddSink(BaseSink* sink)` with your sink.
+You can also create the logger by calling the constructor directly, and then adding a sink you want by calling `AddSink(BLoggerSinkPtr sink)` with your sink.
 
 `BLoggerProps` properties:
 -   `bool async` -> Creates an async logger if true, blocking otherwise.
@@ -99,13 +99,13 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 --- 
 ### - Unicode logging  
 -   In order to enable Unicode mode type `#define BLOGGER_UNICODE_MODE` before including BLogger.h in any translation unit (aka .cpp).  
--   When Unicode mode is enabled, all functions expect wide strings and `const wchar_t*` for literals, wide string literal is defined by typing `L` before the opening quotes. Same way `std::ostream` is replaced with `std::wostream` for passing a user defined data type. As a way to make you life easier BLogger offers a bunch of useful defines to make switching modes easier: `BLOGGER_WIDEN_IF_NEEDED(string)`, `BLOGGER_OSTREAM`, `BLOGGER_COUT` are safe to use in both modes. 
+-   When Unicode mode is enabled, all functions expect wide strings and `const wchar_t*` for literals, wide string literal is defined by typing `L` before the opening quotes. Same way `std::ostream` is replaced with `std::wostream` for passing a user defined data type. As a way to make your life easier BLogger offers a bunch of useful defines like `BLOGGER_WIDEN_IF_NEEDED(string)`, `BLOGGER_OSTREAM`, `BLOGGER_COUT` that are safe to use in both modes. 
 ---
 ### - Misc member functions
 -   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
 -   `SetTag(const std::string& tag)` -> Sets the logger name to the name specified.
 -   `Flush()` -> Flushes the logger.
--   `AddSink(BaseSink* sink)` -> Adds a sink to the logger. Not recommended to use this function directly, use a factory instead.
+-   `AddSink(BLoggerSinkPtr sink)` -> Adds a sink to the logger. Not recommended to use this function directly, use a factory instead.
 -   `StdoutSink::GetGlobalWriteLock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
 ---
 ### There is a total of 6 available logging levels that reside inside the unscoped level_enum inside the level namespace
