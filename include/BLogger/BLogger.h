@@ -71,11 +71,17 @@ public:
         BLoggerPtr out_logger;
 
         if (props.async)
+        {
+            // 'magic statics'
+            BLogger::StdoutSink::GetGlobalWriteLock();
+            BLogger::thread_pool::get();
+
             out_logger = std::make_shared<AsyncLogger>(
                 props.tag,
                 props.filter,
                 props.pattern.empty()
             );
+        }
         else
             out_logger = std::make_shared<BlockingLogger>(
                 props.tag,
@@ -125,6 +131,10 @@ public:
         bool colored = true
     )
     {
+        // 'magic statics'
+        BLogger::StdoutSink::GetGlobalWriteLock();
+        BLogger::thread_pool::get();
+
         BLoggerPtr out_logger = 
             std::make_shared<AsyncLogger>(
                 tag,

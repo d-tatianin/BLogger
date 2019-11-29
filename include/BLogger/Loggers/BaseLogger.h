@@ -6,6 +6,7 @@
 #include "BLogger/Loggers/LogMessage.h"
 #include "BLogger/OS/Functions.h"
 #include "BLogger/Sinks/BaseSink.h"
+#include "BLogger/Sinks/StdoutSink.h"
 #include "BLogger/LogLevels.h"
 
 #define BLOGGER_INFINITE 0u
@@ -40,6 +41,9 @@ namespace BLogger {
             m_Sinks(std::make_shared<BLoggerSinks>()),
             m_Filter(lvl)
         {
+            // 'magic statics'
+            StdoutSink::GetGlobalWriteLock();
+
             BLOGGER_INIT_UNICODE_MODE();
 
             if (default_pattern)
