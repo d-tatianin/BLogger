@@ -97,7 +97,7 @@ namespace BLogger {
             m_Pool.reserve(thread_count);
 
             for (uint16_t i = 0; i < thread_count; i++)
-                m_Pool.emplace_back(std::bind(&thread_pool::worker, this));
+                m_Pool.emplace_back([this]() { worker(); });
         }
 
         thread_pool(const thread_pool& other) = delete;
