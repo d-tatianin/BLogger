@@ -193,7 +193,7 @@ namespace BLogger {
             bool default_pattern = true
         ): BaseLogger(tag, lvl, default_pattern)
         {
-            //thread_pool::get();
+            thread_pool::get();
         }
 
         void Flush() override
