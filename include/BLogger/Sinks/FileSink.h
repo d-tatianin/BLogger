@@ -125,7 +125,7 @@ namespace BLogger {
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(mb_size);
 
-            fwrite(narrow, sizeof(char), mb_size, m_File);
+            BLOGGER_FILE_WRITE(narrow, mb_size, m_File);
         }
     #elif defined(__linux__)
         void write(BLoggerLogMessage& msg) override
@@ -168,7 +168,7 @@ namespace BLogger {
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(mb_size);
 
-            fwrite(narrow, sizeof(char), mb_size, m_File);
+            BLOGGER_FILE_WRITE(narrow, mb_size, m_File);
         }
     #endif
 #else

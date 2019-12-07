@@ -318,7 +318,7 @@ namespace BLogger
         {
             BLoggerStringStream ss;
 
-            *this << *static_cast<BLoggerStringStream*>(&(ss << std::forward<T&&>(arg)));
+            *this << *static_cast<BLoggerStringStream*>(&(ss << std::forward<T>(arg)));
         }
 
         int32_t remaining()

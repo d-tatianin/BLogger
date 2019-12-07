@@ -68,6 +68,39 @@ typedef std::lock_guard<std::mutex> locker;
     #error "BLogger requires at least /std:c++14"
 #endif
 
+// ---- SFINAE (Only enable the 'log' functions if all arguments are ostream-compatible) ----
+template<typename T>
+using try_insert = decltype(std::declval<BLOGGER_OSTREAM&>() << std::declval<T>());
+
+template<typename T>
+struct is_ostream_ref : public std::false_type
+{
+};
+
+template<>
+struct is_ostream_ref<BLOGGER_OSTREAM&> : public std::true_type
+{
+};
+
+template<typename T>
+struct is_ostream_insertable
+{
+    static constexpr bool value = is_ostream_ref<try_insert<T>>::value;
+};
+
+template<class...> struct are_all_true : std::true_type { };
+template<class Arg1> struct are_all_true<Arg1> : Arg1 { };
+template<class Arg1, class... Argn>
+struct are_all_true<Arg1, Argn...>
+    : std::conditional_t<Arg1::value, are_all_true<Argn...>, Arg1> {};
+
+template<typename... Args>
+using enable_if_ostream_insertable = std::enable_if<are_all_true<is_ostream_insertable<Args>...>::value, void>;
+
+template<typename... Args>
+using enable_if_ostream_insertable_t = typename enable_if_ostream_insertable<Args...>::type;
+
+
 // ---- Some useful defines ----
 #define BLOGGER_BUFFER_SIZE 128
 #define BLOGGER_TIMESTAMP BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S") // should be made customizable later

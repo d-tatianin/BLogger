@@ -52,12 +52,10 @@
                 ignored =      _setmode(_fileno(stderr), _O_U16TEXT);
             }
         }
-        #define BLOGGER_FILE_WRITE(data, size, file) ::BLogger::unicode_file_write(data, size, file)
         #define BLOGGER_INIT_UNICODE_MODE ::BLogger::init_unicode
     #else
         static inline void blogger_dummy_func() {}
         #define BLOGGER_INIT_UNICODE_MODE blogger_dummy_func
-        #define BLOGGER_FILE_WRITE(data, size, file) fwrite(data, 1, size, file)
     #endif
 #elif defined(__linux__)
     #include <cstring>
@@ -89,11 +87,9 @@
                 out_file = fptr;
             }
         }
-        #define BLOGGER_FILE_WRITE(data, size, file) ::BLogger::unicode_file_write(data, size, file)
         #define BLOGGER_OPEN_FILE(file, path) ::BLogger::open_unicode_file(file, path.c_str())
     #else
         #define BLOGGER_OPEN_FILE(file, path) file = fopen(path.c_str(), BLOGGER_FILEMODE)
-        #define BLOGGER_FILE_WRITE(data, size, file) fwrite(data, 1, size, file)
     #endif
     #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy(dst, src, (src_size) * sizeof(bl_char))
     #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove(dst, src, (src_size) * sizeof(bl_char))
@@ -113,3 +109,5 @@
 #else
     #error Sorry, your platform is currently not supported! Please let me know it you think it should be.
 #endif
+
+#define BLOGGER_FILE_WRITE(data, size, file) fwrite(data, sizeof(char), size, file)

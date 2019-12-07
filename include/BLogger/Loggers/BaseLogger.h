@@ -99,32 +99,8 @@ namespace BLogger {
             });
         }
 
-        void Log(level lvl, const bl_char* message)
-        {
-            if (!ShouldLog(lvl))
-                return;
-
-            BLoggerFormatter formatter;
-
-            formatter.process_message(
-                message,
-                BLOGGER_STRING_LENGTH(message)
-            );
-
-            std::tm time_point;
-            auto time_now = std::time(nullptr);
-            BLOGGER_UPDATE_TIME(time_point, time_now);
-
-            Post({
-                formatter.release_buffer(), 
-                m_CurrentPattern,
-                time_point,
-                lvl
-            });
-        }
-
         template<typename... Args>
-        void Log(level lvl, BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Log(level lvl, BLoggerInString formattedMsg, Args&& ... args)
         {
             if (!ShouldLog(lvl))
                 return;
@@ -150,161 +126,68 @@ namespace BLogger {
             });
         }
 
-        template<typename... Args>
-        void Log(level lvl, const bl_char* formattedMsg, Args&& ... args)
-        {
-            if (!ShouldLog(lvl))
-                return;
-
-            BLoggerFormatter formatter;
-
-            formatter.process_message(
-                formattedMsg,
-                BLOGGER_STRING_LENGTH(formattedMsg)
-            );
-
-            BLOGGER_PROCESS_PACK(formatter, args);
-
-            std::tm time_point;
-            auto time_now = std::time(nullptr);
-            BLOGGER_UPDATE_TIME(time_point, time_now);
-
-            Post({
-                formatter.release_buffer(),
-                m_CurrentPattern,
-                time_point,
-                lvl
-            });
-        }
-
-        void Trace(BLoggerInString message)
+       void Trace(BLoggerInString message)
         {
             Log(level::trace, message);
         }
 
-        void Debug(BLoggerInString message)
+       void Debug(BLoggerInString message)
         {
             Log(level::debug, message);
         }
 
-        void Info(BLoggerInString message)
+       void Info(BLoggerInString message)
         {
             Log(level::info, message);
         }
 
-        void Warning(BLoggerInString message)
+       void Warning(BLoggerInString message)
         {
             Log(level::warn, message);
         }
 
-        void Error(BLoggerInString message)
+       void Error(BLoggerInString message)
         {
             Log(level::error, message);
         }
 
-        void Critical(BLoggerInString message)
-        {
-            Log(level::crit, message);
-        }
-
-        void Trace(const bl_char* message)
-        {
-            Log(level::trace, message);
-        }
-
-        void Debug(const bl_char* message)
-        {
-            Log(level::debug, message);
-        }
-
-        void Info(const bl_char* message)
-        {
-            Log(level::info, message);
-        }
-
-        void Warning(const bl_char* message)
-        {
-            Log(level::warn, message);
-        }
-
-        void Error(const bl_char* message)
-        {
-            Log(level::error, message);
-        }
-
-        void Critical(const bl_char* message)
+       void Critical(BLoggerInString message)
         {
             Log(level::crit, message);
         }
 
         template<typename... Args>
-        void Trace(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Trace(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::trace, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Debug(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Debug(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::debug, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Info(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Info(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::info, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Warning(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Warning(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::warn, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Error(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Error(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::error, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        void Critical(BLoggerInString formattedMsg, Args&& ... args)
-        {
-            Log(level::crit, formattedMsg, std::forward<Args>(args)...);
-        }
-
-        template<typename... Args>
-        void Trace(const bl_char* formattedMsg, Args&& ... args)
-        {
-            Log(level::trace, formattedMsg, std::forward<Args>(args)...);
-        }
-
-        template<typename... Args>
-        void Debug(const bl_char* formattedMsg, Args&& ... args)
-        {
-            Log(level::debug, formattedMsg, std::forward<Args>(args)...);
-        }
-
-        template<typename... Args>
-        void Info(const bl_char* formattedMsg, Args&& ... args)
-        {
-            Log(level::info, formattedMsg, std::forward<Args>(args)...);
-        }
-
-        template<typename... Args>
-        void Warning(const bl_char* formattedMsg, Args&& ... args)
-        {
-            Log(level::warn, formattedMsg, std::forward<Args>(args)...);
-        }
-
-        template<typename... Args>
-        void Error(const bl_char* formattedMsg, Args&& ... args)
-        {
-            Log(level::error, formattedMsg, std::forward<Args>(args)...);
-        }
-
-        template<typename... Args>
-        void Critical(const bl_char* formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Critical(BLoggerInString formattedMsg, Args&& ... args)
         {
             Log(level::crit, formattedMsg, std::forward<Args>(args)...);
         }
