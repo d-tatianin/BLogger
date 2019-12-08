@@ -4,16 +4,16 @@ An easy to use modern C++14/17 async cross-platform logger which supports custom
 
 ## Performance
 BlockingLogger
-1. Debug: 140μs/message (~7,142/sec).
-2. Release: 110μs/message (~9,900/sec).  
+1. Debug: 90μs/message (~11,111/sec).
+2. Release: 77μs/message (~12,987/sec).  
 
 AsyncLogger
-1. Debug: 12μs/message (~83,333/sec).
-2. Release: 1μs/message (~1,000,000/sec).
+1. Debug: 8μs/message (~125,000/sec).
+2. Release: 0.35μs/message (~2,857,142/sec).
 
-The tests were done with all functionality enabled aside from the file logger.  
-RAM usage peaked at about 10MB with full queue (10,000 log messages).
+The tests were done with a single-argument message, and a full pattern, as well as a colored StdoutSink.
 
+RAM usage peakes at about 6MB with a full queue (10,000 log messages by default). This can obviously be different for you depending on how long your log message is.
 ## Building the Example project
 1. Clone the repository `git clone https://github.com/8infy/BLogger`
 2. Build the project `cd BLogger && mkdir build && cd build && cmake .. && cmake --build .` 
@@ -36,11 +36,11 @@ You can also create the logger by calling the constructor directly, and then add
 -   `bool async` -> Creates an async logger if true, blocking otherwise.
 -   `bool console_logger` -> Adds an stdout sink if set to true.
 -   `bool colored` -> Makes the stdout sink colored if set to true.
--   `BLoggerString tag` -> Current logger name.
--   `BLoggerString pattern` -> Create the logger with this pattern, or uses the default one if empty.
+-   `std::string tag` -> Current logger name.
+-   `std::string pattern` -> Create the logger with this pattern, or uses the default one if empty.
 -   `level filter` -> Logging filter.
 -   `bool file_logger` -> Adds a file sink if set to true.
--   `BLoggerString path` -> Path to a directory where you what the logs to be stored.
+-   `std::string path` -> Path to a directory where you what the logs to be stored.
 -   `size_t bytes_per_file` -> Maximum bytes per log file. Use `BLOGGER_INFINITE` for unlimited size.
 -   `size_t log_files` -> Maximum log files.
 -   `bool rotate_logs` -> Overwrites the oldest log file if the limit is hit.
@@ -77,15 +77,14 @@ Current stdout color is set with `set_output_color(color color)` defined inside 
 
 ---
 ### - Logging your messages
-All logging functions are available in two overloads: one that takes in a c-string (`const char*`), and another one that takes in an `std::string`.
--   `Log(level lvl, const char* message)` -> Logs the message with the given level.  
--   `Log(level lvl, const char* formattedMsg, const Args& ... args)` -> Logs the formatted message with the given level.
+-   `Log(level lvl, std::string message)` -> Logs the message with the given level.  
+-   `Log(level lvl, std::string formattedMsg, const Args& ... args)` -> Logs the formatted message with the given level.
 
 ### - BLogger log message formatting
 BLogger accepts the following formats:
--   `{}` a normal argument. Usage example: `logger.Critical("Something went wrong {}", error.message());`.
--   `{n}` a positional argument. Usage example: `logger.Info("{1} / {0} = 2", 4, 8)` -> prints `8 / 4 = 2`.
--   You can also mix the two types like so `logger.Info("{1} / {0} = {}", 4, 8, 2)` -> prints `8 / 4 = 2`.  
+-   `{}` a normal argument. Usage example: `logger->Critical("Something went wrong {}", error.message());`.
+-   `{n}` a positional argument. Usage example: `logger->Info("{1}, {0}!", "World", "Hello")` -> prints `Hello, World`.
+-   You can also mix the two types like so `logger->Info("{} -> {1}, {0} ", "World", "Hello", "TEST")` -> prints `TEST -> Hello, World`.  
 
 Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::ostream`.
 
@@ -107,6 +106,8 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 -   `Flush()` -> Flushes the logger.
 -   `AddSink(BLoggerSinkPtr sink)` -> Adds a sink to the logger. Not recommended to use this function directly, use a factory instead.
 -   `StdoutSink::GetGlobalWriteLock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
+-   `Formatter::CutIfExceeds(size_t size, std::string postfix)` -> Sets the maximum size of a log message. If the message exceeeds the set size it will be cut and the postfix will be inserted after. The postfix is set to `"..."` by default. Size can also be set to `BLOGGER_INFINITE`, which is the default setting.
+-   `Formatter::SetTimestampFormat(std::string new_format)` -> Sets the timestamp format. Should be formatted according to the `strftime` specifications.
 ---
 ### There is a total of 6 available logging levels that reside inside the unscoped level_enum inside the level namespace
 -   `trace`
