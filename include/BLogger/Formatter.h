@@ -10,571 +10,173 @@
 #include "BLogger/OS/Functions.h"
 #include "BLogger/LogLevels.h"
 
-#ifdef BLOGGER_UNICODE_MODE
-    #ifdef _WIN32
-        #define BLOGGER_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED('s')
-        #define BLOGGER_FULL_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED("%s")
-    #elif defined(__linux__)
-        #define BLOGGER_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED('S')
-        #define BLOGGER_FULL_INTERNAL_FORMAT_ARG BLOGGER_WIDEN_IF_NEEDED("%S")
-    #endif
-#else
-    #define BLOGGER_INTERNAL_FORMAT_ARG 's'
-    #define BLOGGER_FULL_INTERNAL_FORMAT_ARG "%s"
-#endif
+#define BLOGGER_ARG_OPENING BLOGGER_WIDEN_IF_NEEDED("{")
+#define BLOGGER_ARG_CLOSING BLOGGER_WIDEN_IF_NEEDED("}")
+#define BLOGGER_ARG_FULL BLOGGER_WIDEN_IF_NEEDED("{}")
+
+#define BLOGGER_TS_PATTERN  BLOGGER_WIDEN_IF_NEEDED("{ts}")
+#define BLOGGER_TAG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{tag}")
+#define BLOGGER_LVL_PATTERN BLOGGER_WIDEN_IF_NEEDED("{lvl}")
+#define BLOGGER_MSG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{msg}")
+
+#define BLOGGER_TIMESTAMP_FORMAT BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S")
+
+#define BLOGGER_TERMINATE_WITH BLOGGER_WIDEN_IF_NEEDED('\n')
+#define BLOGGER_OVERFLOW_POSTFIX BLOGGER_WIDEN_IF_NEEDED("...")
+
+class CreateLogger;
 
 namespace BLogger
 {
-    template<typename bufferT>
-    class blogger_basic_pattern
+    class Formatter
     {
     private:
-        bufferT m_Buffer;
-
-        bool m_HasTimestamp;
-        bool m_HasMsg;
-        bool m_MsgFirst;
-        bool m_HasLvl;
-
-        size_t m_TimeOffset;
-        size_t m_TimeSize;
+        friend class ::CreateLogger;
+        friend class BaseLogger;
     public:
-        blogger_basic_pattern()
-            : m_Buffer(BLOGGER_BUFFER_SIZE),
-            m_HasTimestamp(false),
-            m_HasMsg(false),
-            m_MsgFirst(false),
-            m_HasLvl(false),
-            m_TimeOffset(0),
-            m_TimeSize(0)
-        {
-        }
-
-        void init()
-        {
-            m_Buffer.resize(BLOGGER_BUFFER_SIZE);
-
-            m_HasTimestamp = false;
-            m_HasMsg       = false;
-            m_MsgFirst     = false;
-            m_HasLvl       = false;
-            m_TimeOffset   = 0;
-            m_TimeSize     = 0;
-
-            memset(m_Buffer.data(), 0, m_Buffer.size());
-        }
-
-        bl_char* ts_begin()
-        {
-            return m_Buffer.data() + m_TimeOffset;
-        }
-
-        size_t ts_size()
-        {
-            return m_TimeSize;
-        }
-
-        bl_char last_ts_char()
-        {
-            return m_Buffer[ptr_to_index(ts_begin() + m_TimeSize)];
-        }
-
-        bl_char* data()
-        {
-            return m_Buffer.data();
-        }
-
-        size_t size()
-        {
-            return m_Buffer.size();
-        }
-
-        void set_memorized(bl_char symbol)
-        {
-            m_Buffer[ptr_to_index(ts_begin() + m_TimeSize)] = symbol;
-        }
-
-        bool timestamp()
-        {
-            return m_HasTimestamp;
-        }
-
-        bool lvl()
-        {
-            return m_HasLvl;
-        }
-
-        bool msg()
-        {
-            return m_HasMsg;
-        }
-
-        bool msg_first()
-        {
-            return m_MsgFirst;
-        }
-
-        size_t zero_term()
-        {
-            auto loc = std::find(m_Buffer.begin(), m_Buffer.end(), BLOGGER_WIDEN_IF_NEEDED('\0'));
-
-            return loc != m_Buffer.end() ? ptr_to_index(&*loc) : m_Buffer.size();
-        }
-
-        bool set(
-            BLoggerInString pattern,
+        static void CreatePatternFrom(
+            BLoggerString& out_pattern,
             BLoggerInString tag
         )
         {
-            if (pattern.empty())
-                return true;
+            if (out_pattern.empty())
+                return;
 
-            #define BLOGGER_TS_PATTERN  BLOGGER_WIDEN_IF_NEEDED("{ts}")
-            #define BLOGGER_TAG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{tag}")
-            #define BLOGGER_LVL_PATTERN BLOGGER_WIDEN_IF_NEEDED("{lvl}")
-            #define BLOGGER_MSG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{msg}")
-
-            BLOGGER_MEMORY_COPY(m_Buffer.data(), m_Buffer.size(), pattern.data(), pattern.size());
-
-            auto ts_offset  = pattern.find(BLOGGER_TS_PATTERN);
-            auto tag_offset = pattern.find(BLOGGER_TAG_PATTERN);
-            auto lvl_offset = pattern.find(BLOGGER_LVL_PATTERN);
-            auto msg_offset = pattern.find(BLOGGER_MSG_PATTERN);
-
-            bool first_arg = true;
-
-            if (msg_offset != BLoggerString::npos && lvl_offset != BLoggerString::npos)
-            {
-                m_MsgFirst = msg_offset < lvl_offset;
-                m_HasMsg = true;
-            }
-            else if (msg_offset != BLoggerString::npos)
-            {
-                m_MsgFirst = true;
-                m_HasMsg = true;
-            }
-
-            for (size_t i = 0; i < pattern.size(); i++)
-            {
-                if (ts_offset != BLoggerString::npos && ts_offset == i)
-                {
-                    m_HasTimestamp = true;
-
-                    m_TimeOffset = first_arg ?
-                       ts_offset :
-                       new_offset(BLOGGER_TS_PATTERN);
-
-                    m_TimeSize = BLOGGER_STRING_LENGTH(BLOGGER_TIMESTAMP);
-
-                    set_arg(
-                        first_arg ? 
-                        ts_offset : 
-                        new_offset(BLOGGER_TS_PATTERN),
-                        BLOGGER_TIMESTAMP,
-                        BLOGGER_TS_PATTERN
-                    );
-
-                    first_arg = false;
-                }
-
-                if (tag_offset != BLoggerString::npos && tag_offset == i)
-                {
-                    set_arg(
-                        first_arg ?
-                        tag_offset :
-                        new_offset(BLOGGER_TAG_PATTERN),
-                        tag.data(),
-                        BLOGGER_TAG_PATTERN
-                    );
-
-                    first_arg = false;
-                }
-
-                if (lvl_offset != BLoggerString::npos && lvl_offset == i)
-                {
-                    m_HasLvl = true;
-
-                    set_arg(
-                        first_arg ?
-                        lvl_offset :
-                        new_offset(BLOGGER_LVL_PATTERN),
-                        BLOGGER_FULL_INTERNAL_FORMAT_ARG, 
-                        BLOGGER_LVL_PATTERN
-                    );
-
-                    first_arg = false;
-                }
-
-                if (msg_offset != BLoggerString::npos && msg_offset == i)
-                {
-                    set_arg(
-                        first_arg ?
-                        msg_offset :
-                        new_offset(BLOGGER_MSG_PATTERN),
-                        BLOGGER_FULL_INTERNAL_FORMAT_ARG,
-                        BLOGGER_MSG_PATTERN
-                    );
-
-                    first_arg = false;
-                }
-            }
-
-            return true;
+            find_and_replace(out_pattern, BLOGGER_TAG_PATTERN, tag);
         }
 
-        blogger_basic_pattern<bufferT>& operator=(const blogger_basic_pattern<bufferT>& other)
+        template<typename... Args>
+        static BLoggerString Format(BLoggerString pattern, Args&& ... args)
         {
-            this->m_Buffer = other.m_Buffer;
-            this->m_HasTimestamp = other.m_HasTimestamp;
-            this->m_HasMsg = other.m_HasMsg;
-            this->m_MsgFirst = other.m_MsgFirst;
-            this->m_HasLvl = other.m_HasLvl;
-            this->m_TimeOffset = other.m_TimeOffset;
-            this->m_TimeSize = other.m_TimeSize;
-
-            return *this;
+            uint16_t index = 0;
+            BLOGGER_FOR_EACH_DO(format_one, args, pattern, index);
+            return pattern;
         }
 
-        private:
-            size_t ptr_to_index(bl_char* p)
-            {
-                return (p - m_Buffer.data());
-            }
-
-            size_t new_offset(const bl_char* arg)
-            {
-                auto index = std::search(
-                    m_Buffer.begin(),
-                    m_Buffer.end(),
-                    arg,
-                    arg +
-                    BLOGGER_STRING_LENGTH(arg)
-                );
-
-                return ptr_to_index(&*index);
-            }
-
-            void set_arg(size_t offset, const bl_char* pattern, const bl_char* arg)
-            {
-                m_Buffer[offset] = BLOGGER_WIDEN_IF_NEEDED('%');
-                m_Buffer[offset + 1] = BLOGGER_INTERNAL_FORMAT_ARG;
-
-                int32_t extra_size = static_cast<int32_t>(BLOGGER_STRING_LENGTH(arg) - 2);
-
-                bl_char* arg_end = (&m_Buffer[offset]) + 2;
-
-                if (extra_size > 0)
-                {
-                    BLOGGER_MEMORY_MOVE(
-                        arg_end,
-                        m_Buffer.size() -
-                        ptr_to_index(arg_end),
-                        arg_end +
-                        extra_size,
-                        m_Buffer.size() -
-                        ptr_to_index(arg_end + extra_size)
-                    );
-                }
-
-                bl_char copy[BLOGGER_BUFFER_SIZE];
-                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
-
-                auto size = m_Buffer.size() -
-                    ptr_to_index(arg_end);
-
-                BLOGGER_FORMAT_STRING(
-                    &m_Buffer[offset],
-                    size,
-                    copy + offset,
-                    pattern
-                );
-            }
-    };
-
-    typedef blogger_basic_pattern<BLoggerBuffer>
-        BLoggerPattern;
-    typedef std::shared_ptr<BLoggerPattern>
-        BLoggerSharedPattern;
-
-    template<typename bufferT>
-    class blogger_basic_formatter
-    {
-    protected:
-        bufferT    m_Buffer;
-        bl_char*   m_Cursor;
-        size_t     m_Occupied;
-        size_t     m_ArgCount;
-    public:
-        blogger_basic_formatter()
-            : m_Buffer(BLOGGER_BUFFER_SIZE),
-            m_Cursor(m_Buffer.data()),
-            m_Occupied(0),
-            m_ArgCount(0)
-        {
-        }
-
-        template<typename T>
-        void handle_pack(T&& arg)
-        {
-            BLoggerStringStream ss;
-
-            *this << *static_cast<BLoggerStringStream*>(&(ss << std::forward<T>(arg)));
-        }
-
-        int32_t remaining()
-        {
-            return static_cast<int32_t>(m_Buffer.size()) -
-                   static_cast<int32_t>(m_Occupied);
-        }
-
-        bl_char* data()
-        {
-            return m_Buffer.data();
-        }
-
-        bl_char* cursor()
-        {
-            return m_Cursor;
-        }
-
-        size_t size()
-        {
-            return m_Occupied;
-        }
-
-        void advance_cursor_by(size_t count)
-        {
-            m_Cursor += count;
-            m_Occupied += count;
-        }
-
-        BLoggerBuffer& get_buffer()
-        {
-            return m_Buffer;
-        }
-
-        BLoggerBuffer&& release_buffer()
-        {
-            m_Buffer.resize(m_Occupied);
-            return std::move(m_Buffer);
-        }
-
-        void reset_buffer()
-        {
-            m_Buffer.resize(BLOGGER_BUFFER_SIZE);
-            m_Occupied = 0;
-            m_ArgCount = 0;
-            m_Cursor = m_Buffer.data();
-            memset(m_Buffer.data(), 0, m_Buffer.size());
-        }
-
-        void write_to(const bl_char* data, size_t size)
-        {
-            if ((m_Buffer.size() - m_Occupied) >= size)
-            {
-                BLOGGER_MEMORY_COPY(m_Cursor, remaining(), data, size);
-                m_Cursor += size;
-                m_Occupied += size;
-            }
-        }
-
-        void process_message(const bl_char* msg, size_t size)
-        {
-            write_to(msg, size);
-        }
-
-        #pragma warning(push)
-        #pragma warning(disable:6054) // String might not be zero-terminated (we don't care)
-
-        static void merge_pattern(
-            bl_string& formatted_msg,
-            BLoggerSharedPattern global_pattern,
-            std::tm* time_ptr, 
+        static void MergePattern(
+            BLoggerString& formatted_msg,
+            BLoggerString& merge_into,
+            std::tm* time_ptr,
             level lvl
         )
         {
-            BLoggerPattern ptrn;
-            ptrn = *global_pattern;
+            find_and_replace(merge_into, BLOGGER_MSG_PATTERN, formatted_msg);
+            find_and_replace(merge_into, BLOGGER_TS_PATTERN, timestamp_format().c_str());
+            find_and_replace_timestamp(merge_into, timestamp_format().c_str(), time_ptr);
+            find_and_replace_level(merge_into, BLOGGER_LVL_PATTERN, lvl);
 
-            size_t message_size = formatted_msg.size() + 1;
-            bl_char* message; BLOGGER_STACK_ALLOC(message_size, message);
-            message[message_size - 1] = '\0';
-            BLOGGER_MEMORY_COPY(message, message_size, formatted_msg.data(), formatted_msg.size());
-
-            if (ptrn.timestamp())
+            if (max_length() != BLOGGER_INFINITE &&
+                merge_into.size() > max_length()
+            )
             {
-                bl_char memorized = ptrn.last_ts_char();
-                auto intended_size = BLOGGER_TIME_TO_STRING(ptrn.ts_begin(), ptrn.size(), BLOGGER_TIMESTAMP, time_ptr);
-                ptrn.set_memorized(memorized);
+                size_t to_cut =
+                    merge_into.size() -
+                    max_length() +
+                    overflow_postfix().size();
 
-                if (!ptrn.lvl() && !ptrn.msg())
-                {
-                    formatted_msg.resize(ptrn.zero_term());
-                    BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
-                }
+                merge_into.resize(merge_into.size() - to_cut);
+                merge_into += overflow_postfix();
             }
 
-            if (ptrn.lvl() && ptrn.msg())
-            {
-                bl_char copy[BLOGGER_BUFFER_SIZE];
-                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
+            merge_into.push_back(BLOGGER_TERMINATE_WITH);
+        }
 
-                auto intended_size = BLOGGER_FORMAT_STRING(
-                    ptrn.data(),
-                    ptrn.size(),
-                    copy,
-                    (ptrn.msg_first() ?
-                    message :
-                    LevelToString(lvl)),
-                    (ptrn.msg_first() ?
-                    LevelToString(lvl) :
-                    message)
-                );
+        static void CutIfExceeds(
+            uint64_t length,
+            BLoggerString overflow_postfix = BLOGGER_OVERFLOW_POSTFIX
+        )
+        {
+            max_length() = length;
+            ::BLogger::Formatter::overflow_postfix() = overflow_postfix;
+        }
 
-                intended_size > BLOGGER_BUFFER_SIZE ?
-                    formatted_msg.resize(BLOGGER_BUFFER_SIZE):
-                    formatted_msg.resize(intended_size);
-
-                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), ptrn.zero_term());
-            }
-            else if(ptrn.lvl())
-            {
-                bl_char copy[BLOGGER_BUFFER_SIZE];
-                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
-
-                auto intended_size = BLOGGER_FORMAT_STRING(
-                    ptrn.data(),
-                    ptrn.size(),
-                    copy,
-                    LevelToString(lvl)
-                );
-
-                intended_size > BLOGGER_BUFFER_SIZE ?
-                    formatted_msg.resize(BLOGGER_BUFFER_SIZE):
-                    formatted_msg.resize(intended_size);
-
-                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
-            }
-            else if (ptrn.msg())
-            {
-                bl_char copy[BLOGGER_BUFFER_SIZE];
-                BLOGGER_MEMORY_COPY(copy, BLOGGER_BUFFER_SIZE, ptrn.data(), ptrn.size());
-
-                auto intended_size = BLOGGER_FORMAT_STRING(
-                    ptrn.data(),
-                    ptrn.size(),
-                    copy,
-                    message
-                );
-
-                intended_size > BLOGGER_BUFFER_SIZE ?
-                    formatted_msg.resize(BLOGGER_BUFFER_SIZE):
-                    formatted_msg.resize(intended_size);
-
-                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
-            }
-            else if (!ptrn.lvl() && !ptrn.msg() && !ptrn.timestamp())
-            {
-                formatted_msg.resize(ptrn.zero_term());
-                BLOGGER_MEMORY_COPY(formatted_msg.data(), formatted_msg.size(), ptrn.data(), formatted_msg.size());
-            }
-
-            if (formatted_msg.size() < BLOGGER_BUFFER_SIZE)
-                formatted_msg.emplace_back('\n');
-            else
-                formatted_msg[formatted_msg.size() - 1] = '\n';
+        // Uses strftime format - https://en.cppreference.com/w/cpp/chrono/c/strftime
+        static void SetTimestampFormat(BLoggerString new_format = BLOGGER_TIMESTAMP_FORMAT)
+        {
+            timestamp_format() = new_format;
         }
     private:
-        void operator<<(BLoggerStringStream& ss)
+        template<typename T>
+        static void find_and_replace(BLoggerString& in, BLoggerInString what, T&& with)
         {
-            BLoggerString pattern = BLOGGER_WIDEN_IF_NEEDED("{");
-            pattern += BLOGGER_TO_STRING(m_ArgCount++);
-            pattern += BLOGGER_WIDEN_IF_NEEDED("}");
-            bl_char* cursor = get_pos_arg(pattern);
+            auto pos = in.find(what);
+            if (pos == BLoggerString::npos) return;
 
-            if (cursor)
-            {
-                cursor[0] = '%';
-                cursor[1] = BLOGGER_INTERNAL_FORMAT_ARG;
-
-                size_t offset = cursor - m_Buffer.data() + 2;
-                bl_char* begin = m_Buffer.data() + offset + pattern.size() - 2;
-                size_t end = m_Buffer.size() - offset + pattern.size() - 2;
-
-                BLOGGER_MEMORY_MOVE(m_Buffer.data() + offset, m_Buffer.size(), begin, end);
-            }
-            else
-            {
-                cursor = get_next_arg();
-
-                if (!cursor) return;
-
-                *cursor = '%';
-                *(cursor + 1) = BLOGGER_INTERNAL_FORMAT_ARG;
-            }
-
-            bl_char format[BLOGGER_BUFFER_SIZE];
-            BLOGGER_MEMORY_COPY(format, BLOGGER_BUFFER_SIZE, m_Buffer.data(), m_Buffer.size());
-
-            auto intended_size =
-                BLOGGER_FORMAT_STRING(
-                    m_Buffer.data(),
-                    m_Buffer.size(),
-                    format,
-                    ss.str().c_str()
-                );
-
-            // if BLOGGER_FORMAT_STRING returned more bytes than we have
-            // that means that our buffer is full
-            // so we just set the capacity to zero
-            intended_size > m_Buffer.size() ?
-                m_Occupied = m_Buffer.size() :
-                m_Occupied = intended_size;
-            m_Cursor = m_Buffer.data() + m_Occupied;
-        }
-        #pragma warning(pop) // 6054 ^
-
-        void write_to_enclosed(const bl_char* data, size_t size, bl_char opening = '[', bl_char closing = ']')
-        {
-            if ((m_Buffer.size() - m_Occupied) >= size + 2)
-            {
-                *(m_Cursor++) = opening;
-                ++m_Occupied;
-                BLOGGER_MEMORY_COPY(m_Cursor, remaining(), data, size);
-                m_Occupied += size;
-                m_Cursor += size;
-                *(m_Cursor++) = closing;
-                ++m_Occupied;
-            }
+            in.erase(pos, what.size());
+            in.insert(pos, to_string(with).c_str());
         }
 
-        bl_char* get_next_arg()
+        static void find_and_replace_timestamp(BLoggerString& in, BLoggerInString what, std::tm* time)
         {
-            auto index = std::search(
-                m_Buffer.begin(),
-                m_Buffer.end(),
-                BLOGGER_ARG_PATTERN,
-                BLOGGER_ARG_PATTERN +
-                BLOGGER_STRING_LENGTH(BLOGGER_ARG_PATTERN)
-            );
+            auto pos = in.find(what);
+            if (pos == BLoggerString::npos) return;
 
-            return (index != m_Buffer.end() ? &(*index) : nullptr);
+            // If your timestamp is longer than this
+            // then you're doing something wrong...
+            constexpr size_t ts_size = 128;
+
+            bl_char timestamp[ts_size];
+
+            auto written = BLOGGER_TIME_TO_STRING(timestamp, ts_size, timestamp_format().c_str(), time);
+
+            in.erase(pos, timestamp_format().size());
+
+            if (!written) return;
+
+            in.insert(pos, timestamp);
         }
 
-        bl_char* get_pos_arg(BLoggerInString pos)
+        static void find_and_replace_level(BLoggerString& in, BLoggerInString what, level lvl)
         {
-            auto cursor = std::search(
-                m_Buffer.begin(),
-                m_Buffer.end(),
-                pos.data(),
-                pos.data() +
-                pos.size()
-            );
+            auto pos = in.find(what);
+            if (pos == BLoggerString::npos) return;
 
-            return (cursor != m_Buffer.end() ? &(*cursor) : nullptr);
+            in.erase(pos, what.size());
+            in.insert(pos, LevelToString(lvl));
+        }
+
+        template<typename T>
+        static void format_one(BLoggerString& out_formatted, uint16_t& index, T&& arg)
+        {
+            BLoggerString stringed_arg = to_string(arg);
+
+            BLoggerString pos_arg;
+            pos_arg.reserve(6); // reserve slightly more than we actually expect
+            pos_arg += BLOGGER_ARG_OPENING;
+            pos_arg += to_string(index);
+            pos_arg += BLOGGER_ARG_CLOSING;
+
+            auto arg_offset = out_formatted.find(pos_arg);
+            if (arg_offset == BLoggerString::npos)
+            {
+                arg_offset = out_formatted.find(BLOGGER_ARG_FULL);
+                pos_arg = BLOGGER_ARG_FULL;
+            }
+            if (arg_offset == BLoggerString::npos)
+                return;
+
+            index++;
+
+            out_formatted.erase(arg_offset, pos_arg.size());
+            out_formatted.insert(arg_offset, stringed_arg.c_str());
+        }
+
+        static BLoggerString& overflow_postfix()
+        {
+            static BLoggerString overflow_postfix = BLOGGER_OVERFLOW_POSTFIX;
+            return overflow_postfix;
+        }
+
+        static uint64_t& max_length()
+        {
+            static uint64_t length = BLOGGER_INFINITE;
+            return length;
+        }
+
+        static BLoggerString& timestamp_format()
+        {
+            static BLoggerString timestamp_format = BLOGGER_TIMESTAMP_FORMAT;
+            return timestamp_format;
         }
     };
-
-    typedef blogger_basic_formatter<BLoggerBuffer>
-        BLoggerFormatter;
 }

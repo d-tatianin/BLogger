@@ -30,8 +30,8 @@
     #define BLOGGER_STRING_LENGTH(string) wcslen(string)
     #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) wcsftime(out, out_size, in_format, in_time)
     #define BLOGGER_FORMAT_STRING(out, out_size, in_format, ...) swprintf(out, out_size, in_format, __VA_ARGS__)
-    #define BLOGGER_TO_STRING(what) ::std::to_wstring(what)
     #define BLOGGER_OSTREAM ::std::wostream
+    #define BLOGGER_STD_TO_STRING ::std::to_wstring
 #else
     typedef char bl_char;
     #define BLOGGER_WIDEN_IF_NEEDED(str) str
@@ -40,8 +40,8 @@
     #define BLOGGER_STRING_LENGTH(string) strlen(string)
     #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) strftime(out, out_size, in_format, in_time)
     #define BLOGGER_FORMAT_STRING(out, out_size, in_format, ...) snprintf(out, out_size, in_format, __VA_ARGS__)
-    #define BLOGGER_TO_STRING(what) ::std::to_string((what))
     #define BLOGGER_OSTREAM ::std::ostream
+    #define BLOGGER_STD_TO_STRING ::std::to_string
 #endif
 
 #ifdef _WIN32 // CLRF?
@@ -58,11 +58,11 @@ typedef std::lock_guard<std::mutex> locker;
 
 // ---- C++14/17 specific stuff ----
 #if _MSVC_LANG >= 201703L || __cplusplus >= 201703L
-    #define BLOGGER_PROCESS_PACK(formatter, args) (formatter.handle_pack(std::forward<Args>(args)), ...)
+    #define BLOGGER_FOR_EACH_DO(what, args, ...) (what(__VA_ARGS__, std::forward<Args>(args)), ...)
     #include <string_view>
     typedef std::basic_string_view<bl_char, std::char_traits<bl_char>> BLoggerInString;
 #elif _MSVC_LANG >= 201402L || __cplusplus >= 201402L
-    #define BLOGGER_PROCESS_PACK(formatter, args) int expander[] = { 0, ( (void) formatter.handle_pack(std::forward<Args>(args)), 0) ... }
+    #define BLOGGER_FOR_EACH_DO(what, args, ...) int expander[] = { 0, ( what(__VA_ARGS__, std::forward<Args>(args)), 0) ... }
     typedef const std::basic_string<bl_char, std::char_traits<bl_char>>& BLoggerInString;
 #else
     #error "BLogger requires at least /std:c++14"
@@ -100,8 +100,48 @@ using enable_if_ostream_insertable = std::enable_if<are_all_true<is_ostream_inse
 template<typename... Args>
 using enable_if_ostream_insertable_t = typename enable_if_ostream_insertable<Args...>::type;
 
+template<typename T>
+using enable_if_integral = std::enable_if<std::is_integral<T>::value, BLoggerString>;
 
-// ---- Some useful defines ----
-#define BLOGGER_BUFFER_SIZE 128
-#define BLOGGER_TIMESTAMP BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S") // should be made customizable later
-#define BLOGGER_ARG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{}")
+template<typename T>
+using enable_if_integral_t = typename enable_if_integral<T>::type;
+
+template<typename T>
+using enable_if_not_integral_and_not_string =
+std::enable_if<
+    !std::is_same<typename std::decay<T>::type, BLoggerString>::value &&
+    !std::is_integral<typename std::decay<T>::type>::value &&
+    is_ostream_insertable<T>::value
+    , BLoggerString>;
+
+template<typename T>
+using enable_if_not_integral_and_not_string_t = typename enable_if_not_integral_and_not_string<T>::type;
+
+template<typename T>
+using enable_if_string = std::enable_if<std::is_same<typename std::decay<T>::type, BLoggerString>::value, T&&>;
+
+template<typename T>
+using enable_if_string_t = typename enable_if_string<T>::type;
+
+template<typename T>
+enable_if_integral_t<T> to_string(T arg)
+{
+    return BLOGGER_STD_TO_STRING(arg);
+}
+
+template<typename T>
+enable_if_not_integral_and_not_string_t<T> to_string(T&& arg)
+{
+    BLoggerStringStream ss;
+    ss << std::forward<T>(arg);
+    return ss.str();
+}
+
+template<typename T>
+enable_if_string_t<T> to_string(T&& str)
+{
+    return std::forward<T>(str);
+}
+
+#define BLOGGER_TO_STRING(what) to_string(what)
+#define BLOGGER_INFINITE 0u

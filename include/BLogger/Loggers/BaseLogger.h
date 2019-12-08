@@ -9,8 +9,6 @@
 #include "BLogger/Sinks/StdoutSink.h"
 #include "BLogger/LogLevels.h"
 
-#define BLOGGER_INFINITE 0u
-
 #define BLOGGER_DEFAULT_PATTERN BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}")
 
 namespace BLogger {
@@ -27,7 +25,6 @@ namespace BLogger {
     protected:
         BLoggerString         m_Tag;
         BLoggerString         m_CachedPattern;
-        BLoggerSharedPattern  m_CurrentPattern;
         BLoggerSharedSinks    m_Sinks;
         level                 m_Filter;
     public:
@@ -37,20 +34,20 @@ namespace BLogger {
             bool default_pattern
         ) : m_Tag(tag),
             m_CachedPattern(BLOGGER_WIDEN_IF_NEEDED("")),
-            m_CurrentPattern(std::make_shared<BLoggerPattern>()),
             m_Sinks(std::make_shared<BLoggerSinks>()),
             m_Filter(lvl)
         {
             // 'magic statics'
             StdoutSink::GetGlobalWriteLock();
+            Formatter::timestamp_format();
+            Formatter::overflow_postfix();
+            Formatter::max_length();
 
             BLOGGER_INIT_UNICODE_MODE();
 
             if (default_pattern)
             {
-                m_CachedPattern = BLOGGER_DEFAULT_PATTERN;
-                m_CurrentPattern->init();
-                m_CurrentPattern->set(BLOGGER_DEFAULT_PATTERN, m_Tag);
+                SetPattern(BLOGGER_DEFAULT_PATTERN);
             }
         }
 
@@ -63,14 +60,7 @@ namespace BLogger {
         void SetPattern(BLoggerInString pattern)
         {
             m_CachedPattern = pattern;
-
-            BLoggerSharedPattern newPattern =
-                std::make_shared<BLoggerPattern>();
-
-            newPattern->init();
-            newPattern->set(pattern, m_Tag);
-
-            m_CurrentPattern = std::move(newPattern);
+            Formatter::CreatePatternFrom(m_CachedPattern, m_Tag);
         }
 
         virtual void Flush() = 0;
@@ -80,20 +70,13 @@ namespace BLogger {
             if (!ShouldLog(lvl))
                 return;
 
-            BLoggerFormatter formatter;
-
-            formatter.process_message(
-                message.data(),
-                message.size()
-            );
-
             std::tm time_point;
             auto time_now = std::time(nullptr);
             BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
-                formatter.release_buffer(),
-                m_CurrentPattern,
+                BLoggerString(message.data()),
+                m_CachedPattern.data(),
                 time_point,
                 lvl
             });
@@ -105,56 +88,47 @@ namespace BLogger {
             if (!ShouldLog(lvl))
                 return;
 
-            BLoggerFormatter formatter;
-
-            formatter.process_message(
-                formattedMsg.data(), 
-                formattedMsg.size()
-            );
-
-            BLOGGER_PROCESS_PACK(formatter, args);
-
             std::tm time_point;
             auto time_now = std::time(nullptr);
             BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
-                formatter.release_buffer(),
-                m_CurrentPattern,
+                Formatter::Format(formattedMsg.data(), std::forward<Args>(args)...),
+                m_CachedPattern.data(),
                 time_point,
                 lvl
             });
         }
 
        void Trace(BLoggerInString message)
-        {
+       {
             Log(level::trace, message);
-        }
+       }
 
        void Debug(BLoggerInString message)
-        {
+       {
             Log(level::debug, message);
-        }
+       }
 
        void Info(BLoggerInString message)
-        {
+       {
             Log(level::info, message);
-        }
+       }
 
        void Warning(BLoggerInString message)
-        {
+       {
             Log(level::warn, message);
-        }
+       }
 
        void Error(BLoggerInString message)
-        {
+       {
             Log(level::error, message);
-        }
+       }
 
        void Critical(BLoggerInString message)
-        {
+       {
             Log(level::crit, message);
-        }
+       }
 
         template<typename... Args>
         enable_if_ostream_insertable_t<Args...> Trace(BLoggerInString formattedMsg, Args&& ... args)

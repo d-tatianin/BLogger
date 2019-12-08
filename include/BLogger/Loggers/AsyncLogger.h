@@ -19,6 +19,8 @@
 #include "BLogger/Sinks/ColoredStdoutSink.h"
 #include "BLogger/LogLevels.h"
 
+#define BLOGGER_TASK_LIMIT 10000
+
 namespace BLogger {
 
     class task
@@ -75,8 +77,6 @@ namespace BLogger {
         }
     };
 
-    #define BLOGGER_TASK_LIMIT 10000
-    
     class thread_pool
     {
     public:

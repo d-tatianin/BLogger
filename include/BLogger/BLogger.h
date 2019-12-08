@@ -74,6 +74,9 @@ public:
         {
             // 'magic statics'
             BLogger::StdoutSink::GetGlobalWriteLock();
+            BLogger::Formatter::timestamp_format();
+            BLogger::Formatter::overflow_postfix();
+            BLogger::Formatter::max_length();
             BLogger::thread_pool::get();
 
             out_logger = std::make_shared<AsyncLogger>(
@@ -133,6 +136,9 @@ public:
     {
         // 'magic statics'
         BLogger::StdoutSink::GetGlobalWriteLock();
+        BLogger::Formatter::timestamp_format();
+        BLogger::Formatter::overflow_postfix();
+        BLogger::Formatter::max_length();
         BLogger::thread_pool::get();
 
         BLoggerPtr out_logger = 

@@ -8,18 +8,18 @@ namespace BLogger {
     struct BLoggerLogMessage
     {
     private:
-        bl_string formatted_msg;
-        BLoggerSharedPattern ptrn;
+        BLoggerString formatted_msg;
+        BLoggerString final_pattern;
         std::tm time_point;
         level lvl;
     public:
         BLoggerLogMessage(
-            bl_string&& formatted_msg,
-            BLoggerSharedPattern& ptrn,
+            BLoggerString&& formatted_msg,
+            BLoggerString&& ptrn,
             std::tm tp,
             level lvl
         ) : formatted_msg(std::move(formatted_msg)),
-            ptrn(ptrn),
+            final_pattern(std::move(ptrn)),
             time_point(tp),
             lvl(lvl)
         {
@@ -27,22 +27,22 @@ namespace BLogger {
 
         void finalize_format()
         {
-            BLoggerFormatter::merge_pattern(
+            Formatter::MergePattern(
                 formatted_msg,
-                ptrn,
+                final_pattern,
                 time_point_ptr(),
                 lvl
             );
         }
 
-        bl_char* data()
+        const bl_char* data()
         {
-            return formatted_msg.data();
+            return final_pattern.data();
         }
 
         size_t size()
         {
-            return formatted_msg.size();
+            return final_pattern.size();
         }
 
         level log_level()
