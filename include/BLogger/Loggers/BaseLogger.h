@@ -24,6 +24,7 @@ namespace BLogger {
     {
     protected:
         BLoggerString         m_Tag;
+        BLoggerString         m_CurrentPattern;
         BLoggerString         m_CachedPattern;
         BLoggerSharedSinks    m_Sinks;
         level                 m_Filter;
@@ -60,7 +61,8 @@ namespace BLogger {
         void SetPattern(BLoggerInString pattern)
         {
             m_CachedPattern = pattern;
-            Formatter::CreatePatternFrom(m_CachedPattern, m_Tag);
+            m_CurrentPattern = m_CachedPattern;
+            Formatter::CreatePatternFrom(m_CurrentPattern, m_Tag);
         }
 
         virtual void Flush() = 0;
@@ -76,7 +78,7 @@ namespace BLogger {
 
             Post({
                 BLoggerString(message.data()),
-                m_CachedPattern.data(),
+                m_CurrentPattern.data(),
                 time_point,
                 lvl
             });
@@ -94,7 +96,7 @@ namespace BLogger {
 
             Post({
                 Formatter::Format(formattedMsg.data(), std::forward<Args>(args)...),
-                m_CachedPattern.data(),
+                m_CurrentPattern.data(),
                 time_point,
                 lvl
             });

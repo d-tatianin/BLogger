@@ -152,5 +152,5 @@ namespace BLogger {
     }
 }
 
-#define BLOGGER_TO_STRING(what) to_string(what)
+#define BLOGGER_TO_STRING(what) ::BLogger::to_string(what)
 #define BLOGGER_INFINITE 0u
