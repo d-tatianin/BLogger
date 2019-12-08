@@ -123,24 +123,33 @@ using enable_if_string = std::enable_if<std::is_same<typename std::decay<T>::typ
 template<typename T>
 using enable_if_string_t = typename enable_if_string<T>::type;
 
-template<typename T>
-enable_if_integral_t<T> to_string(T arg)
-{
-    return BLOGGER_STD_TO_STRING(arg);
-}
+namespace BLogger {
 
-template<typename T>
-enable_if_not_integral_and_not_string_t<T> to_string(T&& arg)
-{
-    BLoggerStringStream ss;
-    ss << std::forward<T>(arg);
-    return ss.str();
-}
+    template<typename T>
+    enable_if_integral_t<T> to_string(T arg)
+    {
+        return BLOGGER_STD_TO_STRING(arg);
+    }
 
-template<typename T>
-enable_if_string_t<T> to_string(T&& str)
-{
-    return std::forward<T>(str);
+    template<>
+    enable_if_integral_t<bl_char> to_string(bl_char arg)
+    {
+        return BLoggerString(1, arg);
+    }
+
+    template<typename T>
+    enable_if_not_integral_and_not_string_t<T> to_string(T&& arg)
+    {
+        BLoggerStringStream ss;
+        ss << std::forward<T>(arg);
+        return ss.str();
+    }
+
+    template<typename T>
+    enable_if_string_t<T> to_string(T&& str)
+    {
+        return std::forward<T>(str);
+    }
 }
 
 #define BLOGGER_TO_STRING(what) to_string(what)
