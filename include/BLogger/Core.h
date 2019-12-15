@@ -44,7 +44,7 @@
     #define BLOGGER_STD_TO_STRING ::std::to_string
 #endif
 
-#ifdef _WIN32 // CLRF?
+#ifdef _WIN32 // CRLF?
     #define BLOGGER_TRUE_SIZE(size) static_cast<size_t>(size) + 3
 #elif defined(__linux__)
     #define BLOGGER_TRUE_SIZE(size) size

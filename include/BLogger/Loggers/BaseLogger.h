@@ -177,20 +177,14 @@ namespace BLogger {
         {
             m_Tag = tag;
             SetPattern(m_CachedPattern);
-
-            for (auto& sink : *m_Sinks)
-            {
-                sink->set_tag(tag);
-            }
         }
 
         void AddSink(BLoggerSinkPtr sink)
         {
             m_Sinks->emplace_back(std::move(sink));
-            m_Sinks->back()->set_tag(m_Tag);
         }
 
-        virtual ~BaseLogger() {}
+        virtual ~BaseLogger() = default;
     protected:
         bool ShouldLog(level lvl)
         {

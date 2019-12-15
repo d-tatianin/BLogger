@@ -35,7 +35,7 @@ namespace BLogger {
     public:
         virtual void complete() = 0;
 
-        virtual ~task() {}
+        virtual ~task() = default;
     };
 
     class log_task : public task

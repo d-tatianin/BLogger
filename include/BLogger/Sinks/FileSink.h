@@ -54,12 +54,6 @@ namespace BLogger {
             newLogFile();
         }
 
-        void set_tag(BLoggerInString tag) override
-        {
-            locker loc(m_FileAccess);
-            m_CachedTag = tag;
-        }
-
         void terminate()
         {
             locker lock(m_FileAccess);
