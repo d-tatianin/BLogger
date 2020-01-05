@@ -19,26 +19,38 @@
 #include "BLogger/Sinks/ColoredStdoutSink.h"
 #include "BLogger/LogLevels.h"
 
+// Probably shouldnt be higher than 4 because the thread_pool
+// threads will spend most of the time waiting
+// for the I/O mutex anyway. Unless you're posting your own tasks.
+#define BLOGGER_THREAD_COUNT std::thread::hardware_concurrency()
+
 #define BLOGGER_TASK_LIMIT 10000
 
 namespace BLogger {
 
+    // You can make your own tasks
+    // and feed them to the thread_pool
+    // as well.
     class task
     {
-    protected:
-        BLoggerSharedSinks log_sinks;
-    protected:
-        task(BLoggerSharedSinks& sinks)
-            : log_sinks(sinks)
-        {
-        }
     public:
         virtual void complete() = 0;
 
         virtual ~task() = default;
     };
 
-    class log_task : public task
+    class bl_task : public task
+    {
+    protected:
+        BLoggerSharedSinks log_sinks;
+    protected:
+        bl_task(BLoggerSharedSinks& sinks)
+            : log_sinks(sinks)
+        {
+        }
+    };
+
+    class log_task : public bl_task
     {
     private:
         BLoggerLogMessage msg;
@@ -46,7 +58,7 @@ namespace BLogger {
         log_task(
             BLoggerLogMessage&& msg,
             BLoggerSharedSinks& sinks
-        ) : task(sinks),
+        ) : bl_task(sinks),
             msg(std::move(msg))
         {
         }
@@ -62,11 +74,11 @@ namespace BLogger {
         }
     };
 
-    class flush_task : public task
+    class flush_task : public bl_task
     {
     public:
         flush_task(BLoggerSharedSinks& sinks)
-            : task(sinks)
+            : bl_task(sinks)
         {
         }
 
@@ -160,7 +172,7 @@ namespace BLogger {
         static thread_pool& get()
         {
             static thread_pool instance(
-                std::thread::hardware_concurrency()
+                BLOGGER_THREAD_COUNT
             );
 
             return instance;
