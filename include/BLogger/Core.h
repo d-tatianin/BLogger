@@ -101,21 +101,21 @@ template<typename... Args>
 using enable_if_ostream_insertable_t = typename enable_if_ostream_insertable<Args...>::type;
 
 template<typename T>
-using enable_if_integral = std::enable_if<std::is_integral<T>::value, BLoggerString>;
+using enable_if_arithmetic = std::enable_if<std::is_arithmetic<T>::value, BLoggerString>;
 
 template<typename T>
-using enable_if_integral_t = typename enable_if_integral<T>::type;
+using enable_if_arithmetic_t = typename enable_if_arithmetic<T>::type;
 
 template<typename T>
-using enable_if_not_integral_and_not_string =
+using enable_if_not_arithmetic_and_not_string =
 std::enable_if<
     !std::is_same<typename std::decay<T>::type, BLoggerString>::value &&
-    !std::is_integral<typename std::decay<T>::type>::value &&
+    !std::is_arithmetic<typename std::decay<T>::type>::value &&
     is_ostream_insertable<T>::value
     , BLoggerString>;
 
 template<typename T>
-using enable_if_not_integral_and_not_string_t = typename enable_if_not_integral_and_not_string<T>::type;
+using enable_if_not_arithmetic_and_not_string_t = typename enable_if_not_arithmetic_and_not_string<T>::type;
 
 template<typename T>
 using enable_if_string = std::enable_if<std::is_same<typename std::decay<T>::type, BLoggerString>::value, T&&>;
@@ -126,19 +126,19 @@ using enable_if_string_t = typename enable_if_string<T>::type;
 namespace BLogger {
 
     template<typename T>
-    enable_if_integral_t<T> to_string(T arg)
+    enable_if_arithmetic_t<T> to_string(T arg)
     {
         return BLOGGER_STD_TO_STRING(arg);
     }
 
     template<>
-    enable_if_integral_t<bl_char> to_string(bl_char arg)
+    enable_if_arithmetic_t<bl_char> to_string(bl_char arg)
     {
         return BLoggerString(1, arg);
     }
 
     template<typename T>
-    enable_if_not_integral_and_not_string_t<T> to_string(T&& arg)
+    enable_if_not_arithmetic_and_not_string_t<T> to_string(T&& arg)
     {
         BLoggerStringStream ss;
         ss << std::forward<T>(arg);
