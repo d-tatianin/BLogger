@@ -103,7 +103,7 @@ namespace BLogger {
         std::deque<task_ptr>     m_TaskQueue;
         std::mutex               m_QueueAccess;
         std::condition_variable  m_Notifier;
-        bool                     m_Running;
+        std::atomic_bool         m_Running;
     private:
         thread_pool(uint16_t thread_count)
             : m_Running(true)
