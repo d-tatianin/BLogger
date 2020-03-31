@@ -42,9 +42,9 @@ namespace BLogger {
     class bl_task : public task
     {
     protected:
-        BLoggerSharedSinks log_sinks;
+        SharedSinks log_sinks;
     protected:
-        bl_task(BLoggerSharedSinks& sinks)
+        bl_task(SharedSinks& sinks)
             : log_sinks(sinks)
         {
         }
@@ -57,7 +57,7 @@ namespace BLogger {
     public:
         log_task(
             BLoggerLogMessage&& msg,
-            BLoggerSharedSinks& sinks
+            SharedSinks& sinks
         ) : bl_task(sinks),
             msg(std::move(msg))
         {
@@ -77,7 +77,7 @@ namespace BLogger {
     class flush_task : public bl_task
     {
     public:
-        flush_task(BLoggerSharedSinks& sinks)
+        flush_task(SharedSinks& sinks)
             : bl_task(sinks)
         {
         }

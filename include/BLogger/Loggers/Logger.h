@@ -5,7 +5,7 @@
 #include "BLogger/Formatter.h"
 #include "BLogger/Loggers/LogMessage.h"
 #include "BLogger/OS/Functions.h"
-#include "BLogger/Sinks/BaseSink.h"
+#include "BLogger/Sinks/Sink.h"
 #include "BLogger/Sinks/StdoutSink.h"
 #include "BLogger/LogLevels.h"
 
@@ -13,12 +13,12 @@
 
 namespace BLogger {
 
-    typedef std::unique_ptr<BaseSink>
-        BLoggerSinkPtr;
-    typedef std::vector<BLoggerSinkPtr>
-        BLoggerSinks;
-    typedef std::shared_ptr<BLoggerSinks>
-        BLoggerSharedSinks;
+    typedef std::unique_ptr<Sink>
+        SinkPtr;
+    typedef std::vector<SinkPtr>
+        Sinks;
+    typedef std::shared_ptr<Sinks>
+        SharedSinks;
 
     // ---- BLogger logger properties struct ----
     // Used for customizing the logger.
@@ -60,7 +60,7 @@ namespace BLogger {
         BLoggerString         m_Tag;
         BLoggerString         m_CurrentPattern;
         BLoggerString         m_CachedPattern;
-        BLoggerSharedSinks    m_Sinks;
+        SharedSinks           m_Sinks;
         level                 m_Filter;
     public:
         using Ptr = std::shared_ptr<Logger>;
@@ -71,7 +71,7 @@ namespace BLogger {
             bool default_pattern
         ) : m_Tag(tag),
             m_CachedPattern(BLOGGER_WIDEN_IF_NEEDED("")),
-            m_Sinks(std::make_shared<BLoggerSinks>()),
+            m_Sinks(std::make_shared<Sinks>()),
             m_Filter(lvl)
         {
             // 'magic statics'
@@ -231,7 +231,7 @@ namespace BLogger {
             SetPattern(m_CachedPattern);
         }
 
-        void AddSink(BLoggerSinkPtr sink)
+        void AddSink(SinkPtr sink)
         {
             m_Sinks->emplace_back(std::move(sink));
         }

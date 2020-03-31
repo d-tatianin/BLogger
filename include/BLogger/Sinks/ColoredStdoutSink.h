@@ -6,7 +6,7 @@
 
 #include "BLogger/Loggers/Logger.h"
 #include "BLogger/Core.h"
-#include "BLogger/Sinks/BaseSink.h"
+#include "BLogger/Sinks/Sink.h"
 #include "BLogger/Sinks/StdoutSink.h"
 
 namespace BLogger {

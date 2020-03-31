@@ -2,7 +2,7 @@
 
 #include "BLogger/Loggers/Logger.h"
 #include "BLogger/LogLevels.h"
-#include "BLogger/Sinks/BaseSink.h"
+#include "BLogger/Sinks/Sink.h"
 
 namespace BLogger {
 

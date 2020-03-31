@@ -2,12 +2,12 @@
 
 #include <iostream>
 
-#include "BaseSink.h"
+#include "Sink.h"
 #include "BLogger/Loggers/Logger.h"
 
 namespace BLogger {
 
-    class StdoutSink : public BaseSink
+    class StdoutSink : public Sink
     {
     public:
         StdoutSink()

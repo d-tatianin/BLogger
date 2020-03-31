@@ -4,12 +4,12 @@
 #include <string>
 #include <mutex>
 
-#include "BLogger/Sinks/BaseSink.h"
+#include "BLogger/Sinks/Sink.h"
 #include "BLogger/OS/Functions.h"
 
 namespace BLogger {
 
-    class FileSink : public BaseSink
+    class FileSink : public Sink
     {
     private:
         FILE*         m_File;
