@@ -108,6 +108,7 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 -   `StdoutSink::GetGlobalWriteLock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
 -   `Formatter::CutIfExceeds(size_t size, std::string postfix)` -> Sets the maximum size of a log message. If the message exceeeds the set size it will be cut and the postfix will be inserted after. The postfix is set to `"..."` by default. Size can also be set to `BLOGGER_INFINITE`, which is the default setting.
 -   `Formatter::SetTimestampFormat(std::string new_format)` -> Sets the timestamp format. Should be formatted according to the `strftime` specifications.
+-   `Formatter::SetEnding(std::string ending)` -> Sets the default log message ending. Defaults to `\n`. The length of this ending is not included into message size calculations.
 ---
 ### There is a total of 6 available logging levels that reside inside the unscoped level_enum inside the level namespace
 -   `trace`
