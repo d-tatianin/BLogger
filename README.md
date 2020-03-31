@@ -20,7 +20,7 @@ RAM usage peakes at about 6MB with a full queue (10,000 log messages by default)
 
 In order to use BLogger in your own project simply add BLogger's include folder into your project's include directories.
 ## Using the logger  
-The preferred way of creating a logger is using the BLogger factory in combination with `BLoggerProps` since the factory initializes static BLogger variables in the correct order, which is safer. 
+The preferred way of creating a logger is using the logger factory in combination with `bl::Props` since the factory initializes static BLogger variables in the correct order, which is safer. 
 The factory always returns a shared pointer to the logger.  
 
 Currently available factory functions:
