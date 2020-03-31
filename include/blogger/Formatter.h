@@ -21,7 +21,7 @@
 
 #define BLOGGER_TIMESTAMP_FORMAT BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S")
 
-#define BLOGGER_TERMINATE_WITH BLOGGER_WIDEN_IF_NEEDED('\n')
+#define BLOGGER_TERMINATE_WITH BLOGGER_WIDEN_IF_NEEDED("\n")
 #define BLOGGER_OVERFLOW_POSTFIX BLOGGER_WIDEN_IF_NEEDED("...")
 
 class CreateLogger;
@@ -76,22 +76,27 @@ namespace bl
                 merge_into += overflow_postfix();
             }
 
-            merge_into.push_back(BLOGGER_TERMINATE_WITH);
+            merge_into += end();
         }
 
         static void CutIfExceeds(
             uint64_t length,
-            String overflow_postfix = BLOGGER_OVERFLOW_POSTFIX
+            InString postfix = BLOGGER_OVERFLOW_POSTFIX
         )
         {
             max_length() = length;
-            ::bl::Formatter::overflow_postfix() = overflow_postfix;
+            overflow_postfix() = postfix;
         }
 
         // Uses strftime format - https://en.cppreference.com/w/cpp/chrono/c/strftime
-        static void SetTimestampFormat(String new_format = BLOGGER_TIMESTAMP_FORMAT)
+        static void SetTimestampFormat(InString new_format = BLOGGER_TIMESTAMP_FORMAT)
         {
             timestamp_format() = new_format;
+        }
+
+        static void SetEnding(InString ending = BLOGGER_TERMINATE_WITH)
+        {
+            end() = ending;
         }
     private:
         template<typename T>
@@ -139,7 +144,6 @@ namespace bl
             String stringed_arg = to_string(arg);
 
             String pos_arg;
-            pos_arg.reserve(6); // reserve slightly more than we actually expect
             pos_arg += BLOGGER_ARG_OPENING;
             pos_arg += to_string(index);
             pos_arg += BLOGGER_ARG_CLOSING;
@@ -175,6 +179,12 @@ namespace bl
         {
             static String timestamp_format = BLOGGER_TIMESTAMP_FORMAT;
             return timestamp_format;
+        }
+
+        static String& end()
+        {
+            static String end = BLOGGER_TERMINATE_WITH;
+            return end;
         }
     };
 }

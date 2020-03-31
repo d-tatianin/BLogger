@@ -29,11 +29,12 @@ namespace bl {
         if (props.async)
         {
             // 'magic statics'
-            bl::StdoutSink::GetGlobalWriteLock();
-            bl::Formatter::timestamp_format();
-            bl::Formatter::overflow_postfix();
-            bl::Formatter::max_length();
-            bl::thread_pool::get();
+            StdoutSink::GetGlobalWriteLock();
+            Formatter::timestamp_format();
+            Formatter::overflow_postfix();
+            Formatter::max_length();
+            Formatter::end();
+            thread_pool::get();
 
             out_logger = std::make_shared<AsyncLogger>(
                 props.tag,
@@ -91,11 +92,12 @@ namespace bl {
     )
     {
         // 'magic statics'
-        bl::StdoutSink::GetGlobalWriteLock();
-        bl::Formatter::timestamp_format();
-        bl::Formatter::overflow_postfix();
-        bl::Formatter::max_length();
-        bl::thread_pool::get();
+        StdoutSink::GetGlobalWriteLock();
+        Formatter::timestamp_format();
+        Formatter::overflow_postfix();
+        Formatter::max_length();
+        Formatter::end();
+        thread_pool::get();
 
         Ptr out_logger =
             std::make_shared<AsyncLogger>(
