@@ -24,13 +24,13 @@ The preferred way of creating a logger is using the BLogger factory in combinati
 The factory always returns a shared pointer to the logger.  
 
 Currently available factory functions:
--   `CreateLogger::FromProps(BLoggerProps& props)` -> create a custom logger according to the properties passed to the function.
--   `CreateLogger::AsyncConsole(std::string tag, level lvl, bool default_pattern, bool colored)` -> a shortcut for creating an async console logger.
--   `CreateLogger::BlockingConsole(std::string tag, level lvl, bool default_pattern, bool colored)` -> a shortcut for creating a blocking console logger.
+-   `bl::Logger::CreateFromProps(BLoggerProps& props)` -> create a custom logger according to the properties passed to the function.
+-   `bl::Logger::CreateAsyncConsole(std::string tag, level lvl, bool default_pattern, bool colored)` -> a shortcut for creating an async console logger.
+-   `bl::Logger::CreateBlockingConsole(std::string tag, level lvl, bool default_pattern, bool colored)` -> a shortcut for creating a blocking console logger.
 
-So in your code you would write: `auto logger = CreateLogger::AsyncConsole("MyLogger", level::trace);`  
+So in your code you would write: `auto logger = bl:Logger::CreateAsyncConsole("MyLogger", level::trace);`  
 
-You can also create the logger by calling the constructor directly, and then adding a sink you want by calling `AddSink(BLoggerSinkPtr sink)` with your sink.
+You can also create the logger by calling the constructor directly, and then adding a sink you want by calling `AddSink(SinkPtr sink)` with your sink.
 
 `BLoggerProps` properties:
 -   `bool async` -> Creates an async logger if true, blocking otherwise.
