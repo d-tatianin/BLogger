@@ -1,4 +1,4 @@
-#include <BLogger/BLogger.h>
+#include <blogger/blogger.h>
 
 class MySerializableClass
 {
