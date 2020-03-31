@@ -56,7 +56,7 @@
     }
 #else
     namespace bl {
-        typedef const bl_char* color;
+        typedef const char_t* color;
 
         static inline void set_output_color(color color)
         {

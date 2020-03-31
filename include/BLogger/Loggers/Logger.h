@@ -28,12 +28,12 @@ namespace bl {
 
         bool console_logger;
         bool colored;
-        BLoggerString tag;
-        BLoggerString pattern;
+        String tag;
+        String pattern;
         level filter;
 
         bool file_logger;
-        BLoggerString path;
+        String path;
         size_t bytes_per_file;
         size_t log_files;
         bool rotate_logs;
@@ -57,16 +57,16 @@ namespace bl {
     class Logger
     {
     protected:
-        BLoggerString         m_Tag;
-        BLoggerString         m_CurrentPattern;
-        BLoggerString         m_CachedPattern;
+        String         m_Tag;
+        String         m_CurrentPattern;
+        String         m_CachedPattern;
         SharedSinks           m_Sinks;
         level                 m_Filter;
     public:
         using Ptr = std::shared_ptr<Logger>;
 
         Logger(
-            BLoggerInString tag,
+            InString tag,
             level lvl,
             bool default_pattern
         ) : m_Tag(tag),
@@ -97,20 +97,20 @@ namespace bl {
         static Ptr CreateFromProps(Props& props);
 
         static Ptr CreateAsyncConsole(
-            BLoggerInString tag,
+            InString tag,
             level lvl,
             bool default_pattern = true,
             bool colored = true
         );
 
         static Ptr CreateBlockingConsole(
-            BLoggerInString tag,
+            InString tag,
             level lvl,
             bool default_pattern = true,
             bool colored = true
         );
 
-        void SetPattern(BLoggerInString pattern)
+        void SetPattern(InString pattern)
         {
             m_CachedPattern = pattern;
             m_CurrentPattern = m_CachedPattern;
@@ -119,7 +119,7 @@ namespace bl {
 
         virtual void Flush() = 0;
 
-        void Log(level lvl, BLoggerInString message)
+        void Log(level lvl, InString message)
         {
             if (!ShouldLog(lvl))
                 return;
@@ -129,7 +129,7 @@ namespace bl {
             BLOGGER_UPDATE_TIME(time_point, time_now);
 
             Post({
-                BLoggerString(message.data()),
+                String(message.data()),
                 m_CurrentPattern.data(),
                 time_point,
                 lvl
@@ -137,7 +137,7 @@ namespace bl {
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Log(level lvl, BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Log(level lvl, InString formattedMsg, Args&& ... args)
         {
             if (!ShouldLog(lvl))
                 return;
@@ -154,68 +154,68 @@ namespace bl {
             });
         }
 
-       void Trace(BLoggerInString message)
+       void Trace(InString message)
        {
             Log(level::trace, message);
        }
 
-       void Debug(BLoggerInString message)
+       void Debug(InString message)
        {
             Log(level::debug, message);
        }
 
-       void Info(BLoggerInString message)
+       void Info(InString message)
        {
             Log(level::info, message);
        }
 
-       void Warning(BLoggerInString message)
+       void Warning(InString message)
        {
             Log(level::warn, message);
        }
 
-       void Error(BLoggerInString message)
+       void Error(InString message)
        {
             Log(level::error, message);
        }
 
-       void Critical(BLoggerInString message)
+       void Critical(InString message)
        {
             Log(level::crit, message);
        }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Trace(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Trace(InString formattedMsg, Args&& ... args)
         {
             Log(level::trace, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Debug(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Debug(InString formattedMsg, Args&& ... args)
         {
             Log(level::debug, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Info(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Info(InString formattedMsg, Args&& ... args)
         {
             Log(level::info, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Warning(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Warning(InString formattedMsg, Args&& ... args)
         {
             Log(level::warn, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Error(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Error(InString formattedMsg, Args&& ... args)
         {
             Log(level::error, formattedMsg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> Critical(BLoggerInString formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> Critical(InString formattedMsg, Args&& ... args)
         {
             Log(level::crit, formattedMsg, std::forward<Args>(args)...);
         }
@@ -225,7 +225,7 @@ namespace bl {
             m_Filter = lvl;
         }
 
-        void SetTag(BLoggerInString tag)
+        void SetTag(InString tag)
         {
             m_Tag = tag;
             SetPattern(m_CachedPattern);

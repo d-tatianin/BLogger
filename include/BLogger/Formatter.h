@@ -33,8 +33,8 @@ namespace bl
         friend class Logger;
     public:
         static void CreatePatternFrom(
-            BLoggerString& out_pattern,
-            BLoggerInString tag
+            String& out_pattern,
+            InString tag
         )
         {
             if (out_pattern.empty())
@@ -44,7 +44,7 @@ namespace bl
         }
 
         template<typename... Args>
-        static BLoggerString Format(BLoggerString pattern, Args&& ... args)
+        static String Format(String pattern, Args&& ... args)
         {
             uint16_t index = 0;
             BLOGGER_FOR_EACH_DO(format_one, args, pattern, index);
@@ -52,8 +52,8 @@ namespace bl
         }
 
         static void MergePattern(
-            BLoggerString& formatted_msg,
-            BLoggerString& merge_into,
+            String& formatted_msg,
+            String& merge_into,
             std::tm* time_ptr,
             level lvl
         )
@@ -81,7 +81,7 @@ namespace bl
 
         static void CutIfExceeds(
             uint64_t length,
-            BLoggerString overflow_postfix = BLOGGER_OVERFLOW_POSTFIX
+            String overflow_postfix = BLOGGER_OVERFLOW_POSTFIX
         )
         {
             max_length() = length;
@@ -89,31 +89,31 @@ namespace bl
         }
 
         // Uses strftime format - https://en.cppreference.com/w/cpp/chrono/c/strftime
-        static void SetTimestampFormat(BLoggerString new_format = BLOGGER_TIMESTAMP_FORMAT)
+        static void SetTimestampFormat(String new_format = BLOGGER_TIMESTAMP_FORMAT)
         {
             timestamp_format() = new_format;
         }
     private:
         template<typename T>
-        static void find_and_replace(BLoggerString& in, BLoggerInString what, T&& with)
+        static void find_and_replace(String& in, InString what, T&& with)
         {
             auto pos = in.find(what);
-            if (pos == BLoggerString::npos) return;
+            if (pos == String::npos) return;
 
             in.erase(pos, what.size());
             in.insert(pos, to_string(with).c_str());
         }
 
-        static void find_and_replace_timestamp(BLoggerString& in, BLoggerInString what, std::tm* time)
+        static void find_and_replace_timestamp(String& in, InString what, std::tm* time)
         {
             auto pos = in.find(what);
-            if (pos == BLoggerString::npos) return;
+            if (pos == String::npos) return;
 
             // If your timestamp is longer than this
             // then you're doing something wrong...
             constexpr size_t ts_size = 128;
 
-            bl_char timestamp[ts_size];
+            char_t timestamp[ts_size];
 
             auto written = BLOGGER_TIME_TO_STRING(timestamp, ts_size, timestamp_format().c_str(), time);
 
@@ -124,33 +124,33 @@ namespace bl
             in.insert(pos, timestamp);
         }
 
-        static void find_and_replace_level(BLoggerString& in, BLoggerInString what, level lvl)
+        static void find_and_replace_level(String& in, InString what, level lvl)
         {
             auto pos = in.find(what);
-            if (pos == BLoggerString::npos) return;
+            if (pos == String::npos) return;
 
             in.erase(pos, what.size());
             in.insert(pos, LevelToString(lvl));
         }
 
         template<typename T>
-        static void format_one(BLoggerString& out_formatted, uint16_t& index, T&& arg)
+        static void format_one(String& out_formatted, uint16_t& index, T&& arg)
         {
-            BLoggerString stringed_arg = to_string(arg);
+            String stringed_arg = to_string(arg);
 
-            BLoggerString pos_arg;
+            String pos_arg;
             pos_arg.reserve(6); // reserve slightly more than we actually expect
             pos_arg += BLOGGER_ARG_OPENING;
             pos_arg += to_string(index);
             pos_arg += BLOGGER_ARG_CLOSING;
 
             auto arg_offset = out_formatted.find(pos_arg);
-            if (arg_offset == BLoggerString::npos)
+            if (arg_offset == String::npos)
             {
                 arg_offset = out_formatted.find(BLOGGER_ARG_FULL);
                 pos_arg = BLOGGER_ARG_FULL;
             }
-            if (arg_offset == BLoggerString::npos)
+            if (arg_offset == String::npos)
                 return;
 
             index++;
@@ -159,9 +159,9 @@ namespace bl
             out_formatted.insert(arg_offset, stringed_arg.c_str());
         }
 
-        static BLoggerString& overflow_postfix()
+        static String& overflow_postfix()
         {
-            static BLoggerString overflow_postfix = BLOGGER_OVERFLOW_POSTFIX;
+            static String overflow_postfix = BLOGGER_OVERFLOW_POSTFIX;
             return overflow_postfix;
         }
 
@@ -171,9 +171,9 @@ namespace bl
             return length;
         }
 
-        static BLoggerString& timestamp_format()
+        static String& timestamp_format()
         {
-            static BLoggerString timestamp_format = BLOGGER_TIMESTAMP_FORMAT;
+            static String timestamp_format = BLOGGER_TIMESTAMP_FORMAT;
             return timestamp_format;
         }
     };

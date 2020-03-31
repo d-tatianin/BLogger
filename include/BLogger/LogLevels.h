@@ -13,7 +13,7 @@ enum class level : int
     crit
 };
 
-inline const bl_char* LevelToString(level lvl)
+inline const bl::char_t* LevelToString(level lvl)
 {
     switch (lvl)
     {

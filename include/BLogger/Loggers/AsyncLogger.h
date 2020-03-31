@@ -202,7 +202,7 @@ namespace bl {
     {
     public:
         AsyncLogger(
-            BLoggerInString tag,
+            InString tag,
             level lvl,
             bool default_pattern = true
         ): Logger(tag, lvl, default_pattern)

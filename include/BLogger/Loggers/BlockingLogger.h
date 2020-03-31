@@ -10,7 +10,7 @@ namespace bl {
     {
     public:
         BlockingLogger(
-            BLoggerInString tag,
+            InString tag,
             level lvl,
             bool default_pattern = true
         ) : Logger(

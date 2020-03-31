@@ -84,7 +84,7 @@ namespace bl {
     }
 
     Logger::Ptr Logger::CreateAsyncConsole(
-        BLoggerInString tag,
+        InString tag,
         level lvl,
         bool default_pattern,
         bool colored
@@ -117,7 +117,7 @@ namespace bl {
     }
 
     Logger::Ptr Logger::CreateBlockingConsole(
-        BLoggerInString tag,
+        InString tag,
         level lvl,
         bool default_pattern,
         bool colored

@@ -13,8 +13,8 @@ namespace bl {
     {
     private:
         FILE*         m_File;
-        BLoggerString m_DirectoryPath;
-        BLoggerString m_CachedTag;
+        String m_DirectoryPath;
+        String m_CachedTag;
         size_t        m_BytesPerFile;
         size_t        m_CurrentBytes;
         size_t        m_MaxLogFiles;
@@ -26,8 +26,8 @@ namespace bl {
             locker;
     public:
         FileSink(
-            BLoggerInString directoryPath,
-            BLoggerInString loggerTag,
+            InString directoryPath,
+            InString loggerTag,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -223,7 +223,7 @@ namespace bl {
         }
     private:
         void constructFullPath(
-            BLoggerString& outPath
+            String& outPath
         )
         {
             outPath += m_DirectoryPath;
@@ -241,7 +241,7 @@ namespace bl {
                 m_File = nullptr;
             }
 
-            BLoggerString fullPath;
+            String fullPath;
             constructFullPath(fullPath);
 
             BLOGGER_OPEN_FILE(m_File, fullPath);

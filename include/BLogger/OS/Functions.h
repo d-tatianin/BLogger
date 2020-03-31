@@ -10,8 +10,8 @@
     #else
         #define BLOGGER_OPEN_FILE(file, path) fopen_s(&file, path.c_str(), BLOGGER_FILEMODE)
     #endif
-    #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy_s(dst, (dst_size) * sizeof(bl_char), src, (src_size) * sizeof(bl_char))
-    #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove_s(dst, (dst_size) * sizeof(bl_char), src, (src_size) * sizeof(bl_char))
+    #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy_s(dst, (dst_size) * sizeof(char_t), src, (src_size) * sizeof(char_t))
+    #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove_s(dst, (dst_size) * sizeof(char_t), src, (src_size) * sizeof(char_t))
 
     namespace bl {
     
@@ -35,7 +35,7 @@
         };
     }
     
-    #define BLOGGER_STACK_ALLOC(size, out_ptr) ::bl::anonymous_stack_allocator anonbuf_##out_ptr((size) * sizeof(bl_char)); \
+    #define BLOGGER_STACK_ALLOC(size, out_ptr) ::bl::anonymous_stack_allocator anonbuf_##out_ptr((size) * sizeof(char_t)); \
                                        out_ptr = static_cast<decltype(out_ptr)>(anonbuf_##out_ptr.buffer)
 
     #ifdef BLOGGER_UNICODE_MODE
@@ -63,13 +63,13 @@
     #include <clocale>
 
     #define BLOGGER_UPDATE_TIME(to, from) localtime_r(&from, &to)
-    #define BLOGGER_STACK_ALLOC(size, out_ptr) out_ptr = static_cast<decltype(out_ptr)>(alloca((size) * sizeof(bl_char)))
+    #define BLOGGER_STACK_ALLOC(size, out_ptr) out_ptr = static_cast<decltype(out_ptr)>(alloca((size) * sizeof(char_t)))
 
     #ifdef BLOGGER_UNICODE_MODE
         #include "BLogger/Core.h"
         namespace bl {
 
-            static inline const char* wide_to_narrow_unfreed(const bl_char* wide)
+            static inline const char* wide_to_narrow_unfreed(const char_t* wide)
             {
                 constexpr size_t filename_size = 128;
                 char* narrow = new char[filename_size];
@@ -79,7 +79,7 @@
                 return narrow;
             }
 
-            static inline void open_unicode_file(FILE*& out_file, const bl_char* path)
+            static inline void open_unicode_file(FILE*& out_file, const char_t* path)
             {
                 auto free_me = wide_to_narrow_unfreed(path);
                 auto fptr = fopen(free_me, BLOGGER_FILEMODE);
@@ -91,8 +91,8 @@
     #else
         #define BLOGGER_OPEN_FILE(file, path) file = fopen(path.c_str(), BLOGGER_FILEMODE)
     #endif
-    #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy(dst, src, (src_size) * sizeof(bl_char))
-    #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove(dst, src, (src_size) * sizeof(bl_char))
+    #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy(dst, src, (src_size) * sizeof(char_t))
+    #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove(dst, src, (src_size) * sizeof(char_t))
 
     #ifdef BLOGGER_UNICODE_MODE
         namespace bl {
