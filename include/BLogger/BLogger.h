@@ -21,54 +21,10 @@
 */
 #include "Loggers/AsyncLogger.h"
 
-// ---- Convenient typedefs ----
-typedef BLogger::BlockingLogger              BlockingLogger;
-typedef BLogger::AsyncLogger                 AsyncLogger;
-typedef std::shared_ptr<BlockingLogger>      BlockingLoggerPtr;
-typedef std::shared_ptr<AsyncLogger>         AsyncLoggerPtr;
-typedef std::shared_ptr<BLogger::Logger> BLoggerPtr;
-
-// ---- BLogger logger properties struct ----
-// Used for customizing the logger.
-struct BLoggerProps
-{
-    bool async;
-
-    bool console_logger;
-    bool colored;
-    BLoggerString tag;
-    BLoggerString pattern;
-    level filter;
-
-    bool file_logger;
-    BLoggerString path;
-    size_t bytes_per_file;
-    size_t log_files;
-    bool rotate_logs;
-
-    BLoggerProps()
-        : async(true),
-        console_logger(true),
-        colored(true),
-        tag(BLOGGER_WIDEN_IF_NEEDED("Unnamed")),
-        pattern(BLOGGER_WIDEN_IF_NEEDED("")),
-        filter(level::trace),
-        file_logger(false),
-        path(BLOGGER_WIDEN_IF_NEEDED("")),
-        bytes_per_file(BLOGGER_INFINITE),
-        log_files(0),
-        rotate_logs(true)
+namespace BLogger {
+    Logger::Ptr Logger::CreateFromProps(Props& props)
     {
-    }
-};
-
-// ---- BLogger factory ----
-class CreateLogger
-{
-public:
-    static BLoggerPtr FromProps(BLoggerProps& props)
-    {
-        BLoggerPtr out_logger;
+        Ptr out_logger;
 
         if (props.async)
         {
@@ -83,14 +39,14 @@ public:
                 props.tag,
                 props.filter,
                 props.pattern.empty()
-            );
+                );
         }
         else
             out_logger = std::make_shared<BlockingLogger>(
                 props.tag,
                 props.filter,
                 props.pattern.empty()
-            );
+                );
 
         if (!props.pattern.empty())
             out_logger->SetPattern(props.pattern);
@@ -119,7 +75,7 @@ public:
                         props.bytes_per_file,
                         props.log_files,
                         props.rotate_logs
-                    )
+                        )
                 );
             }
         }
@@ -127,11 +83,11 @@ public:
         return out_logger;
     }
 
-    static BLoggerPtr AsyncConsole(
+    Logger::Ptr Logger::CreateAsyncConsole(
         BLoggerInString tag,
         level lvl,
-        bool default_pattern = true,
-        bool colored = true
+        bool default_pattern,
+        bool colored
     )
     {
         // 'magic statics'
@@ -141,12 +97,12 @@ public:
         BLogger::Formatter::max_length();
         BLogger::thread_pool::get();
 
-        BLoggerPtr out_logger = 
+        Ptr out_logger =
             std::make_shared<AsyncLogger>(
                 tag,
                 lvl,
                 default_pattern
-            );
+                );
 
         if (colored)
             out_logger->AddSink(
@@ -160,19 +116,19 @@ public:
         return out_logger;
     }
 
-    static BLoggerPtr BlockingConsole(
+    Logger::Ptr Logger::CreateBlockingConsole(
         BLoggerInString tag,
         level lvl,
-        bool default_pattern = true,
-        bool colored = true
+        bool default_pattern,
+        bool colored
     )
     {
-        BLoggerPtr out_logger =
+        Ptr out_logger =
             std::make_shared<BlockingLogger>(
                 tag,
                 lvl,
                 default_pattern
-            );
+                );
 
         if (colored)
             out_logger->AddSink(
@@ -185,7 +141,7 @@ public:
 
         return out_logger;
     }
-};
+}
 
 #undef BLOGGER_ARG_CLOSING
 #undef BLOGGER_ARG_FULL

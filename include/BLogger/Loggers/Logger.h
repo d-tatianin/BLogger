@@ -20,6 +20,40 @@ namespace BLogger {
     typedef std::shared_ptr<BLoggerSinks>
         BLoggerSharedSinks;
 
+    // ---- BLogger logger properties struct ----
+    // Used for customizing the logger.
+    struct Props
+    {
+        bool async;
+
+        bool console_logger;
+        bool colored;
+        BLoggerString tag;
+        BLoggerString pattern;
+        level filter;
+
+        bool file_logger;
+        BLoggerString path;
+        size_t bytes_per_file;
+        size_t log_files;
+        bool rotate_logs;
+
+        Props()
+            : async(true),
+            console_logger(true),
+            colored(true),
+            tag(BLOGGER_WIDEN_IF_NEEDED("Unnamed")),
+            pattern(BLOGGER_WIDEN_IF_NEEDED("")),
+            filter(level::trace),
+            file_logger(false),
+            path(BLOGGER_WIDEN_IF_NEEDED("")),
+            bytes_per_file(BLOGGER_INFINITE),
+            log_files(0),
+            rotate_logs(true)
+        {
+        }
+    };
+
     class Logger
     {
     protected:
@@ -29,6 +63,8 @@ namespace BLogger {
         BLoggerSharedSinks    m_Sinks;
         level                 m_Filter;
     public:
+        using Ptr = std::shared_ptr<Logger>;
+
         Logger(
             BLoggerInString tag,
             level lvl,
@@ -57,6 +93,22 @@ namespace BLogger {
 
         Logger(Logger&& other) = default;
         Logger& operator=(Logger&& other) = default;
+
+        static Ptr CreateFromProps(Props& props);
+
+        static Ptr CreateAsyncConsole(
+            BLoggerInString tag,
+            level lvl,
+            bool default_pattern = true,
+            bool colored = true
+        );
+
+        static Ptr CreateBlockingConsole(
+            BLoggerInString tag,
+            level lvl,
+            bool default_pattern = true,
+            bool colored = true
+        );
 
         void SetPattern(BLoggerInString pattern)
         {

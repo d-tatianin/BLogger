@@ -30,8 +30,6 @@ namespace BLogger
 {
     class Formatter
     {
-    private:
-        friend class ::CreateLogger;
         friend class Logger;
     public:
         static void CreatePatternFrom(
