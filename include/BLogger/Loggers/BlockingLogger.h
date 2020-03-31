@@ -1,19 +1,19 @@
 #pragma once
 
-#include "BLogger/Loggers/BaseLogger.h"
+#include "BLogger/Loggers/Logger.h"
 #include "BLogger/LogLevels.h"
 #include "BLogger/Sinks/BaseSink.h"
 
 namespace BLogger {
 
-    class BlockingLogger : public BaseLogger
+    class BlockingLogger : public Logger
     {
     public:
         BlockingLogger(
             BLoggerInString tag,
             level lvl,
             bool default_pattern = true
-        ) : BaseLogger(
+        ) : Logger(
             tag,
             lvl,
             default_pattern

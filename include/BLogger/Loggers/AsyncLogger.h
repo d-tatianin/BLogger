@@ -13,7 +13,7 @@
 #include <memory>
 
 #include "BLogger/Core.h"
-#include "BLogger/Loggers/BaseLogger.h"
+#include "BLogger/Loggers/Logger.h"
 #include "BLogger/Sinks/FileSink.h"
 #include "BLogger/Sinks/StdoutSink.h"
 #include "BLogger/Sinks/ColoredStdoutSink.h"
@@ -198,14 +198,14 @@ namespace BLogger {
         }
     };
 
-    class AsyncLogger : public BaseLogger
+    class AsyncLogger : public Logger
     {
     public:
         AsyncLogger(
             BLoggerInString tag,
             level lvl,
             bool default_pattern = true
-        ): BaseLogger(tag, lvl, default_pattern)
+        ): Logger(tag, lvl, default_pattern)
         {
             thread_pool::get();
         }

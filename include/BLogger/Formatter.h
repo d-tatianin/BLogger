@@ -32,7 +32,7 @@ namespace BLogger
     {
     private:
         friend class ::CreateLogger;
-        friend class BaseLogger;
+        friend class Logger;
     public:
         static void CreatePatternFrom(
             BLoggerString& out_pattern,

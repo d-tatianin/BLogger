@@ -20,7 +20,7 @@ namespace BLogger {
     typedef std::shared_ptr<BLoggerSinks>
         BLoggerSharedSinks;
 
-    class BaseLogger
+    class Logger
     {
     protected:
         BLoggerString         m_Tag;
@@ -29,7 +29,7 @@ namespace BLogger {
         BLoggerSharedSinks    m_Sinks;
         level                 m_Filter;
     public:
-        BaseLogger(
+        Logger(
             BLoggerInString tag,
             level lvl,
             bool default_pattern
@@ -52,11 +52,11 @@ namespace BLogger {
             }
         }
 
-        BaseLogger(const BaseLogger& other) = delete;
-        BaseLogger& operator=(const BaseLogger& other) = delete;
+        Logger(const Logger& other) = delete;
+        Logger& operator=(const Logger& other) = delete;
 
-        BaseLogger(BaseLogger&& other) = default;
-        BaseLogger& operator=(BaseLogger&& other) = default;
+        Logger(Logger&& other) = default;
+        Logger& operator=(Logger&& other) = default;
 
         void SetPattern(BLoggerInString pattern)
         {
@@ -184,7 +184,7 @@ namespace BLogger {
             m_Sinks->emplace_back(std::move(sink));
         }
 
-        virtual ~BaseLogger() = default;
+        virtual ~Logger() = default;
     protected:
         bool ShouldLog(level lvl)
         {

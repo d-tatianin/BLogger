@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "BaseSink.h"
-#include "BLogger/Loggers/BaseLogger.h"
+#include "BLogger/Loggers/Logger.h"
 
 namespace BLogger {
 

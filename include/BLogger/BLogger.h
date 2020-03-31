@@ -6,7 +6,7 @@
    Responsible for message formatting
    and main logging functions.
 */ 
-#include "Loggers/BaseLogger.h"
+#include "Loggers/Logger.h"
 
 /* Blocking version of BLogger.
    All logging happens on a
@@ -26,7 +26,7 @@ typedef BLogger::BlockingLogger              BlockingLogger;
 typedef BLogger::AsyncLogger                 AsyncLogger;
 typedef std::shared_ptr<BlockingLogger>      BlockingLoggerPtr;
 typedef std::shared_ptr<AsyncLogger>         AsyncLoggerPtr;
-typedef std::shared_ptr<BLogger::BaseLogger> BLoggerPtr;
+typedef std::shared_ptr<BLogger::Logger> BLoggerPtr;
 
 // ---- BLogger logger properties struct ----
 // Used for customizing the logger.
