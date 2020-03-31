@@ -31,7 +31,7 @@
 #endif
 
 #ifdef _WIN32
-    namespace BLogger {
+    namespace bl {
         typedef WORD color;
 
         static inline void set_output_color(color color)
@@ -55,7 +55,7 @@
         }
     }
 #else
-    namespace BLogger {
+    namespace bl {
         typedef const bl_char* color;
 
         static inline void set_output_color(color color)

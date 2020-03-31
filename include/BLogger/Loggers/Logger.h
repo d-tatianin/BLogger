@@ -11,7 +11,7 @@
 
 #define BLOGGER_DEFAULT_PATTERN BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}")
 
-namespace BLogger {
+namespace bl {
 
     typedef std::unique_ptr<Sink>
         SinkPtr;

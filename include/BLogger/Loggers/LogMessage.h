@@ -3,7 +3,7 @@
 #include "BLogger/Formatter.h"
 #include "BLogger/LogLevels.h"
 
-namespace BLogger {
+namespace bl {
 
     struct BLoggerLogMessage
     {

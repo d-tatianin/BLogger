@@ -9,7 +9,7 @@
 #include "BLogger/Sinks/Sink.h"
 #include "BLogger/Sinks/StdoutSink.h"
 
-namespace BLogger {
+namespace bl {
 
     class ColoredStdoutSink : public StdoutSink
     {

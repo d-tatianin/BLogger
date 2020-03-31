@@ -21,7 +21,7 @@
 */
 #include "Loggers/AsyncLogger.h"
 
-namespace BLogger {
+namespace bl {
     Logger::Ptr Logger::CreateFromProps(Props& props)
     {
         Ptr out_logger;
@@ -29,11 +29,11 @@ namespace BLogger {
         if (props.async)
         {
             // 'magic statics'
-            BLogger::StdoutSink::GetGlobalWriteLock();
-            BLogger::Formatter::timestamp_format();
-            BLogger::Formatter::overflow_postfix();
-            BLogger::Formatter::max_length();
-            BLogger::thread_pool::get();
+            bl::StdoutSink::GetGlobalWriteLock();
+            bl::Formatter::timestamp_format();
+            bl::Formatter::overflow_postfix();
+            bl::Formatter::max_length();
+            bl::thread_pool::get();
 
             out_logger = std::make_shared<AsyncLogger>(
                 props.tag,
@@ -57,11 +57,11 @@ namespace BLogger {
         {
             if (props.colored)
                 out_logger->AddSink(
-                    std::make_unique<BLogger::ColoredStdoutSink>()
+                    std::make_unique<bl::ColoredStdoutSink>()
                 );
             else
                 out_logger->AddSink(
-                    std::make_unique<BLogger::StdoutSink>()
+                    std::make_unique<bl::StdoutSink>()
                 );
         }
 
@@ -70,7 +70,7 @@ namespace BLogger {
             if (!props.path.empty())
             {
                 out_logger->AddSink(
-                    std::make_unique<BLogger::FileSink>(
+                    std::make_unique<bl::FileSink>(
                         props.path, props.tag,
                         props.bytes_per_file,
                         props.log_files,
@@ -91,11 +91,11 @@ namespace BLogger {
     )
     {
         // 'magic statics'
-        BLogger::StdoutSink::GetGlobalWriteLock();
-        BLogger::Formatter::timestamp_format();
-        BLogger::Formatter::overflow_postfix();
-        BLogger::Formatter::max_length();
-        BLogger::thread_pool::get();
+        bl::StdoutSink::GetGlobalWriteLock();
+        bl::Formatter::timestamp_format();
+        bl::Formatter::overflow_postfix();
+        bl::Formatter::max_length();
+        bl::thread_pool::get();
 
         Ptr out_logger =
             std::make_shared<AsyncLogger>(
@@ -106,11 +106,11 @@ namespace BLogger {
 
         if (colored)
             out_logger->AddSink(
-                std::make_unique<BLogger::ColoredStdoutSink>()
+                std::make_unique<bl::ColoredStdoutSink>()
             );
         else
             out_logger->AddSink(
-                std::make_unique<BLogger::StdoutSink>()
+                std::make_unique<bl::StdoutSink>()
             );
 
         return out_logger;
@@ -132,11 +132,11 @@ namespace BLogger {
 
         if (colored)
             out_logger->AddSink(
-                std::make_unique<BLogger::ColoredStdoutSink>()
+                std::make_unique<bl::ColoredStdoutSink>()
             );
         else
             out_logger->AddSink(
-                std::make_unique<BLogger::StdoutSink>()
+                std::make_unique<bl::StdoutSink>()
             );
 
         return out_logger;

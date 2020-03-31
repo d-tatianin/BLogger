@@ -123,7 +123,7 @@ using enable_if_string = std::enable_if<std::is_same<typename std::decay<T>::typ
 template<typename T>
 using enable_if_string_t = typename enable_if_string<T>::type;
 
-namespace BLogger {
+namespace bl {
 
     template<typename T>
     enable_if_arithmetic_t<T> to_string(T arg)
@@ -152,5 +152,5 @@ namespace BLogger {
     }
 }
 
-#define BLOGGER_TO_STRING(what) ::BLogger::to_string(what)
+#define BLOGGER_TO_STRING(what) ::bl::to_string(what)
 #define BLOGGER_INFINITE 0u

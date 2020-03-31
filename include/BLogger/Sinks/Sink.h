@@ -2,7 +2,7 @@
 
 #include "BLogger/Loggers/LogMessage.h"
 
-namespace BLogger {
+namespace bl {
 
     class Sink
     {

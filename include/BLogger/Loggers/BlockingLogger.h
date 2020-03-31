@@ -4,7 +4,7 @@
 #include "BLogger/LogLevels.h"
 #include "BLogger/Sinks/Sink.h"
 
-namespace BLogger {
+namespace bl {
 
     class BlockingLogger : public Logger
     {

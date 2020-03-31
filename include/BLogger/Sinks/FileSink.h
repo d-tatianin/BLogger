@@ -7,7 +7,7 @@
 #include "BLogger/Sinks/Sink.h"
 #include "BLogger/OS/Functions.h"
 
-namespace BLogger {
+namespace bl {
 
     class FileSink : public Sink
     {

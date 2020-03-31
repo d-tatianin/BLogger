@@ -5,7 +5,7 @@
 #include "Sink.h"
 #include "BLogger/Loggers/Logger.h"
 
-namespace BLogger {
+namespace bl {
 
     class StdoutSink : public Sink
     {

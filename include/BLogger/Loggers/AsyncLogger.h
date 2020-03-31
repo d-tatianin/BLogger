@@ -26,7 +26,7 @@
 
 #define BLOGGER_TASK_LIMIT 10000
 
-namespace BLogger {
+namespace bl {
 
     // You can make your own tasks
     // and feed them to the thread_pool

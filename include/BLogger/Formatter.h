@@ -26,7 +26,7 @@
 
 class CreateLogger;
 
-namespace BLogger
+namespace bl
 {
     class Formatter
     {
@@ -85,7 +85,7 @@ namespace BLogger
         )
         {
             max_length() = length;
-            ::BLogger::Formatter::overflow_postfix() = overflow_postfix;
+            ::bl::Formatter::overflow_postfix() = overflow_postfix;
         }
 
         // Uses strftime format - https://en.cppreference.com/w/cpp/chrono/c/strftime

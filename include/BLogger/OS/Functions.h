@@ -13,7 +13,7 @@
     #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy_s(dst, (dst_size) * sizeof(bl_char), src, (src_size) * sizeof(bl_char))
     #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove_s(dst, (dst_size) * sizeof(bl_char), src, (src_size) * sizeof(bl_char))
 
-    namespace BLogger {
+    namespace bl {
     
         // A windows-only safer version of alloca that
         // can allocate on the heap as well. Requires freeing.
@@ -35,7 +35,7 @@
         };
     }
     
-    #define BLOGGER_STACK_ALLOC(size, out_ptr) ::BLogger::anonymous_stack_allocator anonbuf_##out_ptr((size) * sizeof(bl_char)); \
+    #define BLOGGER_STACK_ALLOC(size, out_ptr) ::bl::anonymous_stack_allocator anonbuf_##out_ptr((size) * sizeof(bl_char)); \
                                        out_ptr = static_cast<decltype(out_ptr)>(anonbuf_##out_ptr.buffer)
 
     #ifdef BLOGGER_UNICODE_MODE
@@ -44,7 +44,7 @@
         #include <fcntl.h>
         #include <stringapiset.h>
 
-        namespace BLogger {
+        namespace bl {
             static inline void init_unicode()
             {
                 auto ignored = _setmode(_fileno(stdout), _O_U16TEXT);
@@ -52,7 +52,7 @@
                 ignored =      _setmode(_fileno(stderr), _O_U16TEXT);
             }
         }
-        #define BLOGGER_INIT_UNICODE_MODE ::BLogger::init_unicode
+        #define BLOGGER_INIT_UNICODE_MODE ::bl::init_unicode
     #else
         static inline void blogger_dummy_func() {}
         #define BLOGGER_INIT_UNICODE_MODE blogger_dummy_func
@@ -67,7 +67,7 @@
 
     #ifdef BLOGGER_UNICODE_MODE
         #include "BLogger/Core.h"
-        namespace BLogger {
+        namespace bl {
 
             static inline const char* wide_to_narrow_unfreed(const bl_char* wide)
             {
@@ -87,7 +87,7 @@
                 out_file = fptr;
             }
         }
-        #define BLOGGER_OPEN_FILE(file, path) ::BLogger::open_unicode_file(file, path.c_str())
+        #define BLOGGER_OPEN_FILE(file, path) ::bl::open_unicode_file(file, path.c_str())
     #else
         #define BLOGGER_OPEN_FILE(file, path) file = fopen(path.c_str(), BLOGGER_FILEMODE)
     #endif
@@ -95,7 +95,7 @@
     #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove(dst, src, (src_size) * sizeof(bl_char))
 
     #ifdef BLOGGER_UNICODE_MODE
-        namespace BLogger {
+        namespace bl {
             static inline void init_unicode()
             {
                 setlocale(LC_ALL, "en_US.utf8");

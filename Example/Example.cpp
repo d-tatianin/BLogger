@@ -17,7 +17,7 @@ int main()
     // BLogger properties struct
     // used to customize the logger
     // before creating it
-    BLogger::Props props;
+    bl::Props props;
 
     // Creates an Async logger if true
     // blocking otherwise
@@ -64,7 +64,7 @@ int main()
 
     // Use the properties with BLogger factory
     // returns a pointer to the new logger
-    auto logger = BLogger::Logger::CreateFromProps(props);
+    auto logger = bl::Logger::CreateFromProps(props);
 
     // Set the pattern of the logger
     // {ts}  -> timestamp
@@ -118,7 +118,7 @@ int main()
 
     // You can also use factory without BLoggerProps
     // for quickly creating a logger with predefined sinks
-    auto blockingLogger = BLogger::Logger::CreateBlockingConsole("BlockingLogger", level::trace);
+    auto blockingLogger = bl::Logger::CreateBlockingConsole("BlockingLogger", level::trace);
 
     std::cin.get();
     // Will only shutdown after AsyncLogger
