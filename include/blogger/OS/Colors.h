@@ -17,11 +17,12 @@ namespace bl {
         yellow,
         white,
         reset,
-        default = reset
+        original = reset
     };
 
     class StdoutColor
     {
+        friend std::ostream& operator<<(std::ostream& stream, color c);
     public:
         static void set_to(color c)
         {
@@ -49,24 +50,13 @@ namespace bl {
 
         static void reset()
         {
-            set_to(color::default);
-        }
-
-        friend std::ostream& operator<<(std::ostream& stream, color c)
-        {
-          #ifdef _WIN32
-            set_to(c);
-          #else
-            stream << to_native_color(c);
-          #endif
-
-            return stream;
+            set_to(color::original);
         }
     private:
       #ifdef _WIN32
         using color_t = WORD;
       #else
-        using color_t = char_t*;
+        using color_t = const char_t*;
       #endif
 
         static color_t to_native_color(color c)
@@ -124,4 +114,15 @@ namespace bl {
             StdoutColor::reset();
         }
     };
+
+    std::ostream& operator<<(std::ostream& stream, color c)
+    {
+      #ifdef _WIN32
+        StdoutColor::set_to(c);
+      #else
+        stream << StdoutColor::to_native_color(c);
+      #endif
+
+        return stream;
+    }
 }
