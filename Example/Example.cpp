@@ -42,7 +42,7 @@ int main()
     props.pattern = "";
 
     // Sets the logging filter
-    props.filter = level::trace;
+    props.filter = bl::level::trace;
 
     // Enables the file logger
     props.file_logger = true;
@@ -98,7 +98,7 @@ int main()
 
     // Set logging filter to 'Warning'
     // The logger will ignore all messages below 'Warning' log level
-    logger->SetFilter(level::warn);
+    logger->SetFilter(bl::level::warn);
 
     // Log a message with log level 'Warning'
     logger->Warning("Warning message");
@@ -118,7 +118,7 @@ int main()
 
     // You can also use factory without BLoggerProps
     // for quickly creating a logger with predefined sinks
-    auto blockingLogger = bl::Logger::CreateBlockingConsole("BlockingLogger", level::trace);
+    auto blockingLogger = bl::Logger::CreateBlockingConsole("BlockingLogger", bl::level::trace);
 
     std::cin.get();
     // Will only shutdown after AsyncLogger

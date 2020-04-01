@@ -4,38 +4,28 @@
 
 #include "blogger/Core.h"
 
-#ifdef _WIN32
-    #define BLOGGER_BLACK   0
-    #define BLOGGER_RED     4
-    #define BLOGGER_ORANGE  6
-    #define BLOGGER_BLUE    9
-    #define BLOGGER_GREEN   10
-    #define BLOGGER_CYAN    11
-    #define BLOGGER_MAGENTA 13
-    #define BLOGGER_YELLOW  14
-    #define BLOGGER_WHITE   15
-    #define BLOGGER_RESET   0xffff
-    #define BLOGGER_DEFAULT BLOGGER_RESET
-#else
-    #define BLOGGER_BLACK   BLOGGER_WIDEN_IF_NEEDED("\033[0;30m")
-    #define BLOGGER_RED     BLOGGER_WIDEN_IF_NEEDED("\033[1;31m")
-    #define BLOGGER_ORANGE  BLOGGER_WIDEN_IF_NEEDED("\033[0;33m")
-    #define BLOGGER_BLUE    BLOGGER_WIDEN_IF_NEEDED("\033[1;34m")
-    #define BLOGGER_GREEN   BLOGGER_WIDEN_IF_NEEDED("\033[1;32m")
-    #define BLOGGER_CYAN    BLOGGER_WIDEN_IF_NEEDED("\033[1;36m")
-    #define BLOGGER_MAGENTA BLOGGER_WIDEN_IF_NEEDED("\033[1;35m")
-    #define BLOGGER_YELLOW  BLOGGER_WIDEN_IF_NEEDED("\033[1;33m")
-    #define BLOGGER_WHITE   BLOGGER_WIDEN_IF_NEEDED("\033[1;37m")
-    #define BLOGGER_RESET   BLOGGER_WIDEN_IF_NEEDED("\033[0m")
-    #define BLOGGER_DEFAULT BLOGGER_RESET
-#endif
+namespace bl {
+    enum class color
+    {
+        black,
+        red,
+        orange,
+        blue,
+        green,
+        cyan,
+        magenta,
+        yellow,
+        white,
+        reset,
+        default = reset
+    };
 
-#ifdef _WIN32
-    namespace bl {
-        typedef WORD color;
-
-        static inline void set_output_color(color color)
+    class StdoutColor
+    {
+    public:
+        static void set_to(color c)
         {
+          #ifdef _WIN32
             static HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
             static bool defaults_set = false;
             static WORD default_color;
@@ -48,19 +38,90 @@
                 defaults_set = true;
             }
 
-            if (color == BLOGGER_RESET)
+            if (c == color::reset)
                 SetConsoleTextAttribute(console, default_color);
             else
-                SetConsoleTextAttribute(console, color);
+                SetConsoleTextAttribute(console, to_native_color(c));
+          #else
+            BLOGGER_COUT << to_native_color(c);
+          #endif
         }
-    }
-#else
-    namespace bl {
-        typedef const char_t* color;
 
-        static inline void set_output_color(color color)
+        static void reset()
         {
-            BLOGGER_COUT << color;
+            set_to(color::default);
         }
-    }
-#endif
+
+        friend std::ostream& operator<<(std::ostream& stream, color c)
+        {
+          #ifdef _WIN32
+            set_to(c);
+          #else
+            stream << to_native_color(c);
+          #endif
+
+            return stream;
+        }
+    private:
+      #ifdef _WIN32
+        using color_t = WORD;
+      #else
+        using color_t = char_t*;
+      #endif
+
+        static color_t to_native_color(color c)
+        {
+          #ifdef _WIN32
+            constexpr color_t black   = 0;
+            constexpr color_t red     = 4;
+            constexpr color_t orange  = 6;
+            constexpr color_t blue    = 9;
+            constexpr color_t green   = 10;
+            constexpr color_t cyan    = 11;
+            constexpr color_t magenta = 13;
+            constexpr color_t yellow  = 14;
+            constexpr color_t white   = 15;
+            constexpr color_t reset   = -1;
+          #else
+            constexpr color_t black   = BLOGGER_WIDEN_IF_NEEDED("\033[0;30m");
+            constexpr color_t red     = BLOGGER_WIDEN_IF_NEEDED("\033[1;31m");
+            constexpr color_t orange  = BLOGGER_WIDEN_IF_NEEDED("\033[0;33m");
+            constexpr color_t blue    = BLOGGER_WIDEN_IF_NEEDED("\033[1;34m");
+            constexpr color_t green   = BLOGGER_WIDEN_IF_NEEDED("\033[1;32m");
+            constexpr color_t cyan    = BLOGGER_WIDEN_IF_NEEDED("\033[1;36m");
+            constexpr color_t magenta = BLOGGER_WIDEN_IF_NEEDED("\033[1;35m");
+            constexpr color_t yellow  = BLOGGER_WIDEN_IF_NEEDED("\033[1;33m");
+            constexpr color_t white   = BLOGGER_WIDEN_IF_NEEDED("\033[1;37m");
+            constexpr color_t reset   = BLOGGER_WIDEN_IF_NEEDED("\033[0m");
+          #endif
+
+            switch (c)
+            {
+            case color::black:   return black;
+            case color::red:     return red;
+            case color::orange:  return orange;
+            case color::blue:    return blue;
+            case color::green:   return green;
+            case color::cyan:    return cyan;
+            case color::magenta: return magenta;
+            case color::yellow:  return yellow;
+            case color::white:   return white;
+            default:             return reset;
+            }
+        }
+    };
+
+    class ScopedStdoutColor
+    {
+    public:
+        ScopedStdoutColor(color c)
+        {
+            StdoutColor::set_to(c);
+        }
+
+        ~ScopedStdoutColor()
+        {
+            StdoutColor::reset();
+        }
+    };
+}

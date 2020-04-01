@@ -135,7 +135,7 @@ namespace bl
             if (pos == String::npos) return;
 
             in.erase(pos, what.size());
-            in.insert(pos, LevelToString(lvl));
+            in.insert(pos, level_to_string(lvl));
         }
 
         template<typename T>
