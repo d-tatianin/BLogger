@@ -157,7 +157,8 @@ namespace bl {
     {
         return std::forward<T>(str);
     }
+
+    constexpr size_t infinite = 0u;
 }
 
 #define BLOGGER_TO_STRING(what) ::bl::to_string(what)
-#define BLOGGER_INFINITE 0u

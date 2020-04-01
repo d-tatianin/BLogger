@@ -53,7 +53,7 @@ int main()
     props.path = "logs";
 
     // Maximum bytes per log file
-    props.bytes_per_file = BLOGGER_INFINITE;
+    props.bytes_per_file = bl::infinite;
 
     // Maximum log files
     props.log_files = 1;

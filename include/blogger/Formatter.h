@@ -10,26 +10,24 @@
 #include "blogger/OS/Functions.h"
 #include "blogger/LogLevels.h"
 
-#define BLOGGER_ARG_OPENING BLOGGER_WIDEN_IF_NEEDED("{")
-#define BLOGGER_ARG_CLOSING BLOGGER_WIDEN_IF_NEEDED("}")
-#define BLOGGER_ARG_FULL BLOGGER_WIDEN_IF_NEEDED("{}")
-
-#define BLOGGER_TS_PATTERN  BLOGGER_WIDEN_IF_NEEDED("{ts}")
-#define BLOGGER_TAG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{tag}")
-#define BLOGGER_LVL_PATTERN BLOGGER_WIDEN_IF_NEEDED("{lvl}")
-#define BLOGGER_MSG_PATTERN BLOGGER_WIDEN_IF_NEEDED("{msg}")
-
-#define BLOGGER_TIMESTAMP_FORMAT BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S")
-
-#define BLOGGER_TERMINATE_WITH BLOGGER_WIDEN_IF_NEEDED("\n")
-#define BLOGGER_OVERFLOW_POSTFIX BLOGGER_WIDEN_IF_NEEDED("...")
-
-class CreateLogger;
-
 namespace bl
 {
     class Formatter
     {
+        constexpr static auto arg_opening = BLOGGER_WIDEN_IF_NEEDED("{");
+        constexpr static auto arg_closing = BLOGGER_WIDEN_IF_NEEDED("}");
+        constexpr static auto arg_full    = BLOGGER_WIDEN_IF_NEEDED("{}");
+
+        constexpr static auto timestamp_pattern = BLOGGER_WIDEN_IF_NEEDED("{ts}");
+        constexpr static auto tag_pattern       = BLOGGER_WIDEN_IF_NEEDED("{tag}");
+        constexpr static auto level_pattern     = BLOGGER_WIDEN_IF_NEEDED("{lvl}");
+        constexpr static auto message_pattern   = BLOGGER_WIDEN_IF_NEEDED("{msg}");
+
+        constexpr static auto default_timestamp_format = BLOGGER_WIDEN_IF_NEEDED("%H:%M:%S");
+
+        constexpr static auto default_ending  = BLOGGER_WIDEN_IF_NEEDED("\n");
+        constexpr static auto default_postfix = BLOGGER_WIDEN_IF_NEEDED("...");
+
         friend class Logger;
     public:
         static void CreatePatternFrom(
@@ -40,7 +38,7 @@ namespace bl
             if (out_pattern.empty())
                 return;
 
-            find_and_replace(out_pattern, BLOGGER_TAG_PATTERN, tag);
+            find_and_replace(out_pattern, tag_pattern, tag);
         }
 
         template<typename... Args>
@@ -58,12 +56,12 @@ namespace bl
             level lvl
         )
         {
-            find_and_replace(merge_into, BLOGGER_MSG_PATTERN, formatted_msg);
-            find_and_replace(merge_into, BLOGGER_TS_PATTERN, timestamp_format().c_str());
+            find_and_replace(merge_into, message_pattern, formatted_msg);
+            find_and_replace(merge_into, timestamp_pattern, timestamp_format().c_str());
             find_and_replace_timestamp(merge_into, timestamp_format().c_str(), time_ptr);
-            find_and_replace_level(merge_into, BLOGGER_LVL_PATTERN, lvl);
+            find_and_replace_level(merge_into, level_pattern, lvl);
 
-            if (max_length() != BLOGGER_INFINITE &&
+            if (max_length() != infinite &&
                 merge_into.size() > max_length()
             )
             {
@@ -81,7 +79,7 @@ namespace bl
 
         static void CutIfExceeds(
             uint64_t length,
-            InString postfix = BLOGGER_OVERFLOW_POSTFIX
+            InString postfix = default_postfix
         )
         {
             max_length() = length;
@@ -89,12 +87,12 @@ namespace bl
         }
 
         // Uses strftime format - https://en.cppreference.com/w/cpp/chrono/c/strftime
-        static void SetTimestampFormat(InString new_format = BLOGGER_TIMESTAMP_FORMAT)
+        static void SetTimestampFormat(InString new_format = default_timestamp_format)
         {
             timestamp_format() = new_format;
         }
 
-        static void SetEnding(InString ending = BLOGGER_TERMINATE_WITH)
+        static void SetEnding(InString ending = default_ending)
         {
             end() = ending;
         }
@@ -144,15 +142,15 @@ namespace bl
             String stringed_arg = to_string(arg);
 
             String pos_arg;
-            pos_arg += BLOGGER_ARG_OPENING;
+            pos_arg += arg_opening;
             pos_arg += to_string(index);
-            pos_arg += BLOGGER_ARG_CLOSING;
+            pos_arg += arg_closing;
 
             auto arg_offset = out_formatted.find(pos_arg);
             if (arg_offset == String::npos)
             {
-                arg_offset = out_formatted.find(BLOGGER_ARG_FULL);
-                pos_arg = BLOGGER_ARG_FULL;
+                arg_offset = out_formatted.find(arg_full);
+                pos_arg = arg_full;
             }
             if (arg_offset == String::npos)
                 return;
@@ -165,25 +163,25 @@ namespace bl
 
         static String& overflow_postfix()
         {
-            static String overflow_postfix = BLOGGER_OVERFLOW_POSTFIX;
+            static String overflow_postfix = default_postfix;
             return overflow_postfix;
         }
 
         static uint64_t& max_length()
         {
-            static uint64_t length = BLOGGER_INFINITE;
+            static uint64_t length = infinite;
             return length;
         }
 
         static String& timestamp_format()
         {
-            static String timestamp_format = BLOGGER_TIMESTAMP_FORMAT;
+            static String timestamp_format = default_timestamp_format;
             return timestamp_format;
         }
 
         static String& end()
         {
-            static String end = BLOGGER_TERMINATE_WITH;
+            static String end = default_ending;
             return end;
         }
     };

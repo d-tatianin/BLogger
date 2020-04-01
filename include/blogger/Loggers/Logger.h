@@ -9,8 +9,6 @@
 #include "blogger/Sinks/StdoutSink.h"
 #include "blogger/LogLevels.h"
 
-#define BLOGGER_DEFAULT_PATTERN BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}")
-
 namespace bl {
 
     typedef std::unique_ptr<Sink>
@@ -47,7 +45,7 @@ namespace bl {
             filter(level::trace),
             file_logger(false),
             path(BLOGGER_WIDEN_IF_NEEDED("")),
-            bytes_per_file(BLOGGER_INFINITE),
+            bytes_per_file(infinite),
             log_files(0),
             rotate_logs(true)
         {
@@ -63,6 +61,7 @@ namespace bl {
         SharedSinks           m_Sinks;
         level                 m_Filter;
     public:
+        static auto constexpr default_pattern = BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}");
         using Ptr = std::shared_ptr<Logger>;
 
         Logger(
@@ -84,7 +83,7 @@ namespace bl {
 
             if (default_pattern)
             {
-                SetPattern(BLOGGER_DEFAULT_PATTERN);
+                SetPattern(Logger::default_pattern);
             }
         }
 
