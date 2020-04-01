@@ -115,7 +115,7 @@ namespace bl {
         }
     };
 
-    std::ostream& operator<<(std::ostream& stream, color c)
+    inline std::ostream& operator<<(std::ostream& stream, color c)
     {
       #ifdef _WIN32
         StdoutColor::set_to(c);

@@ -22,7 +22,7 @@
 #include "Loggers/AsyncLogger.h"
 
 namespace bl {
-    Logger::Ptr Logger::CreateFromProps(Props& props)
+    inline Logger::Ptr Logger::CreateFromProps(Props& props)
     {
         Ptr out_logger;
 
@@ -84,7 +84,7 @@ namespace bl {
         return out_logger;
     }
 
-    Logger::Ptr Logger::CreateAsyncConsole(
+    inline Logger::Ptr Logger::CreateAsyncConsole(
         InString tag,
         level lvl,
         bool default_pattern,
@@ -118,7 +118,7 @@ namespace bl {
         return out_logger;
     }
 
-    Logger::Ptr Logger::CreateBlockingConsole(
+    inline Logger::Ptr Logger::CreateBlockingConsole(
         InString tag,
         level lvl,
         bool default_pattern,

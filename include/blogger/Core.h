@@ -138,12 +138,6 @@ namespace bl {
         return BLOGGER_STD_TO_STRING(arg);
     }
 
-    template<>
-    enable_if_arithmetic_t<char_t> to_string(char_t arg)
-    {
-        return String(1, arg);
-    }
-
     template<typename T>
     enable_if_not_arithmetic_and_not_string_t<T> to_string(T&& arg)
     {
@@ -156,6 +150,12 @@ namespace bl {
     enable_if_string_t<T> to_string(T&& str)
     {
         return std::forward<T>(str);
+    }
+
+    template<>
+    inline String to_string(char_t arg)
+    {
+        return String(1, arg);
     }
 
     constexpr size_t infinite = 0u;

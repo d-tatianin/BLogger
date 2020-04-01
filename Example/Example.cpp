@@ -14,6 +14,12 @@ public:
 
 int main()
 {
+    // A little bit of manual color manipulation fun
+    std::cout << bl::color::cyan  << "This is cyan\n"
+              << bl::color::red   << "This is red\n"
+              << bl::color::reset << "This is normal\n"
+              << std::endl;
+
     // BLogger properties struct
     // used to customize the logger
     // before creating it
