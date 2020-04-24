@@ -13,8 +13,8 @@ namespace bl {
     {
     private:
         FILE*         m_File;
-        String m_DirectoryPath;
-        String m_CachedTag;
+        String        m_DirectoryPath;
+        String        m_CachedTag;
         size_t        m_BytesPerFile;
         size_t        m_CurrentBytes;
         size_t        m_MaxLogFiles;
@@ -27,7 +27,6 @@ namespace bl {
     public:
         FileSink(
             InString directoryPath,
-            InString loggerTag,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -40,7 +39,7 @@ namespace bl {
             m_RotateLogs(rotateLogs),
             m_FileAccess()
         {
-            m_CachedTag = loggerTag;
+            m_CachedTag = BLOGGER_WIDEN_IF_NEEDED("logfile");
 
             m_BytesPerFile = bytesPerFile;
             m_MaxLogFiles = maxLogFiles;
@@ -50,8 +49,6 @@ namespace bl {
 
             m_DirectoryPath = directoryPath;
             m_DirectoryPath += '/';
-
-            newLogFile();
         }
 
         void terminate()
@@ -72,7 +69,7 @@ namespace bl {
 
 #ifdef BLOGGER_UNICODE_MODE
     #ifdef _WIN32
-        void write(BLoggerLogMessage& msg) override
+        void write(LogMessage& msg) override
         {
             locker lock(m_FileAccess);
 
@@ -98,23 +95,7 @@ namespace bl {
 
             if (m_BytesPerFile && (m_CurrentBytes + BLOGGER_TRUE_SIZE(mb_size)) > m_BytesPerFile)
             {
-                if (m_CurrentLogFiles == m_MaxLogFiles)
-                {
-                    if (!m_RotateLogs)
-                        return;
-                    else
-                    {
-                        m_CurrentLogFiles = 1;
-                        m_CurrentBytes = 0;
-                        newLogFile();
-                    }
-                }
-                else
-                {
-                    m_CurrentBytes = 0;
-                    ++m_CurrentLogFiles;
-                    newLogFile();
-                }
+                newLogFile();
             }
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(mb_size);
@@ -122,7 +103,7 @@ namespace bl {
             BLOGGER_FILE_WRITE(narrow, mb_size, m_File);
         }
     #elif defined(__linux__)
-        void write(BLoggerLogMessage& msg) override
+        void write(LogMessage& msg) override
         {
             locker lock(m_FileAccess);
 
@@ -141,23 +122,7 @@ namespace bl {
 
             if (m_BytesPerFile && (m_CurrentBytes + BLOGGER_TRUE_SIZE(mb_size)) > m_BytesPerFile)
             {
-                if (m_CurrentLogFiles == m_MaxLogFiles)
-                {
-                    if (!m_RotateLogs)
-                        return;
-                    else
-                    {
-                        m_CurrentLogFiles = 1;
-                        m_CurrentBytes = 0;
-                        newLogFile();
-                    }
-                }
-                else
-                {
-                    m_CurrentBytes = 0;
-                    ++m_CurrentLogFiles;
-                    newLogFile();
-                }
+                newLogFile();
             }
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(mb_size);
@@ -166,7 +131,7 @@ namespace bl {
         }
     #endif
 #else
-        void write(BLoggerLogMessage& msg) override
+        void write(LogMessage& msg) override
         {
             locker lock(m_FileAccess);
 
@@ -178,23 +143,7 @@ namespace bl {
 
             if (m_BytesPerFile && (m_CurrentBytes + BLOGGER_TRUE_SIZE(msg.size())) > m_BytesPerFile)
             {
-                if (m_CurrentLogFiles == m_MaxLogFiles)
-                {
-                    if (!m_RotateLogs)
-                        return;
-                    else
-                    {
-                        m_CurrentLogFiles = 1;
-                        m_CurrentBytes = 0;
-                        newLogFile();
-                    }
-                }
-                else
-                {
-                    m_CurrentBytes = 0;
-                    ++m_CurrentLogFiles;
-                    newLogFile();
-                }
+                newLogFile();
             }
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(msg.size());
@@ -221,6 +170,12 @@ namespace bl {
             if (m_File)
                 fclose(m_File);
         }
+
+        void set_name(InString name) override
+        {
+            m_CachedTag = name;
+            newLogFile();
+        }
     private:
         void constructFullPath(
             String& outPath
@@ -235,6 +190,22 @@ namespace bl {
 
         void newLogFile()
         {
+            if (m_CurrentLogFiles == m_MaxLogFiles)
+            {
+                if (!m_RotateLogs)
+                    return;
+                else
+                {
+                    m_CurrentLogFiles = 1;
+                    m_CurrentBytes = 0;
+                }
+            }
+            else
+            {
+                m_CurrentBytes = 0;
+                ++m_CurrentLogFiles;
+            }
+
             if (m_File)
             {
                 fclose(m_File);

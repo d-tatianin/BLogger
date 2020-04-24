@@ -23,6 +23,7 @@
     }
     #define BLOGGER_WIDEN_IF_NEEDED(str) L##str
     #define BLOGGER_COUT ::std::wcout
+    #define BLOGGER_CERR ::std::wcerr
     #ifdef _WIN32
         #define BLOGGER_FILEMODE BLOGGER_WIDEN_IF_NEEDED("w")
     #elif defined(__linux__)
@@ -40,6 +41,7 @@
     }
     #define BLOGGER_WIDEN_IF_NEEDED(str) str
     #define BLOGGER_COUT ::std::cout
+    #define BLOGGER_CERR ::std::cerr
     #define BLOGGER_FILEMODE "w"
     #define BLOGGER_STRING_LENGTH(string) strlen(string)
     #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) strftime(out, out_size, in_format, in_time)

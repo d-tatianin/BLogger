@@ -29,7 +29,7 @@ namespace bl {
             }
         }
     private:
-        void Post(BLoggerLogMessage&& msg) override
+        void Post(LogMessage&& msg) override
         {
             msg.finalize_format();
 

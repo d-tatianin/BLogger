@@ -5,7 +5,7 @@
 
 namespace bl {
 
-    struct BLoggerLogMessage
+    struct LogMessage
     {
     private:
         String formatted_msg;
@@ -13,7 +13,7 @@ namespace bl {
         std::tm time_point;
         level lvl;
     public:
-        BLoggerLogMessage(
+        LogMessage(
             String&& formatted_msg,
             String&& ptrn,
             std::tm tp,

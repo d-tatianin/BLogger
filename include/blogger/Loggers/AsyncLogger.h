@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <deque>
-#include <unordered_map>
 
 #include <functional>
 #include <memory>
@@ -15,8 +14,8 @@
 #include "blogger/Core.h"
 #include "blogger/Loggers/Logger.h"
 #include "blogger/Sinks/FileSink.h"
-#include "blogger/Sinks/StdoutSink.h"
-#include "blogger/Sinks/ColoredStdoutSink.h"
+#include "blogger/Sinks/ConsoleSink.h"
+#include "blogger/Sinks/ColoredConsoleSink.h"
 #include "blogger/LogLevels.h"
 
 // Probably shouldnt be higher than 4 because the thread_pool
@@ -53,10 +52,10 @@ namespace bl {
     class log_task : public bl_task
     {
     private:
-        BLoggerLogMessage msg;
+        LogMessage msg;
     public:
         log_task(
-            BLoggerLogMessage&& msg,
+            LogMessage&& msg,
             SharedSinks& sinks
         ) : bl_task(sinks),
             msg(std::move(msg))
@@ -219,7 +218,7 @@ namespace bl {
 
         ~AsyncLogger() {}
     private:
-        void Post(BLoggerLogMessage&& msg) override
+        void Post(LogMessage&& msg) override
         {
             thread_pool::get().post_task(
                 std::make_unique<log_task>(std::move(msg), m_Sinks)

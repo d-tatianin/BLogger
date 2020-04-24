@@ -5,61 +5,41 @@
 #include "blogger/Core.h"
 
 namespace bl {
-    enum class color
+    class color
     {
-        black,
-        red,
-        orange,
-        blue,
-        green,
-        cyan,
-        magenta,
-        yellow,
-        white,
-        reset,
-        original = reset
-    };
-
-    class StdoutColor
-    {
-        friend std::ostream& operator<<(std::ostream& stream, color c);
     public:
-        static void set_to(color c)
-        {
-          #ifdef _WIN32
-            static HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-            static bool defaults_set = false;
-            static WORD default_color;
-
-            if (!defaults_set)
-            {
-                CONSOLE_SCREEN_BUFFER_INFO console_defaults;
-                GetConsoleScreenBufferInfo(console, &console_defaults);
-                default_color = console_defaults.wAttributes;
-                defaults_set = true;
-            }
-
-            if (c == color::reset)
-                SetConsoleTextAttribute(console, default_color);
-            else
-                SetConsoleTextAttribute(console, to_native_color(c));
-          #else
-            BLOGGER_COUT << to_native_color(c);
-          #endif
-        }
-
-        static void reset()
-        {
-            set_to(color::original);
-        }
-    private:
       #ifdef _WIN32
         using color_t = WORD;
       #else
         using color_t = const char_t*;
       #endif
 
-        static color_t to_native_color(color c)
+        enum type
+        {
+            black,
+            red,
+            orange,
+            blue,
+            green,
+            cyan,
+            magenta,
+            yellow,
+            white,
+            reset,
+            original = reset
+        };
+
+      #ifdef _WIN32
+       // unscoped enum is intended
+       #pragma warning(push)
+       #pragma warning(disable:26812)
+      #endif
+        constexpr color(type k) noexcept
+            : m_Color(k)
+        {
+        }
+
+        color_t to_native() const noexcept
         {
           #ifdef _WIN32
             constexpr color_t black   = 0;
@@ -85,44 +65,97 @@ namespace bl {
             constexpr color_t reset   = BLOGGER_WIDEN_IF_NEEDED("\033[0m");
           #endif
 
-            switch (c)
+            switch (m_Color)
             {
-            case color::black:   return black;
-            case color::red:     return red;
-            case color::orange:  return orange;
-            case color::blue:    return blue;
-            case color::green:   return green;
-            case color::cyan:    return cyan;
-            case color::magenta: return magenta;
-            case color::yellow:  return yellow;
-            case color::white:   return white;
-            default:             return reset;
+                case type::black:   return black;
+                case type::red:     return red;
+                case type::orange:  return orange;
+                case type::blue:    return blue;
+                case type::green:   return green;
+                case type::cyan:    return cyan;
+                case type::magenta: return magenta;
+                case type::yellow:  return yellow;
+                case type::white:   return white;
+                default:            return reset;
             }
         }
+      #ifdef _WIN32
+        #pragma warning(pop)
+      #endif
+        friend bool operator==(color l, color r) noexcept
+        {
+            return static_cast<int>(l.m_Color) == static_cast<int>(r.m_Color);
+        }
+    private:
+        type m_Color;
     };
 
-    class ScopedStdoutColor
+    template<BLOGGER_OSTREAM& stream>
+    class ConsoleColor
     {
     public:
-        ScopedStdoutColor(color c)
+        static void set_to(color c)
         {
-            StdoutColor::set_to(c);
+          #ifdef _WIN32
+            static HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+            static bool defaults_set = false;
+            static color::color_t default_color;
+
+            if (!defaults_set)
+            {
+                CONSOLE_SCREEN_BUFFER_INFO console_defaults;
+                GetConsoleScreenBufferInfo(console, &console_defaults);
+                default_color = console_defaults.wAttributes;
+                defaults_set = true;
+            }
+
+            if (c == color::reset)
+                SetConsoleTextAttribute(console, default_color);
+            else
+                SetConsoleTextAttribute(console, c.to_native());
+          #else
+            stream << c.to_native();
+          #endif
         }
 
-        ~ScopedStdoutColor()
+        static void reset()
         {
-            StdoutColor::reset();
+            set_to(color::original);
         }
     };
 
-    inline std::ostream& operator<<(std::ostream& stream, color c)
+    template<BLOGGER_OSTREAM& stream>
+    class ScopedConsoleColor
+    {
+    public:
+        ScopedConsoleColor(color c)
+        {
+            ConsoleColor<stream>::set_to(c);
+        }
+
+        ~ScopedConsoleColor()
+        {
+            ConsoleColor<stream>::reset();
+        }
+    };
+
+    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, color c)
     {
       #ifdef _WIN32
-        StdoutColor::set_to(c);
+        // Windows doesn't differentiate between
+        // STD_OUTPUT_HANDLE and STD_ERROR_HANDLE color attributes,
+        // so we just set the STD_OUTPUT_HERE
+        // Thanks, Windows! :(
+        ConsoleColor<BLOGGER_COUT>::set_to(c);
       #else
-        stream << StdoutColor::to_native_color(c);
+        stream << c.to_native();
       #endif
 
         return stream;
+    }
+
+    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, color::type c)
+    {
+        return operator<<(stream, color(c));
     }
 }

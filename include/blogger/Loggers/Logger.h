@@ -6,51 +6,29 @@
 #include "blogger/Loggers/LogMessage.h"
 #include "blogger/OS/Functions.h"
 #include "blogger/Sinks/Sink.h"
-#include "blogger/Sinks/StdoutSink.h"
+#include "blogger/Sinks/ConsoleSink.h"
 #include "blogger/LogLevels.h"
 
 namespace bl {
 
-    typedef std::unique_ptr<Sink>
-        SinkPtr;
-    typedef std::vector<SinkPtr>
-        Sinks;
-    typedef std::shared_ptr<Sinks>
-        SharedSinks;
+    using Sinks = std::vector<Sink::Ptr>;
+    using SharedSinks = std::shared_ptr<Sinks>;
 
-    // ---- BLogger logger properties struct ----
-    // Used for customizing the logger.
-    struct Props
+    template<typename T>
+    struct is_sink_ptr : public std::false_type
     {
-        bool async;
-
-        bool console_logger;
-        bool colored;
-        String tag;
-        String pattern;
-        level filter;
-
-        bool file_logger;
-        String path;
-        size_t bytes_per_file;
-        size_t log_files;
-        bool rotate_logs;
-
-        Props()
-            : async(true),
-            console_logger(true),
-            colored(true),
-            tag(BLOGGER_WIDEN_IF_NEEDED("Unnamed")),
-            pattern(BLOGGER_WIDEN_IF_NEEDED("")),
-            filter(level::trace),
-            file_logger(false),
-            path(BLOGGER_WIDEN_IF_NEEDED("")),
-            bytes_per_file(infinite),
-            log_files(0),
-            rotate_logs(true)
-        {
-        }
     };
+
+    template<>
+    struct is_sink_ptr<Sink::Ptr> : public std::true_type
+    {
+    };
+
+    template<typename T, typename... Args>
+    using enable_if_sink_ptr = std::enable_if<are_all_true<is_sink_ptr<Args>...>::value, T>;
+
+    template<typename T, typename... Args>
+    using enable_if_sink_ptr_t = typename std::enable_if<are_all_true<is_sink_ptr<Args>...>::value, T>::type;
 
     class Logger
     {
@@ -58,8 +36,8 @@ namespace bl {
         String         m_Tag;
         String         m_CurrentPattern;
         String         m_CachedPattern;
-        SharedSinks           m_Sinks;
-        level                 m_Filter;
+        SharedSinks    m_Sinks;
+        level          m_Filter;
     public:
         static auto constexpr default_pattern = BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}");
         using Ptr = std::shared_ptr<Logger>;
@@ -74,7 +52,7 @@ namespace bl {
             m_Filter(lvl)
         {
             // 'magic statics'
-            StdoutSink::GetGlobalWriteLock();
+            GlobalConsoleWriteLock();
             Formatter::timestamp_format();
             Formatter::overflow_postfix();
             Formatter::max_length();
@@ -82,9 +60,7 @@ namespace bl {
             BLOGGER_INIT_UNICODE_MODE();
 
             if (default_pattern)
-            {
                 SetPattern(Logger::default_pattern);
-            }
         }
 
         Logger(const Logger& other) = delete;
@@ -93,20 +69,59 @@ namespace bl {
         Logger(Logger&& other) = default;
         Logger& operator=(Logger&& other) = default;
 
-        static Ptr CreateFromProps(Props& props);
-
-        static Ptr CreateAsyncConsole(
+        template<typename... Sinks>
+        static enable_if_sink_ptr_t<Ptr, Sinks...> Custom(
             InString tag,
-            level lvl,
-            bool default_pattern = true,
+            level level,
+            InString pattern,
+            bool asynchronous,
+            Sinks... sinks
+        );
+
+        static Ptr AsyncConsole(
+            InString tag,
+            level level,
             bool colored = true
         );
 
-        static Ptr CreateBlockingConsole(
+        static Ptr AsyncConsole(
             InString tag,
-            level lvl,
-            bool default_pattern = true,
+            level level,
+            InString pattern,
             bool colored = true
+        );
+
+        static Ptr Console(
+            InString tag,
+            level level,
+            bool colored = true
+        );
+
+        static Ptr Console(
+            InString tag,
+            level level,
+            InString pattern,
+            bool colored = true
+        );
+
+        static Ptr File(
+            InString tag,
+            level level,
+            InString pattern,
+            InString directoryPath,
+            size_t bytesPerFile,
+            size_t maxLogFiles,
+            bool rotateLogs = true
+        );
+
+        static Ptr AsyncFile(
+            InString tag,
+            level level,
+            InString pattern,
+            InString directoryPath,
+            size_t bytesPerFile,
+            size_t maxLogFiles,
+            bool rotateLogs = true
         );
 
         void SetPattern(InString pattern)
@@ -228,10 +243,14 @@ namespace bl {
         {
             m_Tag = tag;
             SetPattern(m_CachedPattern);
+
+            SetSinkTags();
         }
 
-        void AddSink(SinkPtr sink)
+        void AddSink(Sink::Ptr sink)
         {
+            sink->set_name(m_Tag);
+
             m_Sinks->emplace_back(std::move(sink));
         }
 
@@ -251,6 +270,13 @@ namespace bl {
             return true;
         }
 
-        virtual void Post(BLoggerLogMessage&& msg) = 0;
+        virtual void Post(LogMessage&& msg) = 0;
+
+    private:
+        void SetSinkTags()
+        {
+            for (auto& sink : *m_Sinks)
+                sink->set_name(m_Tag);
+        }
     };
 }

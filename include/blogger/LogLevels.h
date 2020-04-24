@@ -5,48 +5,92 @@
 
 
 namespace bl {
-    enum class level
+    class level
     {
-        trace,
-        debug,
-        info,
-        warn,
-        error,
-        crit
+    public:
+        enum type
+        {
+            trace,
+            debug,
+            info,
+            warn,
+            error,
+            crit
+        };
+
+        static constexpr color trace_color = color::white;
+        static constexpr color debug_color = color::green;
+        static constexpr color info_color  = color::blue;
+        static constexpr color warn_color  = color::yellow;
+        static constexpr color error_color = color::red;
+        static constexpr color crit_color  = color::magenta;
+
+      #ifdef _WIN32
+        // unscoped enum is intended
+        #pragma warning(push)
+        #pragma warning(disable:26812)
+      #endif
+        constexpr level(type t) noexcept
+            : m_Level(t)
+        {
+        }
+
+        const char_t* to_string() const noexcept
+        {
+            switch (m_Level)
+            {
+                case type::trace: return BLOGGER_WIDEN_IF_NEEDED("TRACE");
+                case type::debug: return BLOGGER_WIDEN_IF_NEEDED("DEBUG");
+                case type::info:  return BLOGGER_WIDEN_IF_NEEDED("INFO");
+                case type::warn:  return BLOGGER_WIDEN_IF_NEEDED("WARNING");
+                case type::error: return BLOGGER_WIDEN_IF_NEEDED("ERROR");
+                case type::crit:  return BLOGGER_WIDEN_IF_NEEDED("CRITICAL");
+                default:          return BLOGGER_WIDEN_IF_NEEDED("UNKNOWN");
+            }
+        }
+      #ifdef _WIN32
+        #pragma warning(pop)
+      #endif
+
+        color to_color() const noexcept
+        {
+            switch (m_Level)
+            {
+                case type::trace:  return trace_color;
+                case type::debug:  return debug_color;
+                case type::info:   return info_color;
+                case type::warn:   return warn_color;
+                case type::error:  return error_color;
+                case type::crit:   return crit_color;
+                default:           return bl::color::reset;
+            }
+        }
+
+        friend bool operator>(level l, level r) noexcept
+        {
+            return static_cast<int>(l.m_Level) > static_cast<int>(r.m_Level);
+        }
+
+        friend bool operator<(level l, level r) noexcept
+        {
+            return static_cast<int>(l.m_Level) < static_cast<int>(r.m_Level);
+        }
+
+        friend bool operator==(level l, level r) noexcept
+        {
+            return static_cast<int>(l.m_Level) == static_cast<int>(r.m_Level);
+        }
+    private:
+        type m_Level;
     };
 
-    inline const char_t* level_to_string(level lvl)
+    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, level l) noexcept
     {
-        switch (lvl)
-        {
-        case level::trace:  return BLOGGER_WIDEN_IF_NEEDED("TRACE");
-        case level::debug:  return BLOGGER_WIDEN_IF_NEEDED("DEBUG");
-        case level::info:   return BLOGGER_WIDEN_IF_NEEDED("INFO");
-        case level::warn:   return BLOGGER_WIDEN_IF_NEEDED("WARNING");
-        case level::error:  return BLOGGER_WIDEN_IF_NEEDED("ERROR");
-        case level::crit:   return BLOGGER_WIDEN_IF_NEEDED("CRITICAL");
-        default:            return nullptr;
-        }
+        return stream << l.to_string();
     }
 
-    constexpr color trace_color = color::white;
-    constexpr color debug_color = color::green;
-    constexpr color info_color  = color::blue;
-    constexpr color warn_color  = color::yellow;
-    constexpr color error_color = color::red;
-    constexpr color crit_color  = color::magenta;
-
-    inline color level_to_color(level lvl)
+    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, level::type l) noexcept
     {
-        switch (lvl)
-        {
-        case level::trace:  return trace_color;
-        case level::debug:  return debug_color;
-        case level::info:   return info_color;
-        case level::warn:   return warn_color;
-        case level::error:  return error_color;
-        case level::crit:   return crit_color;
-        default:            return bl::color::reset;
-        }
+        return operator<<(stream, level(l));
     }
 }
