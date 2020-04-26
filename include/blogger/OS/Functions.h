@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "blogger/Core.h"
+
 #ifdef _WIN32
     #define BLOGGER_UPDATE_TIME(to, from) localtime_s(&to, &from)
     #ifdef BLOGGER_UNICODE_MODE
@@ -10,8 +12,6 @@
     #else
         #define BLOGGER_OPEN_FILE(file, path) fopen_s(&file, path.c_str(), BLOGGER_FILEMODE)
     #endif
-    #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy_s(dst, (dst_size) * sizeof(char_t), src, (src_size) * sizeof(char_t))
-    #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove_s(dst, (dst_size) * sizeof(char_t), src, (src_size) * sizeof(char_t))
 
     namespace bl {
     
@@ -39,7 +39,6 @@
                                        out_ptr = static_cast<decltype(out_ptr)>(anonbuf_##out_ptr.buffer)
 
     #ifdef BLOGGER_UNICODE_MODE
-        #include "BLogger/Core.h"
         #include <io.h>
         #include <fcntl.h>
         #include <stringapiset.h>
@@ -61,18 +60,16 @@
     #include <cstring>
     #include <algorithm>
     #include <clocale>
-    #include <cwchar>
 
     #define BLOGGER_UPDATE_TIME(to, from) localtime_r(&from, &to)
     #define BLOGGER_STACK_ALLOC(size, out_ptr) out_ptr = static_cast<decltype(out_ptr)>(alloca((size) * sizeof(char_t)))
 
     #ifdef BLOGGER_UNICODE_MODE
-        #include "BLogger/Core.h"
         namespace bl {
 
             inline void open_unicode_file(FILE*& out_file, const char_t* path)
             {
-                size_t file_size = wcslen(path) * 2;
+                size_t file_size = BLOGGER_STRING_LENGTH(path) * 2;
                 char* narrow; BLOGGER_STACK_ALLOC(file_size, narrow);
 
                 auto size = wcstombs(narrow, path, file_size);
@@ -92,8 +89,6 @@
     #else
         #define BLOGGER_OPEN_FILE(file, path) file = fopen(path.c_str(), BLOGGER_FILEMODE)
     #endif
-    #define BLOGGER_MEMORY_COPY(dst, dst_size, src, src_size) memcpy(dst, src, (src_size) * sizeof(char_t))
-    #define BLOGGER_MEMORY_MOVE(dst, dst_size, src, src_size) memmove(dst, src, (src_size) * sizeof(char_t))
 
     #ifdef BLOGGER_UNICODE_MODE
         namespace bl {

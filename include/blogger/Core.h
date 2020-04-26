@@ -28,12 +28,10 @@
     #ifdef _WIN32
         #define BLOGGER_FILEMODE BLOGGER_WIDEN_IF_NEEDED("w")
     #elif defined(__linux__)
-        #define BLOGGER_EXTRA_BYTES 0
         #define BLOGGER_FILEMODE "w"
     #endif
     #define BLOGGER_STRING_LENGTH(string) wcslen(string)
     #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) wcsftime(out, out_size, in_format, in_time)
-    #define BLOGGER_FORMAT_STRING(out, out_size, in_format, ...) swprintf(out, out_size, in_format, __VA_ARGS__)
     #define BLOGGER_OSTREAM ::std::wostream
     #define BLOGGER_STD_TO_STRING ::std::to_wstring
 #else
@@ -46,7 +44,6 @@
     #define BLOGGER_FILEMODE "w"
     #define BLOGGER_STRING_LENGTH(string) strlen(string)
     #define BLOGGER_TIME_TO_STRING(out, out_size, in_format, in_time) strftime(out, out_size, in_format, in_time)
-    #define BLOGGER_FORMAT_STRING(out, out_size, in_format, ...) snprintf(out, out_size, in_format, __VA_ARGS__)
     #define BLOGGER_OSTREAM ::std::ostream
     #define BLOGGER_STD_TO_STRING ::std::to_string
 #endif

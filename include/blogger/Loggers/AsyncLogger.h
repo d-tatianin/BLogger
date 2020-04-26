@@ -226,3 +226,6 @@ namespace bl {
         }
     };
 }
+
+#undef BLOGGER_THREAD_COUNT
+#undef BLOGGER_TASK_LIMIT
