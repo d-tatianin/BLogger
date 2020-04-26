@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <mutex>
+#include <sstream>
 
 #ifdef _WIN32
     #ifndef BLOGGER_FULL_WINDOWS
@@ -51,7 +52,7 @@
 #endif
 
 #ifdef _WIN32 // CRLF?
-    #define BLOGGER_TRUE_SIZE(size) static_cast<size_t>(size) + 3
+    #define BLOGGER_TRUE_SIZE(size) static_cast<size_t>(size) + 1
 #elif defined(__linux__)
     #define BLOGGER_TRUE_SIZE(size) size
 #endif

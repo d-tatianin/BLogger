@@ -6,7 +6,6 @@
 #include "blogger/Loggers/LogMessage.h"
 #include "blogger/OS/Functions.h"
 #include "blogger/Sinks/Sink.h"
-#include "blogger/Sinks/ConsoleSink.h"
 #include "blogger/LogLevels.h"
 
 namespace bl {
@@ -72,7 +71,7 @@ namespace bl {
         template<typename... Sinks>
         static enable_if_sink_ptr_t<Ptr, Sinks...> Custom(
             InString tag,
-            level level,
+            level lvl,
             InString pattern,
             bool asynchronous,
             Sinks... sinks
@@ -80,33 +79,33 @@ namespace bl {
 
         static Ptr AsyncConsole(
             InString tag,
-            level level,
+            level lvl,
             bool colored = true
         );
 
         static Ptr AsyncConsole(
             InString tag,
-            level level,
+            level lvl,
             InString pattern,
             bool colored = true
         );
 
         static Ptr Console(
             InString tag,
-            level level,
+            level lvl,
             bool colored = true
         );
 
         static Ptr Console(
             InString tag,
-            level level,
+            level lvl,
             InString pattern,
             bool colored = true
         );
 
         static Ptr File(
             InString tag,
-            level level,
+            level lvl,
             InString pattern,
             InString directoryPath,
             size_t bytesPerFile,
@@ -116,7 +115,7 @@ namespace bl {
 
         static Ptr AsyncFile(
             InString tag,
-            level level,
+            level lvl,
             InString pattern,
             InString directoryPath,
             size_t bytesPerFile,

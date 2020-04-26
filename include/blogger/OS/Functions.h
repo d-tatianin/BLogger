@@ -48,7 +48,7 @@
             static inline void init_unicode()
             {
                 auto ignored = _setmode(_fileno(stdout), _O_U16TEXT);
-                ignored =      _setmode(_fileno(stdin), _O_U16TEXT);
+                ignored =      _setmode(_fileno(stdin),  _O_U16TEXT);
                 ignored =      _setmode(_fileno(stderr), _O_U16TEXT);
             }
         }
@@ -61,6 +61,7 @@
     #include <cstring>
     #include <algorithm>
     #include <clocale>
+    #include <cwchar>
 
     #define BLOGGER_UPDATE_TIME(to, from) localtime_r(&from, &to)
     #define BLOGGER_STACK_ALLOC(size, out_ptr) out_ptr = static_cast<decltype(out_ptr)>(alloca((size) * sizeof(char_t)))
@@ -69,21 +70,21 @@
         #include "BLogger/Core.h"
         namespace bl {
 
-            static inline const char* wide_to_narrow_unfreed(const char_t* wide)
+            inline void open_unicode_file(FILE*& out_file, const char_t* path)
             {
-                constexpr size_t filename_size = 128;
-                char* narrow = new char[filename_size];
-                auto result = wcstombs(narrow, wide, filename_size);
-                narrow[result] = '\0';
-                if(result == -1) throw ""; // TODO: handle this later
-                return narrow;
-            }
+                size_t file_size = wcslen(path) * 2;
+                char* narrow; BLOGGER_STACK_ALLOC(file_size, narrow);
 
-            static inline void open_unicode_file(FILE*& out_file, const char_t* path)
-            {
-                auto free_me = wide_to_narrow_unfreed(path);
-                auto fptr = fopen(free_me, BLOGGER_FILEMODE);
-                delete[] free_me;
+                auto size = wcstombs(narrow, path, file_size);
+                if (size == -1)
+                {
+                    out_file = nullptr;
+                    return;
+                }
+
+                narrow[size] = '\0';
+
+                auto fptr = fopen(narrow, BLOGGER_FILEMODE);
                 out_file = fptr;
             }
         }
@@ -96,14 +97,14 @@
 
     #ifdef BLOGGER_UNICODE_MODE
         namespace bl {
-            static inline void init_unicode()
+            inline void init_unicode()
             {
                 setlocale(LC_ALL, "en_US.utf8");
             }
         }
         #define BLOGGER_INIT_UNICODE_MODE init_unicode
     #else
-        static inline void blogger_dummy_func() {}
+        inline void blogger_dummy_func() {}
         #define BLOGGER_INIT_UNICODE_MODE blogger_dummy_func
     #endif
 #else

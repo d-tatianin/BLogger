@@ -50,7 +50,7 @@ namespace bl {
             bytesPerFile,
             maxLogFiles,
             rotateLogs
-            );
+        );
     }
 
     inline Sink::Ptr Sink::Console(bool colored)
@@ -100,13 +100,13 @@ namespace bl {
 
     inline Logger::Ptr Logger::AsyncConsole(
         InString tag,
-        level level,
+        level lvl,
         bool colored
     )
     {
         return Logger::Custom(
             tag,
-            level,
+            lvl,
             Logger::default_pattern,
             true,
             Sink::Console(colored)
@@ -115,14 +115,14 @@ namespace bl {
 
     inline Logger::Ptr Logger::AsyncConsole(
         InString tag,
-        level level,
+        level lvl,
         InString pattern,
         bool colored
     )
     {
         return Logger::Custom(
             tag,
-            level,
+            lvl,
             pattern,
             true,
             Sink::Console(colored)
@@ -131,13 +131,13 @@ namespace bl {
 
     inline Logger::Ptr Logger::Console(
         InString tag,
-        level level,
+        level lvl,
         bool colored
     )
     {
         return Logger::Custom(
             tag,
-            level,
+            lvl,
             Logger::default_pattern,
             false,
             Sink::Console(colored)
@@ -146,33 +146,33 @@ namespace bl {
 
     inline Logger::Ptr Logger::Console(
         InString tag,
-        level level,
+        level lvl,
         InString pattern,
         bool colored
     )
     {
         return Logger::Custom(
             tag,
-            level,
+            lvl,
             pattern,
             false,
             Sink::Console(colored)
         );
     }
 
-    inline Logger::Ptr File(
+    inline Logger::Ptr Logger::File(
         InString tag,
-        level level,
+        level lvl,
         InString pattern,
         InString directoryPath,
         size_t bytesPerFile,
         size_t maxLogFiles,
-        bool rotateLogs = true
+        bool rotateLogs
     )
     {
         return Logger::Custom(
             tag,
-            level,
+            lvl,
             pattern,
             false,
             Sink::File(
@@ -184,20 +184,20 @@ namespace bl {
         );
     }
 
-    inline Logger::Ptr AsyncFile(
+    inline Logger::Ptr Logger::AsyncFile(
         InString tag,
-        level level,
+        level lvl,
         InString pattern,
         InString directoryPath,
         size_t bytesPerFile,
         size_t maxLogFiles,
-        bool rotateLogs = true
+        bool rotateLogs
     )
     {
         return Logger::Custom(
             tag,
-            level,
-            Logger::default_pattern,
+            lvl,
+            pattern,
             true,
             Sink::File(
                 directoryPath,
