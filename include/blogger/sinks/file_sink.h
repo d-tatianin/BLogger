@@ -63,9 +63,6 @@ namespace bl {
         {
             locker_t lock(m_FileAccess);
 
-            if (!m_BytesPerFile)
-                return;
-
             if (!ok())
                 return;
 
@@ -94,11 +91,14 @@ namespace bl {
             auto  size = msg.size();
         #endif
 
-            if (BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
-                return;
+            if (m_BytesPerFile != infinite)
+            {
+                if (BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
+                    return;
 
-            if (m_CurrentBytes + BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
-                newLogFile();
+                if (m_CurrentBytes + BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
+                    if (!newLogFile()) return;
+            }
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(size);
 
@@ -141,12 +141,12 @@ namespace bl {
             outPath += BLOGGER_WIDEN_IF_NEEDED(".log");
         }
 
-        void newLogFile()
+        bool newLogFile()
         {
             if (m_CurrentLogFiles == m_MaxLogFiles)
             {
                 if (!m_RotateLogs)
-                    return;
+                    return false;
                 else
                 {
                     m_CurrentLogFiles = 1;
@@ -169,6 +169,8 @@ namespace bl {
             constructFullPath(fullPath);
 
             BLOGGER_OPEN_FILE(m_File, fullPath);
+
+            return m_File;
         }
     };
 }
