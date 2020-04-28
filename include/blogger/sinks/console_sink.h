@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "Sink.h"
+#include "sink.h"
 #include "blogger/loggers/logger.h"
 
 namespace bl {
