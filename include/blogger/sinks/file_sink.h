@@ -21,8 +21,6 @@ namespace bl {
         size_t        m_CurrentLogFiles;
         bool          m_RotateLogs;
         std::mutex    m_FileAccess;
-
-        using locker_t = std::lock_guard<std::mutex>;
     public:
         file_sink(
             in_string directoryPath,
@@ -45,7 +43,7 @@ namespace bl {
 
         void terminate()
         {
-            locker_t lock(m_FileAccess);
+            locker lock(m_FileAccess);
 
             if (m_File)
             {
@@ -61,7 +59,7 @@ namespace bl {
 
         void write(log_message& msg) override
         {
-            locker_t lock(m_FileAccess);
+            locker lock(m_FileAccess);
 
             if (!ok())
                 return;
@@ -97,7 +95,7 @@ namespace bl {
                     return;
 
                 if (m_CurrentBytes + BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
-                    if (!newLogFile()) return;
+                    if (!new_log_file()) return;
             }
 
             m_CurrentBytes += BLOGGER_TRUE_SIZE(size);
@@ -107,7 +105,7 @@ namespace bl {
 
         void flush() override
         {
-            locker_t lock(m_FileAccess);
+            locker lock(m_FileAccess);
 
             if (m_File)
                 fflush(m_File);
@@ -127,10 +125,10 @@ namespace bl {
         void set_tag(in_string name) override
         {
             m_CachedTag = name;
-            newLogFile();
+            new_log_file();
         }
     private:
-        void constructFullPath(
+        void construct_full_path(
             string& outPath
         )
         {
@@ -141,7 +139,7 @@ namespace bl {
             outPath += BLOGGER_WIDEN_IF_NEEDED(".log");
         }
 
-        bool newLogFile()
+        bool new_log_file()
         {
             if (m_CurrentLogFiles == m_MaxLogFiles)
             {
@@ -166,7 +164,7 @@ namespace bl {
             }
 
             string fullPath;
-            constructFullPath(fullPath);
+            construct_full_path(fullPath);
 
             BLOGGER_OPEN_FILE(m_File, fullPath);
 

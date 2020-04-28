@@ -85,7 +85,7 @@ namespace bl {
             );
         }
         else
-            out_logger = std::make_shared<BlockingLogger>(
+            out_logger = std::make_shared<blocking_logger>(
                 tag,
                 lvl,
                 false

@@ -6,10 +6,10 @@
 
 namespace bl {
 
-    class BlockingLogger : public logger
+    class blocking_logger : public logger
     {
     public:
-        BlockingLogger(
+        blocking_logger(
             in_string tag,
             level lvl,
             bool default_pattern = true
