@@ -1,19 +1,19 @@
 #pragma once
 
-#include "blogger/Loggers/Logger.h"
-#include "blogger/LogLevels.h"
-#include "blogger/Sinks/Sink.h"
+#include "blogger/loggers/logger.h"
+#include "blogger/log_levels.h"
+#include "blogger/sinks/sink.h"
 
 namespace bl {
 
-    class BlockingLogger : public Logger
+    class BlockingLogger : public logger
     {
     public:
         BlockingLogger(
-            InString tag,
+            in_string tag,
             level lvl,
             bool default_pattern = true
-        ) : Logger(
+        ) : logger(
             tag,
             lvl,
             default_pattern
@@ -21,7 +21,7 @@ namespace bl {
         {
         }
 
-        void Flush() override
+        void flush() override
         {
             for (auto& sink : *m_Sinks)
             {
@@ -29,7 +29,7 @@ namespace bl {
             }
         }
     private:
-        void Post(LogMessage&& msg) override
+        void post(log_message&& msg) override
         {
             msg.finalize_format();
 

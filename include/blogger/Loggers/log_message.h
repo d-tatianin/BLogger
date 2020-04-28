@@ -1,21 +1,21 @@
 #pragma once
 
-#include "blogger/Formatter.h"
-#include "blogger/LogLevels.h"
+#include "blogger/formatter.h"
+#include "blogger/log_levels.h"
 
 namespace bl {
 
-    struct LogMessage
+    struct log_message
     {
     private:
-        String formatted_msg;
-        String final_pattern;
+        string formatted_msg;
+        string final_pattern;
         std::tm time_point;
         level lvl;
     public:
-        LogMessage(
-            String&& formatted_msg,
-            String&& ptrn,
+        log_message(
+            string&& formatted_msg,
+            string&& ptrn,
             std::tm tp,
             level lvl
         ) : formatted_msg(std::move(formatted_msg)),
@@ -27,7 +27,7 @@ namespace bl {
 
         void finalize_format()
         {
-            Formatter::MergePattern(
+            formatter::merge_pattern(
                 formatted_msg,
                 final_pattern,
                 time_point_ptr(),

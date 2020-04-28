@@ -20,7 +20,7 @@
     #include <wchar.h>
     #include <cwchar>
     namespace bl {
-        typedef wchar_t char_t;
+        using char_t = wchar_t;
     }
     #define BLOGGER_WIDEN_IF_NEEDED(str) L##str
     #define BLOGGER_COUT ::std::wcout
@@ -36,7 +36,7 @@
     #define BLOGGER_STD_TO_STRING ::std::to_wstring
 #else
     namespace bl {
-        typedef char char_t;
+        using char_t = char;
     }
     #define BLOGGER_WIDEN_IF_NEEDED(str) str
     #define BLOGGER_COUT ::std::cout
@@ -55,22 +55,21 @@
 #endif
 
 namespace bl {
-    typedef std::basic_string<char_t, std::char_traits<char_t>> String;
-    typedef std::basic_stringstream<char_t, std::char_traits<char_t>> StringStream;
-    typedef std::vector<char_t> raw_string;
-    typedef std::lock_guard<std::mutex> locker;
+    using string = std::basic_string<char_t, std::char_traits<char_t>>;
+    using stringstream = std::basic_stringstream<char_t, std::char_traits<char_t>>;
+    using locker = std::lock_guard<std::mutex>;
 }
 // ---- C++14/17 specific stuff ----
 #if _MSVC_LANG >= 201703L || __cplusplus >= 201703L
     #define BLOGGER_FOR_EACH_DO(what, args, ...) (what(__VA_ARGS__, std::forward<Args>(args)), ...)
     #include <string_view>
     namespace bl {
-        typedef std::basic_string_view<char_t, std::char_traits<char_t>> InString;
+        using in_string = std::basic_string_view<char_t, std::char_traits<char_t>>;
     }
 #elif _MSVC_LANG >= 201402L || __cplusplus >= 201402L
     #define BLOGGER_FOR_EACH_DO(what, args, ...) int expander[] = { 0, ( what(__VA_ARGS__, std::forward<Args>(args)), 0) ... }
     namespace bl {
-        typedef const std::basic_string<char_t, std::char_traits<char_t>>& InString;
+        using in_string = const std::basic_string<char_t, std::char_traits<char_t>>&;
     }
 #else
     #error "BLogger requires at least /std:c++14"
@@ -110,7 +109,7 @@ namespace bl {
     using enable_if_ostream_insertable_t = typename enable_if_ostream_insertable<Args...>::type;
 
     template<typename T>
-    using enable_if_arithmetic = std::enable_if<std::is_arithmetic<T>::value, String>;
+    using enable_if_arithmetic = std::enable_if<std::is_arithmetic<T>::value, string>;
 
     template<typename T>
     using enable_if_arithmetic_t = typename enable_if_arithmetic<T>::type;
@@ -118,16 +117,16 @@ namespace bl {
     template<typename T>
     using enable_if_not_arithmetic_and_not_string =
         std::enable_if<
-        !std::is_same<typename std::decay<T>::type, String>::value &&
+        !std::is_same<typename std::decay<T>::type, string>::value &&
         !std::is_arithmetic<typename std::decay<T>::type>::value &&
         is_ostream_insertable<T>::value
-        , String>;
+        , string>;
 
     template<typename T>
     using enable_if_not_arithmetic_and_not_string_t = typename enable_if_not_arithmetic_and_not_string<T>::type;
 
     template<typename T>
-    using enable_if_string = std::enable_if<std::is_same<typename std::decay<T>::type, String>::value, T&&>;
+    using enable_if_string = std::enable_if<std::is_same<typename std::decay<T>::type, string>::value, T&&>;
 
     template<typename T>
     using enable_if_string_t = typename enable_if_string<T>::type;
@@ -141,7 +140,7 @@ namespace bl {
     template<typename T>
     enable_if_not_arithmetic_and_not_string_t<T> to_string(T&& arg)
     {
-        StringStream ss;
+        stringstream ss;
         ss << std::forward<T>(arg);
         return ss.str();
     }
@@ -153,9 +152,9 @@ namespace bl {
     }
 
     template<>
-    inline String to_string(char_t arg)
+    inline string to_string(char_t arg)
     {
-        return String(1, arg);
+        return string(1, arg);
     }
 
     constexpr size_t infinite = 0u;

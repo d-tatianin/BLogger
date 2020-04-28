@@ -3,20 +3,20 @@
 #include <iostream>
 
 #include "Sink.h"
-#include "blogger/Loggers/Logger.h"
+#include "blogger/loggers/logger.h"
 
 namespace bl {
     template<BLOGGER_OSTREAM& stream>
-    class ConsoleSink : public Sink
+    class console_sink : public sink
     {
     public:
-        ConsoleSink()
+        console_sink()
         {
         }
 
-        void write(LogMessage& msg) override
+        void write(log_message& msg) override
         {
-            auto& wl = GlobalConsoleWriteLock();
+            auto& wl = global_console_write_lock();
             locker lock(wl);
 
             stream.write(
@@ -27,7 +27,7 @@ namespace bl {
 
         void flush() override
         {
-            auto& wl = GlobalConsoleWriteLock();
+            auto& wl = global_console_write_lock();
             locker lock(wl);
 
             stream.flush();
@@ -35,6 +35,6 @@ namespace bl {
     };
 
     // should have a clog sink as well?
-    using StderrSink        = ConsoleSink<BLOGGER_CERR>;
-    using StdoutSink        = ConsoleSink<BLOGGER_COUT>;
+    using stderr_sink = console_sink<BLOGGER_CERR>;
+    using stdout_sink = console_sink<BLOGGER_COUT>;
 }

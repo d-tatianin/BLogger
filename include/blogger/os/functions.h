@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "blogger/Core.h"
+#include "blogger/core.h"
 
 #ifdef _WIN32
     #define BLOGGER_UPDATE_TIME(to, from) localtime_s(&to, &from)

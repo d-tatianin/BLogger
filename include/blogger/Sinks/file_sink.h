@@ -4,17 +4,17 @@
 #include <string>
 #include <mutex>
 
-#include "blogger/Sinks/Sink.h"
-#include "blogger/OS/Functions.h"
+#include "blogger/sinks/sink.h"
+#include "blogger/os/functions.h"
 
 namespace bl {
 
-    class FileSink : public Sink
+    class file_sink : public sink
     {
     private:
         FILE*         m_File;
-        String        m_DirectoryPath;
-        String        m_CachedTag;
+        string        m_DirectoryPath;
+        string        m_CachedTag;
         size_t        m_BytesPerFile;
         size_t        m_CurrentBytes;
         size_t        m_MaxLogFiles;
@@ -24,8 +24,8 @@ namespace bl {
 
         using locker_t = std::lock_guard<std::mutex>;
     public:
-        FileSink(
-            InString directoryPath,
+        file_sink(
+            in_string directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true
@@ -59,7 +59,7 @@ namespace bl {
             return static_cast<bool>(m_File);
         }
 
-        void write(LogMessage& msg) override
+        void write(log_message& msg) override
         {
             locker_t lock(m_FileAccess);
 
@@ -118,20 +118,20 @@ namespace bl {
             return ok();
         }
 
-        ~FileSink()
+        ~file_sink()
         {
             if (m_File)
                 fclose(m_File);
         }
 
-        void set_name(InString name) override
+        void set_tag(in_string name) override
         {
             m_CachedTag = name;
             newLogFile();
         }
     private:
         void constructFullPath(
-            String& outPath
+            string& outPath
         )
         {
             outPath += m_DirectoryPath;
@@ -165,7 +165,7 @@ namespace bl {
                 m_File = nullptr;
             }
 
-            String fullPath;
+            string fullPath;
             constructFullPath(fullPath);
 
             BLOGGER_OPEN_FILE(m_File, fullPath);

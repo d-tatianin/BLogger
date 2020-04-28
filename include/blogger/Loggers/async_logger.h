@@ -11,12 +11,12 @@
 #include <functional>
 #include <memory>
 
-#include "blogger/Core.h"
-#include "blogger/Loggers/Logger.h"
-#include "blogger/Sinks/FileSink.h"
-#include "blogger/Sinks/ConsoleSink.h"
-#include "blogger/Sinks/ColoredConsoleSink.h"
-#include "blogger/LogLevels.h"
+#include "blogger/core.h"
+#include "blogger/loggers/logger.h"
+#include "blogger/sinks/file_sink.h"
+#include "blogger/sinks/console_sink.h"
+#include "blogger/sinks/colored_console_sink.h"
+#include "blogger/log_levels.h"
 
 // Probably shouldnt be higher than 4 because the thread_pool
 // threads will spend most of the time waiting
@@ -41,9 +41,9 @@ namespace bl {
     class bl_task : public task
     {
     protected:
-        SharedSinks log_sinks;
+        shared_sinks log_sinks;
     protected:
-        bl_task(SharedSinks& sinks)
+        bl_task(shared_sinks& sinks)
             : log_sinks(sinks)
         {
         }
@@ -52,11 +52,11 @@ namespace bl {
     class log_task : public bl_task
     {
     private:
-        LogMessage msg;
+        log_message msg;
     public:
         log_task(
-            LogMessage&& msg,
-            SharedSinks& sinks
+            log_message&& msg,
+            shared_sinks& sinks
         ) : bl_task(sinks),
             msg(std::move(msg))
         {
@@ -76,7 +76,7 @@ namespace bl {
     class flush_task : public bl_task
     {
     public:
-        flush_task(SharedSinks& sinks)
+        flush_task(shared_sinks& sinks)
             : bl_task(sinks)
         {
         }
@@ -93,10 +93,7 @@ namespace bl {
     class thread_pool
     {
     public:
-        typedef std::unique_ptr<task>
-            task_ptr;
-        typedef std::lock_guard<std::mutex>
-            locker;
+        using task_ptr = std::unique_ptr<task>;
     private:
         std::vector<std::thread> m_Pool;
         std::deque<task_ptr>     m_TaskQueue;
@@ -197,28 +194,28 @@ namespace bl {
         }
     };
 
-    class AsyncLogger : public Logger
+    class async_logger : public logger
     {
     public:
-        AsyncLogger(
-            InString tag,
+        async_logger(
+            in_string tag,
             level lvl,
             bool default_pattern = true
-        ): Logger(tag, lvl, default_pattern)
+        ): logger(tag, lvl, default_pattern)
         {
             thread_pool::get();
         }
 
-        void Flush() override
+        void flush() override
         {
             thread_pool::get().post_task(
                 std::make_unique<flush_task>(m_Sinks)
             );
         }
 
-        ~AsyncLogger() {}
+        ~async_logger() {}
     private:
-        void Post(LogMessage&& msg) override
+        void post(log_message&& msg) override
         {
             thread_pool::get().post_task(
                 std::make_unique<log_task>(std::move(msg), m_Sinks)

@@ -1,39 +1,38 @@
 #pragma once
 
-#include "blogger/Loggers/LogMessage.h"
+#include "blogger/loggers/log_message.h"
 
 namespace bl {
 
-    inline std::mutex& GlobalConsoleWriteLock()
+    inline std::mutex& global_console_write_lock()
     {
         static std::mutex globalWrite;
 
         return globalWrite;
     }
 
-    class Sink
+    class sink
     {
     public:
-        using Ptr = std::unique_ptr<Sink>;
+        using ptr = std::unique_ptr<sink>;
 
-        static Ptr Stdout(bool colored = true);
+        static ptr make_stdout(bool colored = true);
 
-        static Ptr Stderr(bool colored = true);
+        static ptr make_stderr(bool colored = true);
 
-        static Ptr Console(bool colored = true);
+        static ptr make_console(bool colored = true);
 
-        static Ptr File(
-            InString directoryPath,
+        static ptr make_file(
+            in_string directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
             bool rotateLogs = true);
 
-
-        virtual void write(LogMessage& msg) = 0;
+        virtual void write(log_message& msg) = 0;
         virtual void flush() = 0;
 
-        virtual void set_name(InString name) {}
+        virtual void set_tag(in_string name) {}
 
-        virtual ~Sink() = default;
+        virtual ~sink() = default;
     };
 }

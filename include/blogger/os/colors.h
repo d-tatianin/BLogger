@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "blogger/Core.h"
+#include "blogger/core.h"
 
 namespace bl {
     class color
@@ -91,7 +91,7 @@ namespace bl {
     };
 
     template<BLOGGER_OSTREAM& stream>
-    class ConsoleColor
+    class console_color
     {
     public:
         static void set_to(color c)
@@ -125,17 +125,17 @@ namespace bl {
     };
 
     template<BLOGGER_OSTREAM& stream>
-    class ScopedConsoleColor
+    class scoped_console_color
     {
     public:
-        ScopedConsoleColor(color c)
+        scoped_console_color(color c)
         {
-            ConsoleColor<stream>::set_to(c);
+            console_color<stream>::set_to(c);
         }
 
-        ~ScopedConsoleColor()
+        ~scoped_console_color()
         {
-            ConsoleColor<stream>::reset();
+            console_color<stream>::reset();
         }
     };
 
@@ -146,7 +146,7 @@ namespace bl {
         // STD_OUTPUT_HANDLE and STD_ERROR_HANDLE color attributes,
         // so we just set the STD_OUTPUT_HERE
         // Thanks, Windows! :(
-        ConsoleColor<BLOGGER_COUT>::set_to(c);
+        console_color<BLOGGER_COUT>::set_to(c);
       #else
         stream << c.to_native();
       #endif

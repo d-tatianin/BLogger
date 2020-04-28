@@ -1,7 +1,7 @@
 #pragma once
 
-#include "OS/Colors.h"
-#include "Core.h"
+#include "os/colors.h"
+#include "core.h"
 
 
 namespace bl {

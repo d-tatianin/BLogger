@@ -17,10 +17,10 @@ int main()
     // -------- Creating a simple logger and logging a message
 
     // Create a console logger
-    auto logger = bl::Logger::Console("tag", bl::level::warn, true);
+    auto logger = bl::logger::make_console("tag", bl::level::warn, true);
 
     // Log a 'Warning message'
-    logger->Warning("A warning log message{}", '!');
+    logger->warning("A warning log message{}", '!');
 
     // --------------------------------------------------
 
@@ -41,14 +41,14 @@ int main()
     // -------- Creating an asynchronous logger and setting a custom pattern
 
     // Create an asynchronous console logger
-    auto async_logger = bl::Logger::AsyncConsole("my_async_logger", bl::level::info, true);
+    auto async_logger = bl::logger::make_async_console("my_async_logger", bl::level::info, true);
 
     // Set the logging pattern of our new logger
     // {ts}  -> timestamp
     // {lvl} -> log level of the message
     // {tag} -> current logger tag(name)
     // {msg} -> the message itself
-    async_logger->SetPattern("[{ts}][{tag}]\n[{lvl}] -> {msg}\n");
+    async_logger->set_pattern("[{ts}][{tag}]\n[{lvl}] -> {msg}\n");
 
     // A class that can be serialized
     // by the logger, because it has the
@@ -57,7 +57,7 @@ int main()
 
     // Log an error with multiple arguments
     // Notice how we mix positional/non-positional args here
-    async_logger->Error("An error message, {0}! {}", "something bad happened", mc);
+    async_logger->error("An error message, {0}! {}", "something bad happened", mc);
 
     // --------------------------------------------------
 
@@ -65,13 +65,13 @@ int main()
 
     // -------- Creating a custom logger with sinks of your choice
 
-    auto custom_logger = bl::Logger::Custom(
+    auto custom_logger = bl::logger::make_custom(
         "SomeTag",                   // logger tag
         bl::level::crit,             // log level filter
-        bl::Logger::default_pattern, // logger pattern
+        bl::logger::default_pattern, // logger pattern
         false,                       // is asynchronous
-        bl::Sink::Stderr(true),      // any number of sinks at the end
-        bl::Sink::File(
+        bl::sink::make_stderr(true),      // any number of sinks at the end
+        bl::sink::make_file(
             "/logs",                 // path to a directory where you want the log files to be stored
             bl::infinite,            // bytes per file
             bl::infinite,            // maximum log files

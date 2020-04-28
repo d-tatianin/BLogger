@@ -6,46 +6,46 @@
    Responsible for message formatting
    and main logging functions.
 */ 
-#include "Loggers/Logger.h"
+#include "loggers/logger.h"
 
 /* Blocking version of BLogger.
    All logging happens on a
    single thread.
 */
-#include "Loggers/BlockingLogger.h"
+#include "loggers/blocking_logger.h"
 
 /* Async version of BLogger.
    Logs the mesages using
    a dedicated threadpool
    and a message queue.
 */
-#include "Loggers/AsyncLogger.h"
+#include "loggers/async_logger.h"
 
 namespace bl {
-    inline Sink::Ptr Sink::Stdout(bool colored)
+    inline sink::ptr sink::make_stdout(bool colored)
     {
         if (colored)
-            return std::make_unique<ColoredStdoutSink>();
+            return std::make_unique<colored_stdout_sink>();
         else
-            return std::make_unique<StdoutSink>();
+            return std::make_unique<stdout_sink>();
     }
 
-    inline Sink::Ptr Sink::Stderr(bool colored)
+    inline sink::ptr sink::make_stderr(bool colored)
     {
         if (colored)
-            return std::make_unique<ColoredStderrSink>();
+            return std::make_unique<colored_stderr_sink>();
         else
-            return std::make_unique<StderrSink>();
+            return std::make_unique<stderr_sink>();
     }
 
-    inline Sink::Ptr Sink::File(
-        InString directoryPath,
+    inline sink::ptr sink::make_file(
+        in_string directoryPath,
         size_t bytesPerFile,
         size_t maxLogFiles,
         bool rotateLogs
     )
     {
-        return std::make_unique<FileSink>(
+        return std::make_unique<file_sink>(
             directoryPath,
             bytesPerFile,
             maxLogFiles,
@@ -53,32 +53,32 @@ namespace bl {
         );
     }
 
-    inline Sink::Ptr Sink::Console(bool colored)
+    inline sink::ptr sink::make_console(bool colored)
     {
-        return Sink::Stderr(colored);
+        return sink::make_stderr(colored);
     }
 
     template<typename... Sinks>
-    enable_if_sink_ptr_t<Logger::Ptr, Sinks...> Logger::Custom(
-        InString tag,
+    enable_if_sink_ptr_t<logger::ptr, Sinks...> logger::make_custom(
+        in_string tag,
         level lvl,
-        InString pattern,
+        in_string pattern,
         bool asynchronous,
         Sinks... sinks)
     {
-        Ptr out_logger;
+        ptr out_logger;
 
         if (asynchronous)
         {
             // 'magic statics'
-            GlobalConsoleWriteLock();
-            Formatter::timestamp_format();
-            Formatter::overflow_postfix();
-            Formatter::max_length();
-            Formatter::end();
+            global_console_write_lock();
+            formatter::timestamp_format();
+            formatter::overflow_postfix();
+            formatter::max_length();
+            formatter::ending();
             thread_pool::get();
 
-            out_logger = std::make_shared<AsyncLogger>(
+            out_logger = std::make_shared<async_logger>(
                 tag,
                 lvl,
                 false
@@ -91,91 +91,91 @@ namespace bl {
                 false
             );
 
-        out_logger->SetPattern(pattern);
+        out_logger->set_pattern(pattern);
 
-        int expander[] = { 0, (out_logger->AddSink(std::move(sinks)), 0) ... };
+        int expander[] = { 0, (out_logger->add_sink(std::move(sinks)), 0) ... };
 
         return out_logger;
     }
 
-    inline Logger::Ptr Logger::AsyncConsole(
-        InString tag,
+    inline logger::ptr logger::make_async_console(
+        in_string tag,
         level lvl,
         bool colored
     )
     {
-        return Logger::Custom(
+        return logger::make_custom(
             tag,
             lvl,
-            Logger::default_pattern,
+            logger::default_pattern,
             true,
-            Sink::Console(colored)
+            sink::make_console(colored)
         );
     }
 
-    inline Logger::Ptr Logger::AsyncConsole(
-        InString tag,
+    inline logger::ptr logger::make_async_console(
+        in_string tag,
         level lvl,
-        InString pattern,
+        in_string pattern,
         bool colored
     )
     {
-        return Logger::Custom(
+        return logger::make_custom(
             tag,
             lvl,
             pattern,
             true,
-            Sink::Console(colored)
+            sink::make_console(colored)
         );
     }
 
-    inline Logger::Ptr Logger::Console(
-        InString tag,
+    inline logger::ptr logger::make_console(
+        in_string tag,
         level lvl,
         bool colored
     )
     {
-        return Logger::Custom(
+        return logger::make_custom(
             tag,
             lvl,
-            Logger::default_pattern,
+            logger::default_pattern,
             false,
-            Sink::Console(colored)
+            sink::make_console(colored)
         );
     }
 
-    inline Logger::Ptr Logger::Console(
-        InString tag,
+    inline logger::ptr logger::make_console(
+        in_string tag,
         level lvl,
-        InString pattern,
+        in_string pattern,
         bool colored
     )
     {
-        return Logger::Custom(
+        return logger::make_custom(
             tag,
             lvl,
             pattern,
             false,
-            Sink::Console(colored)
+            sink::make_console(colored)
         );
     }
 
-    inline Logger::Ptr Logger::File(
-        InString tag,
+    inline logger::ptr logger::make_file(
+        in_string tag,
         level lvl,
-        InString pattern,
-        InString directoryPath,
+        in_string pattern,
+        in_string directoryPath,
         size_t bytesPerFile,
         size_t maxLogFiles,
         bool rotateLogs
     )
     {
-        return Logger::Custom(
+        return logger::make_custom(
             tag,
             lvl,
             pattern,
             false,
-            Sink::File(
+            sink::make_file(
                 directoryPath,
                 bytesPerFile,
                 maxLogFiles,
@@ -184,22 +184,22 @@ namespace bl {
         );
     }
 
-    inline Logger::Ptr Logger::AsyncFile(
-        InString tag,
+    inline logger::ptr logger::make_async_file(
+        in_string tag,
         level lvl,
-        InString pattern,
-        InString directoryPath,
+        in_string pattern,
+        in_string directoryPath,
         size_t bytesPerFile,
         size_t maxLogFiles,
         bool rotateLogs
     )
     {
-        return Logger::Custom(
+        return logger::make_custom(
             tag,
             lvl,
             pattern,
             true,
-            Sink::File(
+            sink::make_file(
                 directoryPath,
                 bytesPerFile,
                 maxLogFiles,
