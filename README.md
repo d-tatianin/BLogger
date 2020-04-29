@@ -25,13 +25,13 @@ In order to use BLogger in your own project simply add BLogger's include folder 
 // 1. Create a logger using one of the factory functions
 
 // Fully customizable
-auto custom_logger = bl::Logger::Custom(
+auto custom_logger = bl::logger::make_custom(
         "SomeTag",                   // logger tag
         bl::level::crit,             // log level filter
         bl::Logger::default_pattern, // logger pattern
         false,                       // is asynchronous
-        bl::Sink::Stderr(true),      // any number of sinks at the end
-        bl::Sink::File(
+        bl::sink::make_stderr(),     // any number of sinks at the end
+        bl::sink::make_file(
             "/logs",                 // path to a directory where you want the log files to be stored
             bl::infinite,            // bytes per file
             bl::infinite,            // maximum log files
@@ -40,20 +40,20 @@ auto custom_logger = bl::Logger::Custom(
     );
 
 // Or maybe you want one of the preset loggers, like this one
-auto async_logger = bl::Logger::AsyncConsole("my_async_logger", bl::level::info, true);
+auto async_logger = bl::logger::make_async_console("my_async_logger", bl::level::info, true);
 
 // 2. Start logging
-async_logger->Warning("{0}, {}!", "Hello", "World");
+async_logger->warning("{0}, {}!", "Hello", "World");
 
 // Even after a logger is created it's still highly customizable
 // You can set a new tag
-async_logger->SetTag("NewTag");
+async_logger->set_tag("NewTag");
 
 // Add a new sink
-async_logger->AddSink(bl::Sink::Stdout(true));
+async_logger->add_sink(bl::Sink::Stdout(true));
 
 // And even set a new pattern
-async_logger->SetPattern("[{ts}][{tag}]\n[{lvl}] -> {msg}\n");
+async_logger->set_pattern("[{ts}][{tag}]\n[{lvl}] -> {msg}\n");
 ```
 ---
 ### - Setting the pattern  
@@ -63,30 +63,30 @@ Arguments you can use for creating a custom pattern:
 -   `{tag}` -> logger tag(name).
 -   `{msg}` -> the message itself.  
 
-After you've decided on your pattern you can set it by calling `SetPattern(const std::string& pattern)`.
+After you've decided on your pattern you can set it by calling `set_pattern(const std::string& pattern)`.
 
 Here's an example of an interesting pattern `"[{ts}][{tag}]\n[{lvl}] -> {msg}\n"`, which looks like this:
 ![alt-text](https://i.ibb.co/w0yfBcL/BLogger.png)
 
 ---
 ### - Logging your messages
--   `Log(level lvl, std::string message)` -> Logs the message with a given level.  
--   `Log(level lvl, std::string formattedMsg, Args ... args)` -> Logs the formatted message with a given level.
+-   `log(level lvl, std::string message)` -> Logs the message with a given level.  
+-   `log(level lvl, std::string formattedMsg, Args ... args)` -> Logs the formatted message with a given level.
 
-### - The following redundant member functions are also available with the same overloads as `Log()`, however, don't require a level argument
--   `Trace(...)` -> Logs the given message with logging level `trace`.
--   `Debug(...)`-> Logs the given message with logging level `debug`.
--   `Info(...)` -> Logs the given message with logging level `info`.
--   `Warning(...)` -> Logs the given message with logging level `warn`.
--   `Error(...)` -> Logs the given message with logging level `error`.
--   `Critical(...)` -> Logs the given message with logging level `crit`.
+### - The following redundant member functions are also available with the same overloads as `log()`, however, don't require a level argument
+-   `trace(...)` -> Logs the given message with logging level `trace`.
+-   `debug(...)`-> Logs the given message with logging level `debug`.
+-   `info(...)` -> Logs the given message with logging level `info`.
+-   `warning(...)` -> Logs the given message with logging level `warn`.
+-   `error(...)` -> Logs the given message with logging level `error`.
+-   `critical(...)` -> Logs the given message with logging level `crit`.
 
 ---
 ### - BLogger log message formatting
 BLogger accepts the following formats:
--   `{}` a normal argument. Usage example: `logger->Critical("Something went wrong {}", error.message());`.
--   `{n}` a positional argument. Usage example: `logger->Info("{1}, {0}!", "World", "Hello")` -> prints `Hello, World!`.
--   You can also mix the two types like so `logger->Info("{}, {1}{0}", '!', "World", "Hello")` -> prints `Hello, World!`
+-   `{}` a normal argument. Usage example: `logger->critical("Something went wrong {}", error.message());`.
+-   `{n}` a positional argument. Usage example: `logger->info("{1}, {0}!", "World", "Hello")` -> prints `Hello, World!`.
+-   You can also mix the two types like so `logger->info("{}, {1}{0}", '!', "World", "Hello")` -> prints `Hello, World!`
   
 Note: if you are passing a user defined data type make sure it has the `<<` operator overloads for `std::ostream`.
 
@@ -96,18 +96,18 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 -   When Unicode mode is enabled, all functions expect wide strings and `const wchar_t*` for literals, wide string literal is defined by typing `L` before the opening quotes. Same way `std::ostream` is replaced with `std::wostream` for passing a user defined data type.
 ---
 ### - Misc member functions
--   `SetFilter(level lvl)` - > Sets the logging filter to the level specified.
--   `SetTag(std::string tag)` -> Sets the logger name to the name specified.
--   `Flush()` -> Flushes the logger.
--   `AddSink(Sink::Ptr sink)` -> Adds a sink to the logger.
--   `GlobalConsoleWriteLock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
--   `Formatter::CutIfExceeds(size_t size, std::string postfix)` -> Sets the maximum size of a log message. If the message exceeeds the set size it will be cut and the postfix will be inserted after. The postfix is set to `"..."` by default. Size can also be set to `bl::infinite`, which is the default setting.
--   `Formatter::SetTimestampFormat(std::string new_format)` -> Sets the timestamp format. Should be formatted according to the `strftime` specifications.
--   `Formatter::SetEnding(std::string ending)` -> Sets the global log message ending. Defaults to `\n`. The length is not included into message size calculations.
+-   `set_filter(level lvl)` - > Sets the logging filter to the level specified.
+-   `set_tag(std::string tag)` -> Sets the logger name to the name specified.
+-   `flush()` -> Flushes the logger.
+-   `add_sink(sink::ptr sink)` -> Adds a sink to the logger.
+-   `global_console_write_lock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
+-   `formatter::cut_if_exceeds(size_t size, std::string postfix)` -> Sets the maximum size of a log message. If the message exceeeds the set size it will be cut and the postfix will be inserted after. The postfix is set to `"..."` by default. Size can also be set to `bl::infinite`, which is the default setting.
+-   `formatter::set_timestamp_format(std::string new_format)` -> Sets the timestamp format. Should be formatted according to the `strftime` specifications.
+-   `formatter::set_ending(std::string ending)` -> Sets the global log message ending. Defaults to `\n`. The length is not included into message size calculations.
 ---
 ### - Logging sinks
 BLogger offers a list or predefined sinks, which you can extend with ease.
--   `Sink::Stdout(bool colored)` -> a sink associated with `stdout`.
--   `Sink::Stderr(bool colored)` -> a sink associated with `stderr`.
--   `Sink::Console(bool colored)` -> same as `Sink::Stderr`.
--   `Sink::File(std::string directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs)` -> a file sink.
+-   `sink::make_stdout(bool colored)` -> a sink associated with `stdout`.
+-   `sink::make_stderr(bool colored)` -> a sink associated with `stderr`.
+-   `sink::make_console(bool colored)` -> same as `sink::make_stderr`.
+-   `sink::make_file(std::string directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs)` -> a file sink.
