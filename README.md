@@ -31,7 +31,7 @@ auto async_logger = bl::logger::make_async_console();
 auto custom_logger = bl::logger::make_custom(
         "SomeTag",                   // logger tag
         bl::level::crit,             // log level filter
-        bl::Logger::default_pattern, // logger pattern
+        bl::logger::default_pattern, // logger pattern
         false,                       // is asynchronous
         bl::sink::make_stderr(),     // any number of sinks at the end
         bl::sink::make_file(
@@ -92,6 +92,7 @@ bl::logger::make_custom(string tag,
                         Sinks... sinks);
 ```
 
+---
 ### - Setting the pattern  
 Arguments you can use for creating a custom pattern:
 -   `{ts}` -> timestamp.
