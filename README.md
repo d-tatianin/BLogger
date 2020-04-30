@@ -24,7 +24,10 @@ In order to use BLogger in your own project simply add BLogger's include folder 
 
 // 1. Create a logger using one of the factory functions
 
-// Fully customizable
+// You can use one of the common preconfigured loggers
+auto async_logger = bl::logger::make_async_console();
+
+// Or maybe you want a fully customizable one
 auto custom_logger = bl::logger::make_custom(
         "SomeTag",                   // logger tag
         bl::level::crit,             // log level filter
@@ -39,23 +42,56 @@ auto custom_logger = bl::logger::make_custom(
         )
     );
 
-// Or maybe you want one of the preset loggers, like this one
-auto async_logger = bl::logger::make_async_console("my_async_logger", bl::level::info, true);
-
 // 2. Start logging
 async_logger->warning("{0}, {}!", "Hello", "World");
 
-// Even after a logger is created it's still highly customizable
+// Even after a logger is created it's still highly customizable:
+
 // You can set a new tag
 async_logger->set_tag("NewTag");
 
 // Add a new sink
-async_logger->add_sink(bl::Sink::Stdout(true));
+async_logger->add_sink(bl::sink::make_stdout());
 
 // And even set a new pattern
 async_logger->set_pattern("[{ts}][{tag}]\n[{lvl}] -> {msg}\n");
 ```
 ---
+### - Available factory functions
+```cpp
+// A basic console logger
+bl::logger::make_console(string tag, level lvl, string pattern, bool colored);
+
+// An asychronous console logger
+bl::logger::make_async_console(string tag, level lvl, string pattern, bool colored);
+
+// A basic file logger
+bl::logger::make_file(string tag, 
+                      level lvl, 
+                      string pattern,
+                      string directory_path,
+                      size_t byte_per_file,
+                      size_t max_log_files,
+                      bool rotate_logs);
+
+// An asynchronous file logger
+bl::logger::make_async_file(string tag, 
+                            level lvl, 
+                            string pattern,
+                            string directory_path,
+                            size_t byte_per_file,
+                            size_t max_log_files,
+                            bool rotate_logs);
+
+// Or a fully customizable logger with
+// any number of sinks at the end
+bl::logger::make_custom(string tag,
+                        level lvl,
+                        string pattern,
+                        bool asynchronous,
+                        Sinks... sinks);
+```
+
 ### - Setting the pattern  
 Arguments you can use for creating a custom pattern:
 -   `{ts}` -> timestamp.
@@ -63,15 +99,15 @@ Arguments you can use for creating a custom pattern:
 -   `{tag}` -> logger tag(name).
 -   `{msg}` -> the message itself.  
 
-After you've decided on your pattern you can set it by calling `set_pattern(const std::string& pattern)`.
+After you've decided on your pattern you can set it by calling `set_pattern(string pattern)`.
 
 Here's an example of an interesting pattern `"[{ts}][{tag}]\n[{lvl}] -> {msg}\n"`, which looks like this:
 ![alt-text](https://i.ibb.co/w0yfBcL/BLogger.png)
 
 ---
 ### - Logging your messages
--   `log(level lvl, std::string message)` -> Logs the message with a given level.  
--   `log(level lvl, std::string formattedMsg, Args ... args)` -> Logs the formatted message with a given level.
+-   `log(level lvl, string message)` -> Logs the message with a given level.  
+-   `log(level lvl, string formattedMsg, Args ... args)` -> Logs the formatted message with a given level.
 
 ### - The following redundant member functions are also available with the same overloads as `log()`, however, don't require a level argument
 -   `trace(...)` -> Logs the given message with logging level `trace`.
@@ -97,17 +133,18 @@ Note: if you are passing a user defined data type make sure it has the `<<` oper
 ---
 ### - Misc member functions
 -   `set_filter(level lvl)` - > Sets the logging filter to the level specified.
--   `set_tag(std::string tag)` -> Sets the logger name to the name specified.
+-   `set_tag(string tag)` -> Sets the logger name to the name specified.
 -   `flush()` -> Flushes the logger.
 -   `add_sink(sink::ptr sink)` -> Adds a sink to the logger.
 -   `global_console_write_lock()` -> returns the global mutex BLogger uses to write to a global sink. Use this mutex if you want to combine using BLogger with raw calls to `std::cout`. If you lock the mutex before writing to a global sink your message is guaranteed to be properly printed and be the default color.
--   `formatter::cut_if_exceeds(size_t size, std::string postfix)` -> Sets the maximum size of a log message. If the message exceeeds the set size it will be cut and the postfix will be inserted after. The postfix is set to `"..."` by default. Size can also be set to `bl::infinite`, which is the default setting.
--   `formatter::set_timestamp_format(std::string new_format)` -> Sets the timestamp format. Should be formatted according to the `strftime` specifications.
--   `formatter::set_ending(std::string ending)` -> Sets the global log message ending. Defaults to `\n`. The length is not included into message size calculations.
+-   `formatter::cut_if_exceeds(size_t size, string postfix)` -> Sets the maximum size of a log message. If the message exceeeds the set size it will be cut and the postfix will be inserted after. The postfix is set to `"..."` by default. Size can also be set to `bl::infinite`, which is the default setting.
+-   `formatter::set_timestamp_format(string new_format)` -> Sets the timestamp format. Should be formatted according to the `strftime` specifications.
+-   `formatter::set_ending(string ending)` -> Sets the global log message ending. Defaults to `\n`. The length is not included into message size calculations.
 ---
 ### - Logging sinks
 BLogger offers a list or predefined sinks, which you can extend with ease.
 -   `sink::make_stdout(bool colored)` -> a sink associated with `stdout`.
 -   `sink::make_stderr(bool colored)` -> a sink associated with `stderr`.
--   `sink::make_console(bool colored)` -> same as `sink::make_stderr`.
--   `sink::make_file(std::string directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs)` -> a file sink.
+-   `sink::make_stdlog(bool colored)` -> a wrapper around `std::clog` (uses `stderr`).
+-   `sink::make_console(bool colored)` -> same as `sink::make_stdlog`.
+-   `sink::make_file(string directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs)` -> a file sink.
