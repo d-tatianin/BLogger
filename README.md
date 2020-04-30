@@ -148,4 +148,4 @@ BLogger offers a list or predefined sinks, which you can extend with ease.
 -   `sink::make_stderr(bool colored)` -> a sink associated with `stderr`.
 -   `sink::make_stdlog(bool colored)` -> a wrapper around `std::clog` (uses `stderr`).
 -   `sink::make_console(bool colored)` -> same as `sink::make_stdlog`.
--   `sink::make_file(string directoryPath, size_t bytesPerFile, size_t maxLogFiles, bool rotateLogs)` -> a file sink.
+-   `sink::make_file(string directory_path, size_t bytes_per_file, size_t max_log_files, bool rotate_logs)` -> a file sink.
