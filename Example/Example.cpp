@@ -17,9 +17,9 @@ int main()
     // -------- Creating a simple logger and logging a message
 
     // Create a console logger
-    auto logger = bl::logger::make_console("tag", bl::level::warn, true);
+    auto logger = bl::logger::make_console();
 
-    // Log a 'Warning message'
+    // Log a 'Warning' message
     logger->warning("A warning log message{}", '!');
 
     // --------------------------------------------------
@@ -41,7 +41,7 @@ int main()
     // -------- Creating an asynchronous logger and setting a custom pattern
 
     // Create an asynchronous console logger
-    auto async_logger = bl::logger::make_async_console("my_async_logger", bl::level::info, true);
+    auto async_logger = bl::logger::make_async_console("super_logger");
 
     // Set the logging pattern of our new logger
     // {ts}  -> timestamp
@@ -70,7 +70,7 @@ int main()
         bl::level::crit,             // log level filter
         bl::logger::default_pattern, // logger pattern
         false,                       // is asynchronous
-        bl::sink::make_stderr(true),      // any number of sinks at the end
+        bl::sink::make_stderr(),     // any number of sinks at the end
         bl::sink::make_file(
             "/logs",                 // path to a directory where you want the log files to be stored
             bl::infinite,            // bytes per file
