@@ -32,11 +32,11 @@ namespace bl {
     class logger
     {
     protected:
-        string         m_Tag;
-        string         m_CurrentPattern;
-        string         m_CachedPattern;
-        shared_sinks    m_Sinks;
-        level          m_Filter;
+        string         m_tag;
+        string         m_current_pattern;
+        string         m_cached_pattern;
+        shared_sinks   m_sinks;
+        level          m_filter;
     public:
         static auto constexpr default_pattern = BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}");
         static auto constexpr default_tag     = BLOGGER_WIDEN_IF_NEEDED("Unnamed");
@@ -47,10 +47,10 @@ namespace bl {
             in_string tag,
             level lvl,
             bool default_pattern
-        ) : m_Tag(tag),
-            m_CachedPattern(BLOGGER_WIDEN_IF_NEEDED("")),
-            m_Sinks(std::make_shared<sinks>()),
-            m_Filter(lvl)
+        ) : m_tag(tag),
+            m_cached_pattern(BLOGGER_WIDEN_IF_NEEDED("")),
+            m_sinks(std::make_shared<sinks>()),
+            m_filter(lvl)
         {
             // 'magic statics'
             global_console_write_lock();
@@ -97,27 +97,27 @@ namespace bl {
             in_string tag = default_tag,
             level lvl = level::info,
             in_string pattern = default_pattern,
-            in_string directoryPath = default_path,
-            size_t bytesPerFile = infinite,
-            size_t maxLogFiles = infinite,
-            bool rotateLogs = true
+            in_string directory_path = default_path,
+            size_t bytes_per_file = infinite,
+            size_t max_log_files = infinite,
+            bool rotate_logs = true
         );
 
         static ptr make_async_file(
             in_string tag = default_tag,
             level lvl = level::info,
             in_string pattern = default_pattern,
-            in_string directoryPath = default_path,
-            size_t bytesPerFile = infinite,
-            size_t maxLogFiles = infinite,
-            bool rotateLogs = true
+            in_string directory_path = default_path,
+            size_t bytes_per_file = infinite,
+            size_t max_log_files = infinite,
+            bool rotate_logs = true
         );
 
         void set_pattern(in_string pattern)
         {
-            m_CachedPattern = pattern;
-            m_CurrentPattern = m_CachedPattern;
-            formatter::create_pattern_from(m_CurrentPattern, m_Tag);
+            m_cached_pattern = pattern;
+            m_current_pattern = m_cached_pattern;
+            formatter::create_pattern_from(m_current_pattern, m_tag);
         }
 
         virtual void flush() = 0;
@@ -133,14 +133,14 @@ namespace bl {
 
             post({
                 string(message.data()),
-                m_CurrentPattern.data(),
+                m_current_pattern.data(),
                 time_point,
                 lvl
             });
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> log(level lvl, in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> log(level lvl, in_string formatted_msg, Args&& ... args)
         {
             if (!should_log(lvl))
                 return;
@@ -150,8 +150,8 @@ namespace bl {
             BLOGGER_UPDATE_TIME(time_point, time_now);
 
             post({
-                formatter::format(formattedMsg.data(), std::forward<Args>(args)...),
-                m_CurrentPattern.data(),
+                formatter::format(formatted_msg.data(), std::forward<Args>(args)...),
+                m_current_pattern.data(),
                 time_point,
                 lvl
             });
@@ -188,72 +188,72 @@ namespace bl {
        }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> trace(in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> trace(in_string formatted_msg, Args&& ... args)
         {
-            log(level::trace, formattedMsg, std::forward<Args>(args)...);
+            log(level::trace, formatted_msg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> debug(in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> debug(in_string formatted_msg, Args&& ... args)
         {
-            log(level::debug, formattedMsg, std::forward<Args>(args)...);
+            log(level::debug, formatted_msg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> info(in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> info(in_string formatted_msg, Args&& ... args)
         {
-            log(level::info, formattedMsg, std::forward<Args>(args)...);
+            log(level::info, formatted_msg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> warning(in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> warning(in_string formatted_msg, Args&& ... args)
         {
-            log(level::warn, formattedMsg, std::forward<Args>(args)...);
+            log(level::warn, formatted_msg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> error(in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> error(in_string formatted_msg, Args&& ... args)
         {
-            log(level::error, formattedMsg, std::forward<Args>(args)...);
+            log(level::error, formatted_msg, std::forward<Args>(args)...);
         }
 
         template<typename... Args>
-        enable_if_ostream_insertable_t<Args...> critical(in_string formattedMsg, Args&& ... args)
+        enable_if_ostream_insertable_t<Args...> critical(in_string formatted_msg, Args&& ... args)
         {
-            log(level::crit, formattedMsg, std::forward<Args>(args)...);
+            log(level::crit, formatted_msg, std::forward<Args>(args)...);
         }
 
         void set_filter(level lvl)
         {
-            m_Filter = lvl;
+            m_filter = lvl;
         }
 
         void set_tag(in_string tag)
         {
-            m_Tag = tag;
-            set_pattern(m_CachedPattern);
+            m_tag = tag;
+            set_pattern(m_cached_pattern);
 
             set_sinks_tag();
         }
 
         void add_sink(sink::ptr sink)
         {
-            sink->set_tag(m_Tag);
+            sink->set_tag(m_tag);
 
-            m_Sinks->emplace_back(std::move(sink));
+            m_sinks->emplace_back(std::move(sink));
         }
 
         virtual ~logger() = default;
     protected:
         bool should_log(level lvl)
         {
-            if (m_Filter > lvl)
+            if (m_filter > lvl)
                 return false;
 
-            if (m_Sinks->empty())
+            if (m_sinks->empty())
                 return false;
 
-            if (m_CachedPattern.empty())
+            if (m_cached_pattern.empty())
                 return false;
 
             return true;
@@ -264,8 +264,8 @@ namespace bl {
     private:
         void set_sinks_tag()
         {
-            for (auto& sink : *m_Sinks)
-                sink->set_tag(m_Tag);
+            for (auto& sink : *m_sinks)
+                sink->set_tag(m_tag);
         }
     };
 }

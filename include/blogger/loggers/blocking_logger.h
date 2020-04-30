@@ -13,17 +13,13 @@ namespace bl {
             in_string tag,
             level lvl,
             bool default_pattern = true
-        ) : logger(
-            tag,
-            lvl,
-            default_pattern
-        )
+        ) : logger(tag, lvl, default_pattern)
         {
         }
 
         void flush() override
         {
-            for (auto& sink : *m_Sinks)
+            for (auto& sink : *m_sinks)
             {
                 sink->flush();
             }
@@ -33,7 +29,7 @@ namespace bl {
         {
             msg.finalize_format();
 
-            for (auto& sink : *m_Sinks)
+            for (auto& sink : *m_sinks)
             {
                 sink->write(msg);
             }

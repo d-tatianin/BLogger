@@ -35,7 +35,7 @@ namespace bl {
        #pragma warning(disable:26812)
       #endif
         constexpr color(type k) noexcept
-            : m_Color(k)
+            : m_color(k)
         {
         }
 
@@ -65,7 +65,7 @@ namespace bl {
             constexpr color_t reset   = BLOGGER_WIDEN_IF_NEEDED("\033[0m");
           #endif
 
-            switch (m_Color)
+            switch (m_color)
             {
                 case type::black:   return black;
                 case type::red:     return red;
@@ -84,10 +84,10 @@ namespace bl {
       #endif
         friend bool operator==(color l, color r) noexcept
         {
-            return static_cast<int>(l.m_Color) == static_cast<int>(r.m_Color);
+            return static_cast<int>(l.m_color) == static_cast<int>(r.m_color);
         }
     private:
-        type m_Color;
+        type m_color;
     };
 
     template<ostream& stream>

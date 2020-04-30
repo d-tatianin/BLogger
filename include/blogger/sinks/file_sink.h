@@ -12,54 +12,54 @@ namespace bl {
     class file_sink : public sink
     {
     private:
-        FILE*         m_File;
-        string        m_DirectoryPath;
-        string        m_CachedTag;
-        size_t        m_BytesPerFile;
-        size_t        m_CurrentBytes;
-        size_t        m_MaxLogFiles;
-        size_t        m_CurrentLogFiles;
-        bool          m_RotateLogs;
-        std::mutex    m_FileAccess;
+        FILE*      m_file;
+        string     m_directory_path;
+        string     m_cached_tag;
+        size_t     m_bytes_per_file;
+        size_t     m_current_bytes;
+        size_t     m_max_log_files;
+        size_t     m_current_log_files;
+        bool       m_rotate_logs;
+        std::mutex m_file_access;
     public:
         file_sink(
-            in_string directoryPath,
-            size_t bytesPerFile,
-            size_t maxLogFiles,
-            bool rotateLogs = true
-        ) : m_File(nullptr),
-            m_DirectoryPath(directoryPath),
-            m_CachedTag(BLOGGER_WIDEN_IF_NEEDED("logfile")),
-            m_BytesPerFile(bytesPerFile),
-            m_CurrentBytes(0),
-            m_MaxLogFiles(maxLogFiles),
-            m_CurrentLogFiles(0),
-            m_RotateLogs(rotateLogs),
-            m_FileAccess()
+            in_string directory_path,
+            size_t bytes_per_file,
+            size_t max_log_files,
+            bool rotate_logs = true
+        ) : m_file(nullptr),
+            m_directory_path(directory_path),
+            m_cached_tag(BLOGGER_WIDEN_IF_NEEDED("logfile")),
+            m_bytes_per_file(bytes_per_file),
+            m_current_bytes(0),
+            m_max_log_files(max_log_files),
+            m_current_log_files(0),
+            m_rotate_logs(rotate_logs),
+            m_file_access()
         {
-            if (m_DirectoryPath.back() != BLOGGER_WIDEN_IF_NEEDED('/'))
-                m_DirectoryPath += '/';
+            if (m_directory_path.back() != BLOGGER_WIDEN_IF_NEEDED('/'))
+                m_directory_path += '/';
         }
 
         void terminate()
         {
-            locker lock(m_FileAccess);
+            locker lock(m_file_access);
 
-            if (m_File)
+            if (m_file)
             {
-                fclose(m_File);
-                m_File = nullptr;
+                fclose(m_file);
+                m_file = nullptr;
             }
         }
 
         bool ok()
         {
-            return static_cast<bool>(m_File);
+            return static_cast<bool>(m_file);
         }
 
         void write(log_message& msg) override
         {
-            locker lock(m_FileAccess);
+            locker lock(m_file_access);
 
             if (!ok())
                 return;
@@ -89,26 +89,26 @@ namespace bl {
             auto  size = msg.size();
         #endif
 
-            if (m_BytesPerFile != infinite)
+            if (m_bytes_per_file != infinite)
             {
-                if (BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
+                if (BLOGGER_TRUE_SIZE(size) > m_bytes_per_file)
                     return;
 
-                if (m_CurrentBytes + BLOGGER_TRUE_SIZE(size) > m_BytesPerFile)
+                if (m_current_bytes + BLOGGER_TRUE_SIZE(size) > m_bytes_per_file)
                     if (!new_log_file()) return;
             }
 
-            m_CurrentBytes += BLOGGER_TRUE_SIZE(size);
+            m_current_bytes += BLOGGER_TRUE_SIZE(size);
 
-            BLOGGER_FILE_WRITE(data, size, m_File);
+            BLOGGER_FILE_WRITE(data, size, m_file);
         }
 
         void flush() override
         {
-            locker lock(m_FileAccess);
+            locker lock(m_file_access);
 
-            if (m_File)
-                fflush(m_File);
+            if (m_file)
+                fflush(m_file);
         }
 
         operator bool()
@@ -118,57 +118,57 @@ namespace bl {
 
         ~file_sink()
         {
-            if (m_File)
-                fclose(m_File);
+            if (m_file)
+                fclose(m_file);
         }
 
         void set_tag(in_string name) override
         {
-            m_CachedTag = name;
+            m_cached_tag = name;
             new_log_file();
         }
     private:
         void construct_full_path(
-            string& outPath
+            string& out_path
         )
         {
-            outPath += m_DirectoryPath;
-            outPath += m_CachedTag;
-            outPath += BLOGGER_WIDEN_IF_NEEDED('-');
-            outPath += BLOGGER_TO_STRING(m_CurrentLogFiles);
-            outPath += BLOGGER_WIDEN_IF_NEEDED(".log");
+            out_path += m_directory_path;
+            out_path += m_cached_tag;
+            out_path += BLOGGER_WIDEN_IF_NEEDED('-');
+            out_path += BLOGGER_TO_STRING(m_current_log_files);
+            out_path += BLOGGER_WIDEN_IF_NEEDED(".log");
         }
 
         bool new_log_file()
         {
-            if (m_CurrentLogFiles == m_MaxLogFiles)
+            if (m_current_log_files == m_max_log_files)
             {
-                if (!m_RotateLogs)
+                if (!m_rotate_logs)
                     return false;
                 else
                 {
-                    m_CurrentLogFiles = 1;
-                    m_CurrentBytes = 0;
+                    m_current_log_files = 1;
+                    m_current_bytes = 0;
                 }
             }
             else
             {
-                m_CurrentBytes = 0;
-                ++m_CurrentLogFiles;
+                m_current_bytes = 0;
+                ++m_current_log_files;
             }
 
-            if (m_File)
+            if (m_file)
             {
-                fclose(m_File);
-                m_File = nullptr;
+                fclose(m_file);
+                m_file = nullptr;
             }
 
             string fullPath;
             construct_full_path(fullPath);
 
-            BLOGGER_OPEN_FILE(m_File, fullPath);
+            BLOGGER_OPEN_FILE(m_file, fullPath);
 
-            return m_File;
+            return m_file;
         }
     };
 }

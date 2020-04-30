@@ -47,17 +47,17 @@ namespace bl {
     }
 
     inline sink::ptr sink::make_file(
-        in_string directoryPath,
-        size_t bytesPerFile,
-        size_t maxLogFiles,
-        bool rotateLogs
+        in_string directory_path,
+        size_t bytes_per_file,
+        size_t max_log_files,
+        bool rotate_logs
     )
     {
         return std::make_unique<file_sink>(
-            directoryPath,
-            bytesPerFile,
-            maxLogFiles,
-            rotateLogs
+            directory_path,
+            bytes_per_file,
+            max_log_files,
+            rotate_logs
         );
     }
 
@@ -142,10 +142,10 @@ namespace bl {
         in_string tag,
         level lvl,
         in_string pattern,
-        in_string directoryPath,
-        size_t bytesPerFile,
-        size_t maxLogFiles,
-        bool rotateLogs
+        in_string directory_path,
+        size_t bytes_per_file,
+        size_t max_log_files,
+        bool rotate_logs
     )
     {
         return logger::make_custom(
@@ -154,10 +154,10 @@ namespace bl {
             pattern,
             false,
             sink::make_file(
-                directoryPath,
-                bytesPerFile,
-                maxLogFiles,
-                rotateLogs
+                directory_path,
+                bytes_per_file,
+                max_log_files,
+                rotate_logs
             )
         );
     }
@@ -166,10 +166,10 @@ namespace bl {
         in_string tag,
         level lvl,
         in_string pattern,
-        in_string directoryPath,
-        size_t bytesPerFile,
-        size_t maxLogFiles,
-        bool rotateLogs
+        in_string directory_path,
+        size_t bytes_per_file,
+        size_t max_log_files,
+        bool rotate_logs
     )
     {
         return logger::make_custom(
@@ -178,10 +178,10 @@ namespace bl {
             pattern,
             true,
             sink::make_file(
-                directoryPath,
-                bytesPerFile,
-                maxLogFiles,
-                rotateLogs
+                directory_path,
+                bytes_per_file,
+                max_log_files,
+                rotate_logs
             )
         );
     }
@@ -199,6 +199,7 @@ namespace bl {
 
 #undef BLOGGER_TRUE_SIZE
 #undef BLOGGER_FOR_EACH_DO
+#undef BLOGGER_VA_FOR_EACH_DO
 #undef BLOGGER_UPDATE_TIME
 
 #undef BLOGGER_STACK_ALLOC

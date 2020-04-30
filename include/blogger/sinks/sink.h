@@ -6,9 +6,9 @@ namespace bl {
 
     inline std::mutex& global_console_write_lock()
     {
-        static std::mutex globalWrite;
+        static std::mutex global_write;
 
-        return globalWrite;
+        return global_write;
     }
 
     class sink
@@ -25,10 +25,10 @@ namespace bl {
         static ptr make_console(bool colored = true);
 
         static ptr make_file(
-            in_string directoryPath,
-            size_t bytesPerFile,
-            size_t maxLogFiles,
-            bool rotateLogs);
+            in_string directory_path,
+            size_t bytes_per_file,
+            size_t max_log_files,
+            bool rotate_logs);
 
         virtual void write(log_message& msg) = 0;
         virtual void flush() = 0;

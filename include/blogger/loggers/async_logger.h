@@ -95,19 +95,19 @@ namespace bl {
     public:
         using task_ptr = std::unique_ptr<task>;
     private:
-        std::vector<std::thread> m_Pool;
-        std::deque<task_ptr>     m_TaskQueue;
-        std::mutex               m_QueueAccess;
-        std::condition_variable  m_Notifier;
-        std::atomic_bool         m_Running;
+        std::vector<std::thread> m_pool;
+        std::deque<task_ptr>     m_task_queue;
+        std::mutex               m_queue_access;
+        std::condition_variable  m_notifier;
+        std::atomic_bool         m_running;
     private:
         thread_pool(uint16_t thread_count)
-            : m_Running(true)
+            : m_running(true)
         {
-            m_Pool.reserve(thread_count);
+            m_pool.reserve(thread_count);
 
             for (uint16_t i = 0; i < thread_count; i++)
-                m_Pool.emplace_back([this]() { worker(); });
+                m_pool.emplace_back([this]() { worker(); });
         }
 
         thread_pool(const thread_pool& other) = delete;
@@ -122,10 +122,10 @@ namespace bl {
             std::mutex worker_lock;
             std::unique_lock<std::mutex> task_waiter(worker_lock);
 
-            while (m_Running || did_work)
+            while (m_running || did_work)
             {
                 if (!did_work)
-                    m_Notifier.wait_for(
+                    m_notifier.wait_for(
                         task_waiter,
                         std::chrono::seconds(5)
                     );
@@ -139,12 +139,12 @@ namespace bl {
             task_ptr p;
 
             {
-                locker lock(m_QueueAccess);
+                locker lock(m_queue_access);
 
-                if (!m_TaskQueue.empty())
+                if (!m_task_queue.empty())
                 {
-                    p = std::move(m_TaskQueue.front());
-                    m_TaskQueue.pop_front();
+                    p = std::move(m_task_queue.front());
+                    m_task_queue.pop_front();
                 }
                 else
                     return false;
@@ -157,10 +157,10 @@ namespace bl {
 
         void shutdown()
         {
-            m_Running = false;
-            m_Notifier.notify_all();
+            m_running = false;
+            m_notifier.notify_all();
 
-            for (auto& worker : m_Pool)
+            for (auto& worker : m_pool)
                 worker.join();
         }
 
@@ -177,15 +177,15 @@ namespace bl {
         void post_task(std::unique_ptr<task> t)
         {
             {
-                locker lock(m_QueueAccess);
+                locker lock(m_queue_access);
 
-                if (m_TaskQueue.size() == BLOGGER_TASK_LIMIT)
-                    m_TaskQueue.pop_front();
+                if (m_task_queue.size() == BLOGGER_TASK_LIMIT)
+                    m_task_queue.pop_front();
 
-                m_TaskQueue.emplace_back(std::move(t));
+                m_task_queue.emplace_back(std::move(t));
             }
 
-            m_Notifier.notify_one();
+            m_notifier.notify_one();
         }
 
         ~thread_pool()
@@ -209,7 +209,7 @@ namespace bl {
         void flush() override
         {
             thread_pool::get().post_task(
-                std::make_unique<flush_task>(m_Sinks)
+                std::make_unique<flush_task>(m_sinks)
             );
         }
 
@@ -218,7 +218,7 @@ namespace bl {
         void post(log_message&& msg) override
         {
             thread_pool::get().post_task(
-                std::make_unique<log_task>(std::move(msg), m_Sinks)
+                std::make_unique<log_task>(std::move(msg), m_sinks)
             );
         }
     };

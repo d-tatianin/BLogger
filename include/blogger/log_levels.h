@@ -31,13 +31,13 @@ namespace bl {
         #pragma warning(disable:26812)
       #endif
         constexpr level(type t) noexcept
-            : m_Level(t)
+            : m_level(t)
         {
         }
 
         const char_t* to_string() const noexcept
         {
-            switch (m_Level)
+            switch (m_level)
             {
                 case type::trace: return BLOGGER_WIDEN_IF_NEEDED("TRACE");
                 case type::debug: return BLOGGER_WIDEN_IF_NEEDED("DEBUG");
@@ -54,7 +54,7 @@ namespace bl {
 
         color to_color() const noexcept
         {
-            switch (m_Level)
+            switch (m_level)
             {
                 case type::trace:  return trace_color;
                 case type::debug:  return debug_color;
@@ -68,20 +68,20 @@ namespace bl {
 
         friend bool operator>(level l, level r) noexcept
         {
-            return static_cast<int>(l.m_Level) > static_cast<int>(r.m_Level);
+            return static_cast<int>(l.m_level) > static_cast<int>(r.m_level);
         }
 
         friend bool operator<(level l, level r) noexcept
         {
-            return static_cast<int>(l.m_Level) < static_cast<int>(r.m_Level);
+            return static_cast<int>(l.m_level) < static_cast<int>(r.m_level);
         }
 
         friend bool operator==(level l, level r) noexcept
         {
-            return static_cast<int>(l.m_Level) == static_cast<int>(r.m_Level);
+            return static_cast<int>(l.m_level) == static_cast<int>(r.m_level);
         }
     private:
-        type m_Level;
+        type m_level;
     };
 
     inline ostream& operator<<(ostream& stream, level l) noexcept
