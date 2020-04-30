@@ -6,9 +6,11 @@
 #include "blogger/loggers/logger.h"
 
 namespace bl {
-    template<BLOGGER_OSTREAM& stream>
+    template<ostream& stream>
     class console_sink : public sink
     {
+    private:
+        ostream& m_Stream = stream;
     public:
         console_sink()
         {
@@ -19,7 +21,7 @@ namespace bl {
             auto& wl = global_console_write_lock();
             locker lock(wl);
 
-            stream.write(
+            underlying_stream().write(
                 msg.data(),
                 msg.size()
             );
@@ -30,11 +32,21 @@ namespace bl {
             auto& wl = global_console_write_lock();
             locker lock(wl);
 
-            stream.flush();
+            underlying_stream().flush();
+        }
+
+        ostream& underlying_stream()
+        {
+            return m_Stream;
+        }
+
+        ostream& operator<<(in_string message)
+        {
+            return underlying_stream() << message;
         }
     };
 
-    // should have a clog sink as well?
     using stderr_sink = console_sink<BLOGGER_CERR>;
     using stdout_sink = console_sink<BLOGGER_COUT>;
+    using stdlog_sink = console_sink<BLOGGER_CLOG>;
 }

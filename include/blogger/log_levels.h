@@ -84,12 +84,12 @@ namespace bl {
         type m_Level;
     };
 
-    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, level l) noexcept
+    inline ostream& operator<<(ostream& stream, level l) noexcept
     {
         return stream << l.to_string();
     }
 
-    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, level::type l) noexcept
+    inline ostream& operator<<(ostream& stream, level::type l) noexcept
     {
         return operator<<(stream, level(l));
     }

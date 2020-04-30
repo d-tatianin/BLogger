@@ -45,7 +45,7 @@ namespace bl
         static string format(string pattern, Args&& ... args)
         {
             uint16_t index = 0;
-            BLOGGER_FOR_EACH_DO(format_one, args, pattern, index);
+            BLOGGER_VA_FOR_EACH_DO(format_one, Args, args, pattern, index);
             return pattern;
         }
 

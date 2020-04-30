@@ -51,12 +51,8 @@
                 ignored =      _setmode(_fileno(stderr), _O_U16TEXT);
             }
         }
-        #define BLOGGER_INIT_UNICODE_MODE ::bl::init_unicode
-    #else
-        static inline void blogger_dummy_func() {}
-        #define BLOGGER_INIT_UNICODE_MODE blogger_dummy_func
     #endif
-#elif defined(__linux__)
+#elif defined(__linux__) || defined (__OSX__)
     #include <cstring>
     #include <algorithm>
     #include <clocale>
@@ -97,13 +93,13 @@
                 setlocale(LC_ALL, "en_US.utf8");
             }
         }
-        #define BLOGGER_INIT_UNICODE_MODE init_unicode
-    #else
-        inline void blogger_dummy_func() {}
-        #define BLOGGER_INIT_UNICODE_MODE blogger_dummy_func
     #endif
 #else
     #error Sorry, your platform is currently not supported! Please let me know it you think it should be.
 #endif
 
 #define BLOGGER_FILE_WRITE(data, size, file) fwrite(data, sizeof(char), size, file)
+
+#ifndef BLOGGER_UNICODE_MODE
+    namespace bl { inline void init_unicode() {} }
+#endif

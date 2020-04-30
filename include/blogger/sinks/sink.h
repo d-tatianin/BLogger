@@ -20,13 +20,15 @@ namespace bl {
 
         static ptr make_stderr(bool colored = true);
 
+        static ptr make_stdlog(bool colored = true);
+
         static ptr make_console(bool colored = true);
 
         static ptr make_file(
             in_string directoryPath,
             size_t bytesPerFile,
             size_t maxLogFiles,
-            bool rotateLogs = true);
+            bool rotateLogs);
 
         virtual void write(log_message& msg) = 0;
         virtual void flush() = 0;

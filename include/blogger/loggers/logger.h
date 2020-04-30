@@ -39,6 +39,8 @@ namespace bl {
         level          m_Filter;
     public:
         static auto constexpr default_pattern = BLOGGER_WIDEN_IF_NEEDED("[{ts}][{lvl}][{tag}] {msg}");
+        static auto constexpr default_tag     = BLOGGER_WIDEN_IF_NEEDED("Unnamed");
+        static auto constexpr default_path    = BLOGGER_WIDEN_IF_NEEDED("logs");
         using ptr = std::shared_ptr<logger>;
 
         logger(
@@ -56,7 +58,7 @@ namespace bl {
             formatter::overflow_postfix();
             formatter::max_length();
 
-            BLOGGER_INIT_UNICODE_MODE();
+            init_unicode();
 
             if (default_pattern)
                 set_pattern(logger::default_pattern);
@@ -78,48 +80,36 @@ namespace bl {
         );
 
         static ptr make_async_console(
-            in_string tag,
-            level lvl,
-            bool colored = true
-        );
-
-        static ptr make_async_console(
-            in_string tag,
-            level lvl,
-            in_string pattern,
+            in_string tag = default_tag,
+            level lvl = level::info,
+            in_string pattern = default_pattern,
             bool colored = true
         );
 
         static ptr make_console(
-            in_string tag,
-            level lvl,
-            bool colored = true
-        );
-
-        static ptr make_console(
-            in_string tag,
-            level lvl,
-            in_string pattern,
+            in_string tag = default_tag,
+            level lvl = level::info,
+            in_string pattern = default_pattern,
             bool colored = true
         );
 
         static ptr make_file(
-            in_string tag,
-            level lvl,
-            in_string pattern,
-            in_string directoryPath,
-            size_t bytesPerFile,
-            size_t maxLogFiles,
+            in_string tag = default_tag,
+            level lvl = level::info,
+            in_string pattern = default_pattern,
+            in_string directoryPath = default_path,
+            size_t bytesPerFile = infinite,
+            size_t maxLogFiles = infinite,
             bool rotateLogs = true
         );
 
         static ptr make_async_file(
-            in_string tag,
-            level lvl,
-            in_string pattern,
-            in_string directoryPath,
-            size_t bytesPerFile,
-            size_t maxLogFiles,
+            in_string tag = default_tag,
+            level lvl = level::info,
+            in_string pattern = default_pattern,
+            in_string directoryPath = default_path,
+            size_t bytesPerFile = infinite,
+            size_t maxLogFiles = infinite,
             bool rotateLogs = true
         );
 

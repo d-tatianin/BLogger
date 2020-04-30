@@ -38,6 +38,14 @@ namespace bl {
             return std::make_unique<stderr_sink>();
     }
 
+    inline sink::ptr sink::make_stdlog(bool colored)
+    {
+        if (colored)
+            return std::make_unique<colored_stdlog_sink>();
+        else
+            return std::make_unique<stdlog_sink>();
+    }
+
     inline sink::ptr sink::make_file(
         in_string directoryPath,
         size_t bytesPerFile,
@@ -55,7 +63,7 @@ namespace bl {
 
     inline sink::ptr sink::make_console(bool colored)
     {
-        return sink::make_stderr(colored);
+        return sink::make_stdlog(colored);
     }
 
     template<typename... Sinks>
@@ -93,24 +101,9 @@ namespace bl {
 
         out_logger->set_pattern(pattern);
 
-        int expander[] = { 0, (out_logger->add_sink(std::move(sinks)), 0) ... };
+        BLOGGER_FOR_EACH_DO(out_logger->add_sink, Sinks, std::move(sinks));
 
         return out_logger;
-    }
-
-    inline logger::ptr logger::make_async_console(
-        in_string tag,
-        level lvl,
-        bool colored
-    )
-    {
-        return logger::make_custom(
-            tag,
-            lvl,
-            logger::default_pattern,
-            true,
-            sink::make_console(colored)
-        );
     }
 
     inline logger::ptr logger::make_async_console(
@@ -125,21 +118,6 @@ namespace bl {
             lvl,
             pattern,
             true,
-            sink::make_console(colored)
-        );
-    }
-
-    inline logger::ptr logger::make_console(
-        in_string tag,
-        level lvl,
-        bool colored
-    )
-    {
-        return logger::make_custom(
-            tag,
-            lvl,
-            logger::default_pattern,
-            false,
             sink::make_console(colored)
         );
     }

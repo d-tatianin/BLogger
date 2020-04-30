@@ -90,7 +90,7 @@ namespace bl {
         type m_Color;
     };
 
-    template<BLOGGER_OSTREAM& stream>
+    template<ostream& stream>
     class console_color
     {
     public:
@@ -124,7 +124,7 @@ namespace bl {
         }
     };
 
-    template<BLOGGER_OSTREAM& stream>
+    template<ostream& stream>
     class scoped_console_color
     {
     public:
@@ -139,7 +139,7 @@ namespace bl {
         }
     };
 
-    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, color c)
+    inline ostream& operator<<(ostream& stream, color c)
     {
       #ifdef _WIN32
         // Windows doesn't differentiate between
@@ -154,7 +154,7 @@ namespace bl {
         return stream;
     }
 
-    inline BLOGGER_OSTREAM& operator<<(BLOGGER_OSTREAM& stream, color::type c)
+    inline ostream& operator<<(ostream& stream, color::type c)
     {
         return operator<<(stream, color(c));
     }
