@@ -4,7 +4,7 @@
     #include <syslog.h>
     #include <cstdlib>
 #else
-    #define syslog(a, b, c) (void) a; (void) b; (void) c
+    #define syslog(a, b, c)  (void) a; (void) b; (void) c
     #define openlog(a, b, c) (void) a; (void) b; (void) c
     #define LOG_PID  0
     #define LOG_USER 0

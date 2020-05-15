@@ -49,7 +49,7 @@ namespace bl {
             level lvl,
             bool default_pattern
         ) : m_tag(tag),
-            m_cached_pattern(BLOGGER_WIDEN_IF_NEEDED("")),
+            m_cached_pattern(),
             m_sinks(std::make_shared<sinks>()),
             m_filter(lvl)
         {

@@ -106,6 +106,7 @@ namespace bl {
 
         out_logger->set_pattern(pattern);
 
+        // (MSVC) ignore the E1919 here
         BLOGGER_FOR_EACH_DO(out_logger->add_sink, Sinks, std::move(sinks));
 
         return out_logger;

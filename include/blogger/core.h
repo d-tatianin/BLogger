@@ -70,8 +70,8 @@ namespace bl {
         using in_string = std::basic_string_view<char_t, std::char_traits<char_t>>;
     }
 #elif _MSVC_LANG >= 201402L || __cplusplus >= 201402L
-    #define BLOGGER_VA_FOR_EACH_DO(what, args_t, args, ...) int expander[] = { 0, ( what(__VA_ARGS__, std::forward<args_t>(args)), 0) ... }
-    #define BLOGGER_FOR_EACH_DO(what, args_t, args) int expander[] = { 0, ( what(std::forward<args_t>(args)), 0) ... }
+    #define BLOGGER_VA_FOR_EACH_DO(what, args_t, args, ...) int _[] = { 0, ( what(__VA_ARGS__, std::forward<args_t>(args)), 0) ... }
+    #define BLOGGER_FOR_EACH_DO(what, args_t, args) int _[] = { 0, ( what(std::forward<args_t>(args)), 0) ... }
     namespace bl {
         using in_string = const std::basic_string<char_t, std::char_traits<char_t>>&;
     }

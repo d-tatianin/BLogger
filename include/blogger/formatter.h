@@ -45,6 +45,8 @@ namespace bl
         static string format(string pattern, Args&& ... args)
         {
             uint16_t index = 0;
+
+            // (MSVC) ignore the E1919 here
             BLOGGER_VA_FOR_EACH_DO(format_one, Args, args, pattern, index);
             return pattern;
         }
@@ -58,7 +60,7 @@ namespace bl
         {
             find_and_replace(merge_into, message_pattern, formatted_msg);
             find_and_replace(merge_into, timestamp_pattern, timestamp_format().c_str());
-            find_and_replace_timestamp(merge_into, timestamp_format().c_str(), time_ptr);
+            find_and_replace_timestamp(merge_into, timestamp_format(), time_ptr);
             find_and_replace_level(merge_into, level_pattern, lvl);
 
             if (max_length() != infinite &&
