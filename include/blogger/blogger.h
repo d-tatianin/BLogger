@@ -46,6 +46,11 @@ namespace bl {
             return std::make_unique<stdlog_sink>();
     }
 
+    inline sink::ptr sink::make_syslog()
+    {
+        return std::make_unique<syslog_sink>();
+    }
+
     inline sink::ptr sink::make_file(
         in_string directory_path,
         size_t bytes_per_file,

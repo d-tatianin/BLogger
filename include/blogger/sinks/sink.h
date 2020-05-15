@@ -22,6 +22,8 @@ namespace bl {
 
         static ptr make_stdlog(bool colored = true);
 
+        static ptr make_syslog();
+
         static ptr make_console(bool colored = true);
 
         static ptr make_file(

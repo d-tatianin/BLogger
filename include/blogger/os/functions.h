@@ -101,5 +101,5 @@
 #define BLOGGER_FILE_WRITE(data, size, file) fwrite(data, sizeof(char), size, file)
 
 #ifndef BLOGGER_UNICODE_MODE
-    namespace bl { inline void init_unicode() {} }
+    #define init_unicode()
 #endif

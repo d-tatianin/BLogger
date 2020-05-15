@@ -6,6 +6,7 @@
 #include "blogger/loggers/log_message.h"
 #include "blogger/os/functions.h"
 #include "blogger/sinks/sink.h"
+#include "blogger/sinks/syslog_sink.h"
 #include "blogger/log_levels.h"
 
 namespace bl {
