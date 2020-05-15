@@ -4,9 +4,9 @@
     #include <syslog.h>
     #include <cstdlib>
 #else
-    #define syslog(a, b) (void) a; (void) b
-    #define openlog(a, b, c) void(a)
-    #define LOG_PID 0
+    #define syslog(a, b, c) (void) a; (void) b; (void) c
+    #define openlog(a, b, c) (void) a; (void) b; (void) c
+    #define LOG_PID  0
     #define LOG_USER 0
     #define LOG_INFO 0
 #endif
@@ -25,7 +25,7 @@ namespace bl {
 
         void write(log_message& msg) override
         {
-          #if defined(BLOGGER_UNICODE_MODE) and defined (__linux__)
+          #if defined(BLOGGER_UNICODE_MODE) && defined (__linux__)
             constexpr size_t syslog_message_size = 1024;
             char message[syslog_message_size];
 
@@ -50,7 +50,7 @@ namespace bl {
 
         void set_tag(in_string tag) override
         {
-          #if defined(BLOGGER_UNICODE_MODE) and defined (__linux__)
+          #if defined(BLOGGER_UNICODE_MODE) && defined (__linux__)
             constexpr size_t syslog_tag_size = 256;
             char narrow_tag[syslog_tag_size];
 
@@ -76,9 +76,9 @@ namespace bl {
 }
 
 #ifndef __linux__
-#undef syslog
-#undef openlog
-#undef LOG_PID
-#undef LOG_USER
-#undef LOG_INFO
+    #undef syslog
+    #undef openlog
+    #undef LOG_PID
+    #undef LOG_USER
+    #undef LOG_INFO
 #endif
